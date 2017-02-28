@@ -15,7 +15,7 @@ If you have any comments or suggestions, please let me know at pm14ehds@leeds.ac
 **Note:** If you find logical errors and/or bugs in the code, please let me know and I'll strive to fix it as soon
 as possible!
 
-**Note2:** Let me know if you find spelling and grammar mistakes.
+**Note2:** Let me know if you find any spelling and grammatical error.
 
 ## Copyright
 Copyright 2017, Eduardo Henriques Dos Santos, All rights reserved.
