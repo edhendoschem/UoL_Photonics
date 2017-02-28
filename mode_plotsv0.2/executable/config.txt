@@ -1,0 +1,12 @@
+upper_clad_index = 1.45
+
+down_clad_index = 1.45
+left_clad_index = 1.45
+
+right_clad_index = 1.45
+
+core_index = 1.4517
+width (micron) = 8
+
+depth (micron) = 8
+wavelength (nm) = 1550
