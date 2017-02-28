@@ -1,12 +1,20 @@
 #Leeds Photonic group files
 
-## Introduction
+## Purpose and organization
 
-This repository is organized by programming language, each folder contains a readme file that explains the use of
-each of the programs in it and a folder named 'OLD'.
+This repository was created to share the knowledge with the rest of the Leeds Photonics group.
 
-The 'OLD' folder, contains working versions of programs which were written when I was learning that particular language 
-and therefore may be disorganized and/or difficult to read.
+It is organized by programming language, each folder contains a readme file that explains the use of
+each of the programs, and a folder named 'OLD'.
+
+The 'OLD' folder, contains versions of programs which were written when I was learning that particular language, 
+and therefore may be disorganized and/or difficult to read but they work! and could prove useful
+
+If you have any comments or suggestions, please let me know at pm14ehds@leeds.ac.uk
+
+**Note:** If you find logical errors and/or bugs in the code, please let me know and I'll strive to fix it as soon
+as possible!
+**Note2:** Let me know if you find spelling and grammar mistakes.
 
 ## Copyright
 Copyright 2017, Eduardo Henriques Dos Santos, All rights reserved.
