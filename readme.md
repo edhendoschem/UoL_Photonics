@@ -2,5 +2,5 @@
 
 ##Introduction
 
-There are three folders, and the files are separated by programming language. The folders usually contain the source code only but sometimes the windows executable
-file is included
+There are three folders, and the files are separated by programming language. The folders usually contain the source code 
+only but sometimes the compiled windows executable file is included in a folder called 'executable'.
