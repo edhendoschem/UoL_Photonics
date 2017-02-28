@@ -1,4 +1,3 @@
-//Pending: Write mode results to a csv file, extensively test, Write explanations to Jaya
 extern crate rand;
 extern crate gnuplot;
 
