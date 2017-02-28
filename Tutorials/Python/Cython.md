@@ -16,6 +16,6 @@ numbers only) and you have tried optimizing with numpy and it still is too slow.
 ## How do I install Cython?
 
 If you have installed Python Anaconda then you already have Cython installed, otherwise type:
-'''
+```
 pip install cython
-'''
+```
