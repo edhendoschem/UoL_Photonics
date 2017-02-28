@@ -5,7 +5,7 @@ It will create two folders:
 - mode_data: will contain a .csv file with the mode information
 - mode_graphs: Will create a plot of the intensity of the EM field (requires gnuplot installed and added to PATH)
 
-Note on gnuplot installation:
+**Note** on gnuplot installation:
 go to:
 http://www.gnuplot.info/download.html
 
