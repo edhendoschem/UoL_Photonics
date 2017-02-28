@@ -1,12 +1,13 @@
 upper_clad_index = 1.45
-
 down_clad_index = 1.45
 left_clad_index = 1.45
-
 right_clad_index = 1.45
-
-core_index = 1.4517
+core_index = 1.6
 width (micron) = 8
-
-depth (micron) = 8
+depth (micron) = 1
 wavelength (nm) = 1550
+enable_plots (requires gnuplots) = true
+show_interactive_plots (requires gnuplots) = false
+
+
+
