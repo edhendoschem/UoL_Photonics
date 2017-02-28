@@ -25,9 +25,8 @@ https://www.rust-lang.org/en-US/install.html
 
 3) If the code compiles successfully an executable file with your program should appear in target/release
 
-#Rust Resources
-##Rust tutorial
+#Rust tutorials
 https://doc.rust-lang.org/book/
 
-##Rust reference
+#Rust reference
 https://doc.rust-lang.org/reference.html
