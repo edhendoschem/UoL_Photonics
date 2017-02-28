@@ -1,11 +1,12 @@
 #Leeds Photonic group files
 
-##Introduction
+## Introduction
 
-There are three folders, and the files are separated by programming language. The folders usually contain the source code 
-only but sometimes the compiled windows executable file is included in a folder called 'executable'.
+This repository is organized by programming language, each folder contains a readme file that explains the use of
+each of the programs in it and a folder named 'OLD'.
 
-##Contents
+The 'OLD' folder, contains working versions of programs which were written when I was learning that particular language 
+and therefore may be disorganized and/or difficult to read.
 
-##Copyright
+## Copyright
 Copyright 2017, Eduardo Henriques Dos Santos, All rights reserved.

@@ -1,0 +1,25 @@
+-----Parameters-----
+s_start (nm) = 1530.0
+fp_wavelength (nm) = 980.0
+bp_wavelength (nm)= 980.0
+width (micron) = 1.25
+depth (micron) = 1.25
+length (cm)= 5.0                                                     
+N (ions/m^3) = 4.45e26
+tau (ms) = 12.94
+fp0 (W) = 100.0e-3
+bp0 (W) = 0.0e-3
+s0 (W) = 1.0e-6
+-----ASE-----
+fASEstart_wavelength (nm) = 1520.0
+channel_spacing (Hz) = 62.5e9
+bASEstart_wavelength (nm) = 1520.0
+------Mode calculation-------
+n_0 = 1.45
+n_1 = 1.47
+------Other options---------
+STEPS = 1000
+find_single_mode (true or false) = true
+enable_mode_calc = true
+enable_gain_calc = false
+enable_gain_plots (requires gnuplots installed) = true
