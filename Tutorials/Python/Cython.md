@@ -1,9 +1,21 @@
 # Cython: A quick tutorial
 
 ## Table of contents
-1. [What is Cython](#Cython)
+1. [What is Cython](#cython)
+2. [When to use Cython](#when)
+3. [How do I install Cython?](#how)
+4. [Before starting](#before)
+5. [Cython files: .pyd and .pyx](#files)
+6. [Defining variables in Cython](#vars)
+7. [Defining loops in Cython](#loops)
+8. [Defining functions in Cython](#functions)
+9. [Full Examples](#examples)
+10 [Working with line_profiler to find bottlenecks](#line_profiler)
 
-## What is Cython? <a name="Cython"></a>
+
+
+
+## What is Cython? <a name="cython"></a>
 
 Cython is a way to compile C extensions using syntax similar to Python, this allows you to have C levels of speed
 in your Python code. 
@@ -11,7 +23,7 @@ in your Python code.
 More info on their website:
 http://cython.org/
 
-## When to use Cython?
+## When to use Cython? <a name="when"></a>
 When your code is running slowly the first step is to check which part can be improved, whether you can avoid loops
 and change your arrays to numpy arrays. In order to help you determine where the code might be slow you can install
 line_profiler with `pip install line_profiler`
@@ -19,14 +31,14 @@ line_profiler with `pip install line_profiler`
 If you have a problem that requires extensive use of loops, or computations using the same type of elements (i.e.
 numbers only).
 
-## How do I install Cython?
+## How do I install Cython?<a name="how"></a>
 
 If you have installed Python Anaconda then you already have Cython installed, otherwise type:
 ```
 pip install cython
 ```
 
-## Before starting
+## Before starting<a name="before"></a>
 
 We will be using jupyter notebook in this tutorial. In order to open jupyter notebook follow this procedure:
 
@@ -89,14 +101,14 @@ runs 'somestatement' 1000 times and repeats it 3 times (the default number). Dis
 'ctrl + enter' Runs the code in the current cell
 'shift + enter' Runs the code in the current cell and creates a new cell
 
-## Cython files: .pyd and .pyx
+## Cython files: .pyd and .pyx <a name="files"></a>
 
 Cython files have a different extension than Python files. They are **.pyd** to store declarations (we will ignore
 these for now) and **.pyx** to store the definitions. If we want to compile our program to C we need to place the
 parts to optimize inside a .pyx file, this can be done very easily with the cell magic '%%file ourextname.pyx' and
 then just write the body of the file.
 
-## Defining variables in Cython
+## Defining variables in Cython <a name="vars"></a>
 
 In order to use Cython we must first statically type our variables, this means we must tell the compiler what sort
 of value to expect. Of all the types, the most commonly used are:
@@ -124,7 +136,7 @@ exceed that number it will "wrap around": `2,147,483,647 + 1 = -2,147,483,647` o
 If you are unsure whether an integer number will fit inside a long long integer (+/-9,223,372,036,854,775,807) then
 it is better to store it in a double floating point 
 
-## Defining loops in Cython
+## Defining loops in Cython <a name="loops"></a>
 
 In Cython loops are defined in exactly the same way as python, the only difference is that any integer used for range
 need to be statically defined:
@@ -137,7 +149,7 @@ for i in range(n): #This is the same as a python 'for i in range(10)' loop
 	do stuff
 ```
 
-## Defining functions in Cython
+## Defining functions in Cython <a name="functions"></a>
 
 Functions in Cython are defined in almost the same way as in python, the difference is that you need to specify the
 input type (if any) and you use cpdef instead of def. Example:
@@ -156,7 +168,7 @@ cpdef some_func2():
 **Note:** You can also use def and cdef when defining functions in Cython which have different properties and 
 advantages/disadvantages, but for now let us stick with cpdef
 
-## Compiling the code
+## Compiling the code <a name="compiling"></a>
 Before we can actually use our Cython code we need to compile it. This can be done by creating a Python script
 setup.py with the module name and running it in Python. You can copy and paste this code and just change the relevant
 names: 
@@ -179,7 +191,7 @@ If successful you can the simply import your code using:
 import mymodulename
 ```
 
-## Full Examples
+## Full Examples <a name="examples"></a>
 In these examples we create a .pyx file, compile it and then compare it with an equivalent python loop using %timeit
 
 ### Example 1: Loop comparison
@@ -318,5 +330,5 @@ _________________________________________________
 
 If we are unsure whether an integer value will fit inside an integer variable, it is better to change it to a double.
 
-## Working with line_profiler to find bottlenecks
+## Working with line_profiler to find bottlenecks <a name="line_profiler"></a>
 pending
