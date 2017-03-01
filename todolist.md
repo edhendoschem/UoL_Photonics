@@ -1,4 +1,4 @@
-1) Finish Cython tutorial
+~1) Finish Cython tutorial~
 
 2) Upload more programs
 
