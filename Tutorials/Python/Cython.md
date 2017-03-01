@@ -10,7 +10,7 @@
 7. [Defining loops in Cython](#loops)
 8. [Defining functions in Cython](#functions)
 9. [Full Examples](#examples)
-10 [Working with line_profiler to find bottlenecks](#line_profiler)
+10. [Working with line_profiler to find bottlenecks](#line_profiler)
 
 
 
