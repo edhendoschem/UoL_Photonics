@@ -404,8 +404,162 @@ if __name__ == '__main__':
 ```
 
 ***Note:*** Profiling adds overhead when calling the program, once we have finished profiling and optimizing the code,
-all `# cython: profile = True` and `if __name =='__main__': etc..` should be removed, and the extensions recompiled
+all of the `# cython: profile = True` and `if __name =='__main__': etc..` should be removed, and the extensions recompiled.
 
 ## cProfile example <a name="examples2"></a>
+Let's say we want to find the value of the integral of the function: sin(x) * (e^-x)^0.5 by using a simple numerical 
+method:
+```
+%%file py_test.py
+import math as mt
+def integrate(a, b, f, N = 10000000):
+    dx = (b - a) / N
+    s = 0.0
+    for i in range(N):
+        s += f(a+i*dx)
+    return s * dx
 
+def some_func(a):
+    return mt.sin(a) * mt.sqrt((mt.exp(-a)))
+        
+def main():
+    total = 0
+    a = 2
+    b = 7
+    
+    #Find the integral of some_func from a to b
+    result = integrate(a, b, some_func)
+    return result
+```
+We test it by running it:
+```
+%run py_test.py
+```
+But it takes too long to run, so we decide to examine it and optimize it. There are no Cython modules so we add
+the relevant code to tell python to run cProfile:
+```
+%%file py_test.py
+import math as mt
+def integrate(a, b, f, N = 10000000):
+    dx = (b - a) / N
+    s = 0.0
+    for i in range(N):
+        s += f(a+i*dx)
+    return s * dx
+
+def some_func(a):
+    return mt.sin(a) * mt.sqrt((mt.exp(-a)))
+        
+def main():
+    total = 0
+    a = 2
+    b = 7
+    
+    #Find the integral of some_func from a to b
+    result = integrate(a, b, some_func)
+    return result
+    
+
+if __name__ == '__main__':
+    import cProfile
+    cProfile.run('main()', sort = 'time')
+```
+And then run it:
+```
+%run py_test.py
+```
+We get the following output:
+```
+     40000005 function calls in 17.821 seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+ 10000000    9.128    0.000   13.701    0.000 py_test.py:9(some_func)
+        1    4.120    4.120   17.821   17.821 py_test.py:2(integrate)
+ 10000000    1.855    0.000    1.855    0.000 {built-in method math.sin}
+ 10000000    1.585    0.000    1.585    0.000 {built-in method math.exp}
+ 10000000    1.133    0.000    1.133    0.000 {built-in method math.sqrt}
+        1    0.000    0.000   17.821   17.821 {built-in method builtins.exec}
+        1    0.000    0.000   17.821   17.821 py_test.py:12(main)
+        1    0.000    0.000   17.821   17.821 <string>:1(<module>)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+```
+From this we notice the slowest two functions are some_func and integrate, we can rewrite them as a cython extension
+by basically copying them and pasting them in a .pyx file and then adding type information. We will also be using
+the maths function from C by importing them directly with `from libc.math cimport sin, sqrt, exp`. The list of 
+functions available can be found here: http://www.gnu.org/software/libc/manual/html_node/Mathematics.html
+```
+%%file py_test_ext.pyx
+#cython: profile = True
+from libc.math cimport sin, sqrt, exp
+cpdef integrate(double a, double b, f,long long N = 10000000):
+    cdef:
+        double dx = (b - a) / N
+        double s = 0.0
+        long long i
+    for i in range(N):
+        s += f(a+i*dx)
+    return s * dx
+
+cpdef some_func(double a):
+    return sin(a) * sqrt((exp(-a)))
+```
+We now compile this extension in the usual way
+```
+%%file setup.py
+from distutils.core import setup
+from Cython.Build import cythonize
+
+setup(
+    name = "py_test_ext",
+    ext_modules = cythonize("py_test_ext.pyx")
+)
+```
+```
+%run setup.py build_ext --inplace
+```
+And finally the modified version:
+```
+%%file py_test2.py
+from py_test_ext import integrate, some_func
+import math as mt
+
+def main():
+    total = 0
+    a = 2
+    b = 7
+    
+    #Find the integral of some_func from a to b
+    result = integrate(a, b, some_func)
+    return result
+    
+    
+if __name__ == '__main__':
+    import cProfile
+    cProfile.run('main()', sort = 'time')
+```
+```
+%run py_test2.py
+```
+The result is:
+```
+         20000007 function calls in 6.713 seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    2.442    2.442    6.713    6.713 py_test_ext.pyx:3(integrate)
+ 10000000    2.415    0.000    4.271    0.000 py_test_ext.pyx:12(some_func (wrapper))
+ 10000000    1.855    0.000    1.855    0.000 py_test_ext.pyx:12(some_func)
+        1    0.000    0.000    6.713    6.713 py_test2.py:4(main)
+        1    0.000    0.000    6.713    6.713 {built-in method builtins.exec}
+        1    0.000    0.000    6.713    6.713 {built-in method py_test_ext.integrate}
+        1    0.000    0.000    6.713    6.713 <string>:1(<module>)
+        1    0.000    0.000    6.713    6.713 py_test_ext.pyx:3(integrate (wrapper))
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+```
+
+We get a ***2.65 times*** improvement in our run time with relatively low effort (mostly copying and pasting code).
+More dramatic improvements are possible using some of the other capabilities available in Cython.
 
