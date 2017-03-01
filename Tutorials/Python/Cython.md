@@ -79,6 +79,10 @@ runs 'somestatement' 1000 times and repeats it 4 times. Displays the speed of th
 ```
 runs 'somestatement' 1000 times and repeats it 3 times (the default number). Displays the speed of the fastest run
 
+### Useful jupyter notebook shortcuts
+'ctrl + enter' Runs the code in the current cell
+'shift + enter' Runs the code in the current cell and creates a new cell
+
 ## Cython files: .pyd and .pyx
 
 Cython files have a different extension than Python files. They are **.pyd** to store declarations (we will ignore
@@ -92,9 +96,9 @@ In order to use Cython we must first statically type our variables, this means w
 of value to expect. Of all the types, the most commonly used are:
 
 'long' represents a 32 bit precision integer
-'long long' represents a 64 bit precision int
-'float' represents a 32 bit precision integer
-'double' represents a 64 bit precision integer
+'long long' represents a 64 bit precision integer
+'float' represents a 32 bit precision floating point
+'double' represents a 64 bit precision floating point
 
 To define a variable in Cython we can write:
 ```
@@ -110,6 +114,108 @@ cdef:
 ```
 
 continued
+
+## Defining loops in Cython
+
+In Cython loops are defined in exactly the same way as python, the only difference is that any integer used for range
+need to be statically defined:
+
+```
+cdef:
+	int i, n = 10;
+
+for i in range(n): #This is the same as a python 'for i in range(10)' loop
+	do stuff
+```
+
+## Defining functions in Cython
+
+Functions in Cython are defined in almost the same way as in python, the difference is that you need to specify the
+input type (if any) and you use cpdef instead of def. Example:
+
+```
+#This function takes an integer 'a' and returns a * a which is also an integer
+cpdef some_func(int a):
+	return a * a
+
+#This function takes no arguments and returns a double
+cpdef some_func2():
+	double a = 3.3
+	return a 
+```
+
+**Note:** You can also use def and cdef when defining functions in Cython which have different properties and 
+advantages/disadvantages, but for now let us stick with cpdef
+
+## Compiling the code
+Before we can actually use our Cython code we need to compile it. This can be done by creating a Python script
+setup.py with the module name and running it in Python. You can copy and paste this code and just change the relevant
+names: 
+```
+%%file setup.py
+from distutils.core import setup
+from Cython.Build import cythonize
+
+setup (
+	name = "mymodulename",
+	ext_files = cythonize("mymodulename.pyx")
+)
+```
+The previous code tells which file to compile. Now to actually compile we use:
+```
+%run setup.py build_ext --inplace
+```
+If successful you can the simply import your code using:
+```
+import mymodulename
+```
+
+## Full Examples
+In these examples we create a .pyx file, compile it and then compare it with an equivalent python loop using %timeit
+
+Example 1: Loop comparison
+```
+%%file busy_loop.pyx
+cpdef busy_loop():
+    cdef:
+        long i, total = 0, n = 10000
+    for i in range(n):
+        total += i
+    return total
+```
+Press shift+enter to execute and create another cell
+```
+%%file setup.py
+from distutils.core import setup
+from Cython.Build import cythonize
+
+setup (
+    name = "busy_loop",
+    ext_modules = cythonize("busy_loop.pyx")
+)
+```
+Press shift+enter to execute and create another cell
+```
+%run setup.py build_ext --inplace
+```
+Press shift+enter to execute and create another cell
+```
+def py_busy_loop(): #This is the same as busy_loop(), except it's defined in Python
+    n = 100000
+    total = 0
+    for i in range(n):
+        total += i
+    return total
+```
+Press shift+enter to execute and create another cell
+```
+import busy_loop #Import your compiled c extension before using it!
+%timeit -n 1000 busy_loop.busy_loop()
+%timeit -n 1000 py_busy_loop()
+```
+Press shift enter to run this cell and wait
+In my computer Cython busy_loop() took 333 nanoseconds to run while py_busy_loop() took 8.45 miliseconds, in other
+words the cython implementation was **25000 times** faster
 
 
 
