@@ -9,8 +9,9 @@
 6. [Defining variables in Cython](#vars)
 7. [Defining loops in Cython](#loops)
 8. [Defining functions in Cython](#functions)
-9. [Full Examples](#examples)
-10. [Working with line_profiler to find bottlenecks](#line_profiler)
+9. [Examples](#examples)
+10. [Working with cProfile to find bottlenecks](#cProfile)
+11. [cProfile example](#examples2)
 
 
 
@@ -25,8 +26,10 @@ http://cython.org/
 
 ## When to use Cython? <a name="when"></a>
 When your code is running slowly the first step is to check which part can be improved, whether you can avoid loops
-and change your arrays to numpy arrays. In order to help you determine where the code might be slow you can install
-line_profiler with `pip install line_profiler`
+and change your arrays to numpy arrays or implement better algorithms. If afterwards the performance is insatisfactory
+the we can use cProfile to help determine what parts of the code are slow and then convert it to a C extension using
+cython.
+
 
 If you have a problem that requires extensive use of loops, or computations using the same type of elements (i.e.
 numbers only).
@@ -169,17 +172,17 @@ cpdef some_func2():
 advantages/disadvantages, but for now let us stick with cpdef
 
 ## Compiling the code <a name="compiling"></a>
-Before we can actually use our Cython code we need to compile it. This can be done by creating a Python script
-setup.py with the module name and running it in Python. You can copy and paste this code and just change the relevant
-names: 
+Before we can actually use our Cython code we need to compile it. This can be done in several ways but only one will 
+be shown. We start by creating a Python script setup.py with the module name and then running it in Python. You can 
+copy and paste this code and just change the relevant names: 
 ```
 %%file setup.py
 from distutils.core import setup
 from Cython.Build import cythonize
 
 setup (
-	name = "mymodulename",
-	ext_files = cythonize("mymodulename.pyx")
+    name = "mymodulename",
+    ext_modules = cythonize("mymodulename.pyx")
 )
 ```
 The previous code tells which file to compile. Now to actually compile we use:
@@ -191,7 +194,7 @@ If successful you can the simply import your code using:
 import mymodulename
 ```
 
-## Full Examples <a name="examples"></a>
+## Examples <a name="examples"></a>
 In these examples we create a .pyx file, compile it and then compare it with an equivalent python loop using %timeit
 
 ### Example 1: Loop comparison
@@ -330,5 +333,79 @@ _________________________________________________
 
 If we are unsure whether an integer value will fit inside an integer variable, it is better to change it to a double.
 
-## Working with line_profiler to find bottlenecks <a name="line_profiler"></a>
-pending
+## Working with cProfile to find bottlenecks <a name="cProfile"></a>
+In order to use line profiler, when defining our python script we just need to add the following at the end:
+```
+%%file myscript.py
+
+def main():
+    Our code here
+    return result
+
+if __name__ == '__main__':
+    import cProfile
+    cProfile.run('main()', sort = 'time')
+```
+
+This will tell Python when running the script to profile the 'main' function where our code is. If we enter the
+following command:
+```
+%run myscript.py
+```
+We should get the following table ordered by tottime:
+```
+         4000005 function calls in 1.773 seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  1000000    0.909    0.000    1.373    0.000 py_test.py:9(some_func)
+        1    0.401    0.401    1.773    1.773 py_test.py:2(integrate)
+  1000000    0.190    0.000    0.190    0.000 {built-in method math.sin}
+  1000000    0.159    0.000    0.159    0.000 {built-in method math.exp}
+  1000000    0.114    0.000    0.114    0.000 {built-in method math.sqrt}
+        1    0.000    0.000    1.773    1.773 {built-in method builtins.exec}
+        1    0.000    0.000    1.773    1.773 py_test.py:12(main)
+        1    0.000    0.000    1.773    1.773 <string>:1(<module>)
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+```
+
+-The ncalls column is the number of times that function or method was called
+-The tottime is the total time spent in the function without including the time spent in called functions, this is the
+time used to sort the functions, and the most useful column
+-The first percall is equivalent to the tottime/ncalls
+-The second percall is equivalent cumtime/ncalls
+-The last column is the name of the module, the line where the function is, and the name of the function called
+
+### Profiling Cython extensions
+If we use cProfile in a code that makes use of compiled Cython extension files, cProfile won't be able to measure the
+individual calls to functions inside the extension. To get around this, we can add the following directive to our
+extension before compiling:
+
+```
+file myextension.pyx
+# cython: profile = True
+
+extension body
+```
+Then in our main function we can call cProfile as normal:
+```
+file somescript.py
+import myextension
+
+def main():
+    main code
+    calls to myextension.function()
+    return result
+
+if __name__ == '__main__':
+    import cProfile
+    cProfile.run('main()', sort = 'time')
+```
+
+***Note:*** Profiling adds overhead when calling the program, once we have finished profiling and optimizing the code,
+all `# cython: profile = True` and `if __name =='__main__': etc..` should be removed, and the extensions recompiled
+
+## cProfile example <a name="examples2"></a>
+
+
