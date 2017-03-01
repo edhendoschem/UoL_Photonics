@@ -310,4 +310,4 @@ _________________________________________________
 12200160415121876738
 ```
 
-If we are unsure whether a value will fit inside an integer, it is better to change it to a double.
+If we are unsure whether an integer value will fit inside an integer variable, it is better to change it to a double.
