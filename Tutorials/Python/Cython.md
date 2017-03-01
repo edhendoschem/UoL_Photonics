@@ -102,13 +102,14 @@ To define a variable in Cython we can write:
 cdef:
 	#Notice the indentation, it tells the program when the cdef ends
 	double var1 #Defines a 64 bit floating point called var1
-	long int1, int2 #Defines two 32 bit integers, in1 and int2
+	long int1, int2 #Defines two 32 bit integers, int1 and int2
 	double array_test[10][20]  #Defines a stack allocated array of 10 x 20 elements, the var name is 'array_test'
 	double var2 = 0.0, var3 = 0.0 #Defines and assigns a value to var2 and var3. 
 				      #Initializing a variable by assigning a value is strongly recommended
 
 ```
 
+continued
 
 
 
