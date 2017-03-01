@@ -1,6 +1,9 @@
 # Cython: A quick tutorial
 
-## What is Cython?
+## Table of contents
+1. [What is Cython](#Cython)
+
+## What is Cython? <a name="Cython"></a>
 
 Cython is a way to compile C extensions using syntax similar to Python, this allows you to have C levels of speed
 in your Python code. 
@@ -9,9 +12,12 @@ More info on their website:
 http://cython.org/
 
 ## When to use Cython?
+When your code is running slowly the first step is to check which part can be improved, whether you can avoid loops
+and change your arrays to numpy arrays. In order to help you determine where the code might be slow you can install
+line_profiler with `pip install line_profiler`
 
 If you have a problem that requires extensive use of loops, or computations using the same type of elements (i.e.
-numbers only) and you have tried optimizing with numpy and it still is too slow.
+numbers only).
 
 ## How do I install Cython?
 
@@ -311,3 +317,6 @@ _________________________________________________
 ```
 
 If we are unsure whether an integer value will fit inside an integer variable, it is better to change it to a double.
+
+## Working with line_profiler to find bottlenecks
+pending
