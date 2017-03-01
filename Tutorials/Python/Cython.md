@@ -109,11 +109,14 @@ cdef:
 	long int1, int2 #Defines two 32 bit integers, int1 and int2
 	double array_test[10][20]  #Defines a stack allocated array of 10 x 20 elements, the var name is 'array_test'
 	double var2 = 0.0, var3 = 0.0 #Defines and assigns a value to var2 and var3. 
-				      #Initializing a variable by assigning a value is strongly recommended
-
 ```
 
-continued
+***Warning:*** Python by default has unlimited precision, this is not the case in statically typed Cython, if for
+example we have defined `long i` The maximum possible integer it can store is -2,147,483,647 to 2,147,483,647. If we
+exceed that number it will "wrap around": `2,147,483,647 + 1 = -2,147,483,647` or `-2,147,483,647 - 1 = 2,147,483,647`
+
+If you are unsure whether an integer number will fit inside a long long integer (+/-9,223,372,036,854,775,807) then
+it is better to store it in a double floating point 
 
 ## Defining loops in Cython
 
@@ -173,12 +176,12 @@ import mymodulename
 ## Full Examples
 In these examples we create a .pyx file, compile it and then compare it with an equivalent python loop using %timeit
 
-Example 1: Loop comparison
+### Example 1: Loop comparison
 ```
 %%file busy_loop.pyx
 cpdef busy_loop():
     cdef:
-        long i, total = 0, n = 10000
+        long i, n = 10000
     for i in range(n):
         total += i
     return total
@@ -213,10 +216,98 @@ import busy_loop #Import your compiled c extension before using it!
 %timeit -n 1000 busy_loop.busy_loop()
 %timeit -n 1000 py_busy_loop()
 ```
-Press shift enter to run this cell and wait
+Press ctrl+enter to run this cell and wait. This will run each statement a thousand times on three ocassions and
+display the fastest runtime. You should get some output like this:
+```
+1000 loops, best of 3: 333 ns per loop
+1000 loops, best of 3: 8.45 ms per loop
+```
 In my computer Cython busy_loop() took 333 nanoseconds to run while py_busy_loop() took 8.45 miliseconds, in other
-words the cython implementation was **25000 times** faster
+words the Cython implementation was **~25000 times** faster than pure Python.
 
+### Example 2: Fibonacci sequence
+In this example the function will take an argument n which is the element number: 
+f1 = 1, f2 = 1, f3 = 2, f4 = 3, f5 = 5, f6 = 8, f7 = 13 ... fn = f_(n-1) + f_(n-2)
+```
+%%file fibonacci.pyx
+cpdef fibonacci(long long n):
+    cdef:
+        long long current = 1, previous = 1, temp = 0, i
+    if n > 2:
+        for i in range(2, n):
+            temp = current
+            current += previous
+            previous = temp
+    else:
+        return current
+    return current
+```
+Run and then
+```
+%%file setup.py
+from distutils.core import setup
+from Cython.Build import cythonize
 
+setup (
+    name = "fibonacci",
+    ext_modules = cythonize("fibonacci.pyx")
+)
+```
+Run and then
+```
+%run setup.py build_ext --inplace
+```
+In another cell:
+```
+def py_fibonacci(n):
+    current = 1
+    previous = 1
+    temp = 0
+    if n > 2:
+        for i in range(2, n):
+            temp = current
+            current += previous
+            previous = temp
+    else:
+        return current
+    return current
+```
+Finally:
+```
+import fibonacci as fib
+%timeit -n 10000 fib.fibonacci(92)
+%timeit -n 10000 py_fibonacci(92)
+```
+The result:
+```
+10000 loops, best of 3: 497 ns per loop
+10000 loops, best of 3: 7.79 µs per loop
+```
+In my computer the Cython version ran ***~15 times*** faster than the pure Python version. There is a caveat however;
+If we print the values:
+```
+print(fib.fibonacci(92))
+print("_________________________________________________")
+print(py_fibonacci(92))
+```
+The output:
+```
+7540113804746346429
+_________________________________________________
+7540113804746346429
+```
+We notice they are the same as they should, but if we try with n = 93, we exceed the limit of what the long long
+integer can store and obtain a wrap around result:
+```
+print(fib.fibonacci(93))
+print("_________________________________________________")
+print(py_fibonacci(93))
+```
+We get:
+```
+-6246583658587674878
+_________________________________________________
+12200160415121876738
+```
 
-
+If we are unsure whether a value will fit inside an integer, it is better to change it to a double.
