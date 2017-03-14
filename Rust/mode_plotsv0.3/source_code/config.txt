@@ -1,4 +1,4 @@
-upper_clad_index = 1.45
+upper_clad_index = 0.45
 down_clad_index = 1.45
 left_clad_index = 1.45
 right_clad_index = 1.45

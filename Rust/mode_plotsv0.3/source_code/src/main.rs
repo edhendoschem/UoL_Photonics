@@ -1,7 +1,8 @@
-extern crate gnuplot; //This is equivalent to python's import or C++ #include
+//Pending: Write mode results to a csv file, extensively test, Write explanations to Jaya
+extern crate rand;
+extern crate gnuplot;
 
-//Specifies what functins you wish to use. Note the std library does not need to be called with
-//extern crate
+use rand::distributions::{IndependentSample, Range};
 use gnuplot::*;
 use std::{f64, i64};
 use std::f64::consts;
@@ -21,16 +22,15 @@ const PI: f64 = consts::PI;
 const h: f64 = 6.626070e-34; // Planck's constant, J.s
 const c: f64 =  299792458.0; // Speed of light, m/s
 const mu_0: f64 = (4.0 * PI) * 1e-7;  // Permeability of free space in H/m
-const epsilon_0: f64 = 8.854187817 * 1e-12; //Permittivity of free space F/m
+const epsilon_0: f64 = 8.854187817 * 1e-12;
 
 /* /////////////////////////////STRUCTS///////////////////////////// */
-//This struct will store the results of reading the text file
+//#[derive(Clone)]
 struct text_file {
     values: Vec<f64>,
     booleans: Vec<bool>,
 }
 
-//This struct stores the characteristics of the waveguide
 struct waveguide {
     n_up: f64, //Upper cladding refractive index
     n_dn: f64, //Lower cladding refractive index
@@ -50,7 +50,6 @@ struct waveguide {
     k_co: f64, //Wavenumber in core in radians/meters
 }
 
-//This struct will store the results
 struct results {
     m: f64, //mode in the x direction
     n: f64, //mode in the y direction
@@ -66,8 +65,6 @@ struct results {
 
 
 /* /////////////////////////////FUNCTIONS///////////////////////////// */
-//Reads the values of the text file, if it can't stops the program execution and outputs the
-//corresponding error message
 fn read_values(a: &mut text_file, s: &str) -> () {
     let path = Path::new(s);
     let display = path.display();
@@ -101,8 +98,13 @@ fn read_values(a: &mut text_file, s: &str) -> () {
 } //End of read values
 /******************************************************************************/
 /******************************************************************************/
-//assigns the values read from the text file to the waveguide struct
 fn initialize_waveguide(a: &text_file, b: &mut waveguide) -> () {
+    if (a.values[0] >= a.values[4] || a.values[1] >= a.values[4] || a.values[2] >= a.values[4] ||
+    a.values[3] >= a.values[4]) {
+        panic!("ERROR: Cladding refractive index cannot be greater than core refractive index");
+    } else if (a.values[0] < 1.0 || a.values[0] < 1.0 || a.values[0] < 1.0 || a.values[0] < 1.0) {
+        panic!("ERROR: Refractive index cannot be less than 1");
+    }
     b.n_up = a.values[0];
     b.n_dn = a.values[1];
     b.n_l = a.values[2];
@@ -122,8 +124,6 @@ fn initialize_waveguide(a: &text_file, b: &mut waveguide) -> () {
 } //End of initialize_waveguide
 /******************************************************************************/
 /******************************************************************************/
-//Finds k_x by brute force (i.e. trying all the values until a solution is found) and stores it in
-//the results struct
 fn find_k_x(a: &waveguide, b: &mut results) -> () {
     let mut lowest_val: f64 = a.k_co;
     let mut new_val: f64 = 0.0;
@@ -160,8 +160,7 @@ fn find_k_x(a: &waveguide, b: &mut results) -> () {
 
     b.k_x = k_x;
 } //End of find_k_x
-//Finds k_y by brute force (i.e. trying all the values until a solution is found) and stores it in
-//the results struct
+
 fn find_k_y(a: &waveguide, b: &mut results) -> () {
     let mut lowest_val: f64 = a.k_co;
     let mut new_val: f64 = 0.0;
@@ -197,7 +196,6 @@ fn find_k_y(a: &waveguide, b: &mut results) -> () {
     b.k_y = k_y;
 } //End of find_k_y
 
-//Finds the values of the wavenumber, if it is negative then outputs -1
 fn find_beta(a: &waveguide, b: &mut results) -> () {
     let mut beta_sqr: f64 = 0.0;
     beta_sqr = a.k_co.powi(2) - b.k_x.powi(2) - b.k_y.powi(2);
@@ -210,15 +208,12 @@ fn find_beta(a: &waveguide, b: &mut results) -> () {
 } //End of find_beta
 /******************************************************************************/
 /******************************************************************************/
-//Helper function, used to calculate and store the phase
 fn set_phase(a: &mut results) -> () {
     a.phi_x = 0.5 * a.m * PI;
     a.phi_y = 0.5 * a.n * PI;
 } //End of set_phase
 /******************************************************************************/
 /******************************************************************************/
-//Calculates the EM field and stores the values for plotting, if it falls outside the are of
-//Marcatili's method then stores NAN (not a number) which will be ignored by gnuplot
 fn find_field(a: &waveguide, b: &mut results, x: f64, y: f64) -> () {
     let mut field: f64 = 0.0;
     let c_up: f64 = (b.beta.powi(2) - a.k_up.powi(2) + b.k_x.powi(2)).sqrt();
@@ -251,7 +246,6 @@ fn find_field(a: &waveguide, b: &mut results, x: f64, y: f64) -> () {
     }
 }//End of find_field
 
-//Creates a series of x and y points to be used to determine the field
 fn populate_field(a: &waveguide, b: &mut results, points: usize) -> () {
     let mut range_x: Vec<f64> = vec![0.0; points];
     let mut range_y: Vec<f64> = vec![0.0; points];
@@ -295,7 +289,6 @@ fn plot(a: &waveguide, b: &results, points: usize) -> bool {
 }//End of plot
 /******************************************************************************/
 /******************************************************************************/
-//Helper function to find the lowest refractive index
 fn find_lowest(a: &waveguide) -> f64 {
     let mut all_n: [f64;4] = [0.0;4];
     all_n[0] = a.n_up;
@@ -328,8 +321,8 @@ fn main() {
         panic!("Unable to create mode_data directory: {}", err.description()));
 
     println!("Creating data structures...");
-    let resolution: usize = 261; //Plot resolution, 261 recommended, total of 261^2 points
-    //Definition of structs
+    let resolution: usize = 261; //Plot resolution, 261 recommended
+
     let mut text_vals: text_file = text_file {
         values: vec![],
         booleans: vec![],
@@ -399,7 +392,6 @@ fn main() {
             if plot(&data, &E_x, resolution) == false {
                 break;
             };//This will plot and also terminate the inner loop if the condition fails
-            //Write the data to the file or output an error and terminate the program
             match write!(file,"{},{},{},{},{},{},{},{},{},{},{},{},{},{}\n", data.waveln * 1.0e9,
             data.a * 2.0e6, data.b * 2.0e6, data.n_up, data.n_dn, data.n_l, data.n_r, data.n_co,
             E_x.n_eff, E_x.m, E_x.n, E_x.k_x as i64, E_x.k_y as i64, E_x.beta as i64) {
