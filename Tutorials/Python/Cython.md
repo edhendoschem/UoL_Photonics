@@ -144,7 +144,7 @@ it is better to store it in a double floating point
 In Cython loops are defined in exactly the same way as python, the only difference is that any integer used for range
 need to be statically defined:
 
-```Python
+```Cython
 cdef:
 	int i, n = 10;
 
