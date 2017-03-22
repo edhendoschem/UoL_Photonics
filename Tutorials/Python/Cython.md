@@ -144,7 +144,7 @@ it is better to store it in a double floating point
 In Cython loops are defined in exactly the same way as python, the only difference is that any integer used for range
 need to be statically defined:
 
-```Cython
+```Python
 cdef:
 	int i, n = 10;
 
@@ -157,7 +157,7 @@ for i in range(n): #This is the same as a python 'for i in range(10)' loop
 Functions in Cython are defined in almost the same way as in python, the difference is that you need to specify the
 input type (if any) and you use cpdef instead of def. Example:
 
-```
+```Python
 #This function takes an integer 'a' and returns a * a which is also an integer
 cpdef some_func(int a):
 	return a * a
@@ -175,7 +175,7 @@ advantages/disadvantages, but for now let us stick with cpdef
 Before we can actually use our Cython code we need to compile it. This can be done in several ways but only one will 
 be shown. We start by creating a Python script setup.py with the module name and then running it in Python. You can 
 copy and paste this code and just change the relevant names: 
-```
+```Python
 %%file setup.py
 from distutils.core import setup
 from Cython.Build import cythonize
@@ -190,7 +190,7 @@ The previous code tells which file to compile. Now to actually compile we use:
 %run setup.py build_ext --inplace
 ```
 If successful you can the simply import your code using:
-```
+```Python
 import mymodulename
 ```
 
@@ -198,7 +198,7 @@ import mymodulename
 In these examples we create a .pyx file, compile it and then compare it with an equivalent python loop using %timeit
 
 ### Example 1: Loop comparison
-```
+```Python
 %%file busy_loop.pyx
 cpdef busy_loop():
     cdef:
@@ -208,7 +208,7 @@ cpdef busy_loop():
     return total
 ```
 Press shift+enter to execute and create another cell
-```
+```Python
 %%file setup.py
 from distutils.core import setup
 from Cython.Build import cythonize
@@ -223,7 +223,7 @@ Press shift+enter to execute and create another cell
 %run setup.py build_ext --inplace
 ```
 Press shift+enter to execute and create another cell
-```
+```Python
 def py_busy_loop(): #This is the same as busy_loop(), except it's defined in Python
     n = 100000
     total = 0
@@ -232,7 +232,7 @@ def py_busy_loop(): #This is the same as busy_loop(), except it's defined in Pyt
     return total
 ```
 Press shift+enter to execute and create another cell
-```
+```Python
 import busy_loop #Import your compiled c extension before using it!
 %timeit -n 1000 busy_loop.busy_loop()
 %timeit -n 1000 py_busy_loop()
@@ -249,7 +249,7 @@ words the Cython implementation was **~25000 times** faster than pure Python.
 ### Example 2: Fibonacci sequence
 In this example the function will take an argument n which is the element number: 
 f1 = 1, f2 = 1, f3 = 2, f4 = 3, f5 = 5, f6 = 8, f7 = 13 ... fn = f_(n-1) + f_(n-2)
-```
+```Python
 %%file fibonacci.pyx
 cpdef fibonacci(long long n):
     cdef:
@@ -264,7 +264,7 @@ cpdef fibonacci(long long n):
     return current
 ```
 Run and then
-```
+```Python
 %%file setup.py
 from distutils.core import setup
 from Cython.Build import cythonize
@@ -279,7 +279,7 @@ Run and then
 %run setup.py build_ext --inplace
 ```
 In another cell:
-```
+```Python
 def py_fibonacci(n):
     current = 1
     previous = 1
@@ -294,7 +294,7 @@ def py_fibonacci(n):
     return current
 ```
 Finally:
-```
+```Python
 import fibonacci as fib
 %timeit -n 10000 fib.fibonacci(92)
 %timeit -n 10000 py_fibonacci(92)
@@ -306,9 +306,9 @@ The result:
 ```
 In my computer the Cython version ran ***~15 times*** faster than the pure Python version. There is a caveat however;
 If we print the values:
-```
+```Python
 print(fib.fibonacci(92))
-print("_________________________________________________")
+print("_________________________________________________") #Visual aid
 print(py_fibonacci(92))
 ```
 The output:
@@ -319,9 +319,9 @@ _________________________________________________
 ```
 We notice they are the same as they should, but if we try with n = 93, we exceed the limit of what the long long
 integer can store and obtain a wrap around result:
-```
+```Python
 print(fib.fibonacci(93))
-print("_________________________________________________")
+print("_________________________________________________") #Visual aid
 print(py_fibonacci(93))
 ```
 We get:
@@ -335,7 +335,7 @@ If we are unsure whether an integer value will fit inside an integer variable, i
 
 ## Working with cProfile to find bottlenecks <a name="cProfile"></a>
 In order to use line profiler, when defining our python script we just need to add the following at the end:
-```
+```Python
 %%file myscript.py
 
 def main():
@@ -382,14 +382,14 @@ If we use cProfile in a code that makes use of compiled Cython extension files, 
 individual calls to functions inside the extension. To get around this, we can add the following directive to our
 extension before compiling:
 
-```
+```Python
 file myextension.pyx
 # cython: profile = True
 
 extension body
 ```
 Then in our main function we can call cProfile as normal:
-```
+```Python
 file somescript.py
 import myextension
 
@@ -409,7 +409,7 @@ all of the `# cython: profile = True` and `if __name =='__main__': etc..` should
 ## cProfile example <a name="examples2"></a>
 Let's say we want to find the value of the integral of the function: sin(x) * (e^-x)^0.5 by using a simple numerical 
 method:
-```
+```Python
 %%file py_test.py
 import math as mt
 def integrate(a, b, f, N = 10000000):
@@ -437,7 +437,7 @@ We test it by running it:
 ```
 But it takes too long to run, so we decide to examine it and optimize it. There are no Cython modules so we add
 the relevant code to tell python to run cProfile:
-```
+```Python
 %%file py_test.py
 import math as mt
 def integrate(a, b, f, N = 10000000):
@@ -485,11 +485,11 @@ We get the following output:
         1    0.000    0.000   17.821   17.821 <string>:1(<module>)
         1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
 ```
-From this we notice the slowest two functions are some_func and integrate, we can rewrite them as a cython extension
+From this we notice the two slowest functions are 'some_func' and 'integrate', we can rewrite them as a cython extension
 by basically copying them and pasting them in a .pyx file and then adding type information. We will also be using
-the maths function from C by importing them directly with `from libc.math cimport sin, sqrt, exp`. The list of 
+maths functions from C by importing them directly with `from libc.math cimport sin, sqrt, exp`. The list of 
 functions available can be found here: http://www.gnu.org/software/libc/manual/html_node/Mathematics.html
-```
+```Python
 %%file py_test_ext.pyx
 #cython: profile = True
 from libc.math cimport sin, sqrt, exp
@@ -506,7 +506,7 @@ cpdef some_func(double a):
     return sin(a) * sqrt((exp(-a)))
 ```
 We now compile this extension in the usual way
-```
+```Python
 %%file setup.py
 from distutils.core import setup
 from Cython.Build import cythonize
@@ -520,7 +520,7 @@ setup(
 %run setup.py build_ext --inplace
 ```
 And finally the modified version:
-```
+```Python
 %%file py_test2.py
 from py_test_ext import integrate, some_func
 import math as mt
@@ -561,5 +561,6 @@ The result is:
 ```
 
 We get a ***2.65 times*** improvement in our run time with relatively low effort (mostly copying and pasting code).
-More dramatic improvements are possible using some of the other capabilities available in Cython.
+More dramatic improvements are possible using some of the other capabilities available in Cython (cdef functions, 
+typed memory views, etc.), not covered in this tutorial.
 
