@@ -6,7 +6,7 @@
 This is a finite difference time domain method solver for Maxwell's Equations, to simulate propagation through a
 rectangular straight waveguide. It employs multithreading to enhance speed also provides a serial execution functions
 to compare speedup and correctness.
-Currently unfinished
+<b>Currently unfinished</b>
 
 ### To do:
 1. Fix the source
