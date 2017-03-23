@@ -20,6 +20,7 @@ const double epsilon_0 = 8.854187e-12; //Permittivity of vacuum/free space
 const double mu_0 = 4.0 * PI * 1.0e-7; //Permeability of free space
 const double c0 = 299792458.0; //Speed of light in vacuum m/s
 const double z0 = mu_0 * c0; //Characteristic impedance of free space Ohms
+const unsigned int NUM_THREADS = std::thread::hardware_concurrency(); //Detects maximum number of threads
 
 using namespace std;
 
@@ -64,25 +65,27 @@ struct Grid {
                         double abs_fact);
     void parallel_update_boundary_all();
 
-    void update_E_x(unsigned long long I, unsigned long long J, unsigned long long K, vector<double> &H_z,
-                    vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b);
-    void update_E_y(unsigned long long I, unsigned long long J, unsigned long long K, vector<double> &H_z,
-                    vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b);
-    void update_E_z(unsigned long long I, unsigned long long J, unsigned long long K, vector<double> &H_z,
-                    vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b);
+    void update_E_x(unsigned long long I_s, unsigned long long I, unsigned long long J, unsigned long long K,
+                    vector<double> &H_z, vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b);
+    void update_E_y(unsigned long long I_s, unsigned long long I, unsigned long long J, unsigned long long K,
+                    vector<double> &H_z, vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b);
+    void update_E_z(unsigned long long I_s, unsigned long long I, unsigned long long J, unsigned long long K,
+                    vector<double> &H_z, vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b);
     void parallel_update_E_field();
 
-    void update_H_x(unsigned long long I, unsigned long long J, unsigned long long K, vector<double> &H_z,
-                    vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b);
-    void update_H_y(unsigned long long I, unsigned long long J, unsigned long long K, vector<double> &H_z,
-                    vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b);
-    void update_H_z(unsigned long long I, unsigned long long J, unsigned long long K, vector<double> &H_z,
-                    vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b);
+    void update_H_x(unsigned long long I_s, unsigned long long I, unsigned long long J, unsigned long long K,
+                    vector<double> &H_z, vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b);
+    void update_H_y(unsigned long long I_s, unsigned long long I, unsigned long long J, unsigned long long K,
+                    vector<double> &H_z, vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b);
+    void update_H_z(unsigned long long I_s, unsigned long long I, unsigned long long J, unsigned long long K,
+                    vector<double> &H_z, vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b);
     void parallel_update_H_field();
 
     void serial_update_boundary_all();
     void serial_update_E_field();
     void serial_update_H_field();
+
+
 
 
 

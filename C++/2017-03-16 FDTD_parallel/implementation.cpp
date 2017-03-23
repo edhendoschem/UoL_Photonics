@@ -272,9 +272,9 @@ void Grid::parallel_update_boundary_all() {
     }
 }
 
-void Grid::update_E_x(unsigned long long I, unsigned long long J, unsigned long long K, vector<double> &H_z,
-                      vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b) {
-    for (unsigned long i = 0; i < I-1; ++i) {
+void Grid::update_E_x(unsigned long long I_s, unsigned long long I, unsigned long long J, unsigned long long K,
+                      vector<double> &H_z, vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b) {
+    for (unsigned long i = I_s; i < I-1; ++i) {
         for (unsigned long j = 1; j < J-1; ++j) {
             for (unsigned long k = 1; k < K-1; ++k) {
                 E_x[get_ind(i, j, k)] = C_a[get_ind(i, j, k)] * E_x[get_ind(i, j, k)] +
@@ -285,9 +285,9 @@ void Grid::update_E_x(unsigned long long I, unsigned long long J, unsigned long 
     }
 }
 
-void Grid::update_E_y(unsigned long long I, unsigned long long J, unsigned long long K, vector<double> &H_z,
-                      vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b) {
-    for (unsigned long i = 1; i < I-1; ++i) {
+void Grid::update_E_y(unsigned long long I_s, unsigned long long I, unsigned long long J, unsigned long long K,
+                      vector<double> &H_z, vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b) {
+    for (unsigned long i = I_s + 1; i < I-1; ++i) {
         for (unsigned long j = 0; j < J-1; ++j) {
             for (unsigned long k = 1; k < K-1; ++k) {
                 E_x[get_ind(i, j, k)] = C_a[get_ind(i, j, k)] * E_x[get_ind(i, j, k)] +
@@ -298,9 +298,9 @@ void Grid::update_E_y(unsigned long long I, unsigned long long J, unsigned long 
     }
 }
 
-void Grid::update_E_z(unsigned long long I, unsigned long long J, unsigned long long K, vector<double> &H_z,
-                      vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b) {
-    for (unsigned long i = 1; i < I-1; ++i) {
+void Grid::update_E_z(unsigned long long I_s, unsigned long long I, unsigned long long J, unsigned long long K,
+                      vector<double> &H_z, vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b) {
+    for (unsigned long i = I_s + 1; i < I-1; ++i) {
         for (unsigned long j = 1; j < J-1; ++j) {
             for (unsigned long k = 0; k < K-1; ++k) {
                 E_x[get_ind(i, j, k)] = C_a[get_ind(i, j, k)] * E_x[get_ind(i, j, k)] +
@@ -314,20 +314,20 @@ void Grid::update_E_z(unsigned long long I, unsigned long long J, unsigned long 
 void Grid::parallel_update_E_field() {
     vector<thread> threads;
 
-    threads.push_back(thread(&Grid::update_E_x, this, this->I, this->J, this->K, ref(this->H_z), ref(this->H_y), ref(this->E_x),
-                      ref(this->C_a), ref(this->C_b)));
-    threads.push_back(thread(&Grid::update_E_y, this, this->I, this->J, this->K, ref(this->H_x), ref(this->H_z), ref(this->E_y),
-                      ref(this->C_a), ref(this->C_b)));
-    threads.push_back(thread(&Grid::update_E_z, this, this->I, this->J, this->K, ref(this->H_y), ref(this->H_x), ref(this->E_z),
-                      ref(this->C_a), ref(this->C_b)));
+    threads.push_back(thread(&Grid::update_E_x, this, 0, this->I, this->J, this->K, ref(this->H_z), ref(this->H_y),
+                      ref(this->E_x), ref(this->C_a), ref(this->C_b)));
+    threads.push_back(thread(&Grid::update_E_y, this, 0, this->I, this->J, this->K, ref(this->H_x), ref(this->H_z),
+                      ref(this->E_y), ref(this->C_a), ref(this->C_b)));
+    threads.push_back(thread(&Grid::update_E_z, this, 0, this->I, this->J, this->K, ref(this->H_y), ref(this->H_x),
+                      ref(this->E_z), ref(this->C_a), ref(this->C_b)));
     for (thread &th : threads) {
         th.join();
     }
 }
 
-void Grid::update_H_x(unsigned long long I, unsigned long long J, unsigned long long K, vector<double> &H_z,
-                      vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b) {
-    for (unsigned long i = 0; i < I; ++i) {
+void Grid::update_H_x(unsigned long long I_s, unsigned long long I, unsigned long long J, unsigned long long K,
+                      vector<double> &H_z, vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b) {
+    for (unsigned long i = I_s; i < I; ++i) {
         for (unsigned long j = 0; j < J-1; ++j) {
             for (unsigned long k = 0; k < K-1; ++k) {
                 E_x[get_ind(i, j, k)] = C_a[get_ind(i, j, k)] * E_x[get_ind(i, j, k)] +
@@ -338,9 +338,9 @@ void Grid::update_H_x(unsigned long long I, unsigned long long J, unsigned long 
     }
 }
 
-void Grid::update_H_y(unsigned long long I, unsigned long long J, unsigned long long K, vector<double> &H_z,
-                      vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b) {
-    for (unsigned long i = 0; i < I-1; ++i) {
+void Grid::update_H_y(unsigned long long I_s, unsigned long long I, unsigned long long J, unsigned long long K,
+                      vector<double> &H_z, vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b) {
+    for (unsigned long i = I_s; i < I-1; ++i) {
         for (unsigned long j = 0; j < J; ++j) {
             for (unsigned long k = 0; k < K-1; ++k) {
                 E_x[get_ind(i, j, k)] = C_a[get_ind(i, j, k)] * E_x[get_ind(i, j, k)] +
@@ -351,9 +351,9 @@ void Grid::update_H_y(unsigned long long I, unsigned long long J, unsigned long 
     }
 }
 
-void Grid::update_H_z(unsigned long long I, unsigned long long J, unsigned long long K, vector<double> &H_z,
-                      vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b) {
-    for (unsigned long i = 0; i < I-1; ++i) {
+void Grid::update_H_z(unsigned long long I_s, unsigned long long I, unsigned long long J, unsigned long long K,
+                      vector<double> &H_z, vector<double> &H_y, vector<double> &E_x, vector<double> &C_a, vector<double> &C_b) {
+    for (unsigned long i = I_s; i < I-1; ++i) {
         for (unsigned long j = 0; j < J-1; ++j) {
             for (unsigned long k = 0; k < K; ++k) {
                 E_x[get_ind(i, j, k)] = C_a[get_ind(i, j, k)] * E_x[get_ind(i, j, k)] +
@@ -367,12 +367,12 @@ void Grid::update_H_z(unsigned long long I, unsigned long long J, unsigned long 
 void Grid::parallel_update_H_field() {
     vector<thread> threads;
 
-    threads.push_back(thread(&Grid::update_H_x, this, this->I, this->J, this->K, ref(this->E_y), ref(this->E_z), ref(this->H_x),
-                      ref(this->D_a), ref(this->D_b)));
-    threads.push_back(thread(&Grid::update_H_y, this, this->I, this->J, this->K, ref(this->E_z), ref(this->E_x), ref(this->H_y),
-                      ref(this->D_a), ref(this->D_b)));
-    threads.push_back(thread(&Grid::update_H_z, this, this->I, this->J, this->K, ref(this->E_x), ref(this->E_y), ref(this->H_z),
-                      ref(this->D_a), ref(this->D_b)));
+    threads.push_back(thread(&Grid::update_H_x, this, 0, this->I, this->J, this->K, ref(this->E_y), ref(this->E_z),
+                      ref(this->H_x), ref(this->D_a), ref(this->D_b)));
+    threads.push_back(thread(&Grid::update_H_y, this, 0, this->I, this->J, this->K, ref(this->E_z), ref(this->E_x),
+                      ref(this->H_y), ref(this->D_a), ref(this->D_b)));
+    threads.push_back(thread(&Grid::update_H_z, this, 0, this->I, this->J, this->K, ref(this->E_x), ref(this->E_y),
+                      ref(this->H_z), ref(this->D_a), ref(this->D_b)));
     for (thread &th : threads) {
         th.join();
     }
@@ -402,18 +402,15 @@ void Grid::serial_update_boundary_all() {
 
 void Grid::serial_update_E_field() {
 
-    update_E_x(this->I, this->J, this->K, this->H_z, this->H_y, this->E_x, this->C_a, this->C_b);
-    update_E_y(this->I, this->J, this->K, this->H_x, this->H_z, this->E_y, this->C_a, this->C_b);
-    update_E_z(this->I, this->J, this->K, this->H_y, this->H_x, this->E_z, this->C_a, this->C_b);
+    update_E_x(0, this->I, this->J, this->K, this->H_z, this->H_y, this->E_x, this->C_a, this->C_b);
+    update_E_y(0, this->I, this->J, this->K, this->H_x, this->H_z, this->E_y, this->C_a, this->C_b);
+    update_E_z(0, this->I, this->J, this->K, this->H_y, this->H_x, this->E_z, this->C_a, this->C_b);
 
 }
 
 void Grid::serial_update_H_field() {
-    update_H_x(this->I, this->J, this->K, this->E_y, this->E_z, this->H_x, this->D_a, this->D_b);
-    update_H_y(this->I, this->J, this->K, this->E_z, this->E_x, this->H_y, this->D_a, this->D_b);
-    update_H_z(this->I, this->J, this->K, this->E_x, this->E_y, this->H_z, this->D_a, this->D_b);
+    update_H_x(0, this->I, this->J, this->K, this->E_y, this->E_z, this->H_x, this->D_a, this->D_b);
+    update_H_y(0, this->I, this->J, this->K, this->E_z, this->E_x, this->H_y, this->D_a, this->D_b);
+    update_H_z(0, this->I, this->J, this->K, this->E_x, this->E_y, this->H_z, this->D_a, this->D_b);
 
 }
-
-
-
