@@ -1,0 +1,22 @@
+-----Parameters-----
+s_start = 1530.0e-9
+fp_wavelength = 980.0e-9
+bp_wavelength = 980.0e-9
+width = 2.5e-6
+depth = 2.5e-6
+length = 2.0e-2                                                     
+N = 4.45e26
+tau = 12.94e-3
+fp0 = 500.0e-3
+bp0 = 0.0e-3
+s0 = 1.0e-3
+-----ASE-----
+fASEstart_wavelength = 1520.0e-9
+channel_spacing = 62.5e9
+bASEstart_wavelength = 1520.0e-9
+------Mode calculation-------
+n_0 = 1.45
+n_1 = 1.4571
+find_single_mode (true or false) = true
+enable_mode_calc = false
+enable_gain_calc = true

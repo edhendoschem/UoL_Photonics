@@ -1,0 +1,31 @@
+-----Parameters-----
+s_wavelength = 1536.0e-9
+s_sig_a = 5.8e-25
+s_sig_e = 7.27e-25        
+s_gam = 0.693
+fp_wavelength = 981.0e-9
+fp_sig_a = 3.12e-25
+fp_sig_e = 0.0
+fp_gam = 0.863
+bp_wavelength = 981.0e-9
+bp_sig_a = 3.12e-25
+bp_sig_e = 0.0
+bp_gam = 0.863
+width = 5.0e-6
+depth = 5.0e-6
+length = 10.0e-2                                                     
+N = 4.45e26
+tau = 12.94e-3
+fp0 = 10.0e-3
+bp0 = 00.0e-3
+s0 = 1.0e-3
+-----ASE-----
+fASEstart_wavelength = 1520.0e-9
+channel_spacing = 125.0e9
+fASE_sig_a = 5.8e-25
+fASE_sig_e = 7.27e-25
+fASE_gam = 0.693
+bASEstart_wavelength = 1520.0e-9
+bASE_sig_a = 5.8e-25
+base_sig_e = 7.27e-25
+bASE_gam = 0.693

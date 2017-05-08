@@ -1,0 +1,7 @@
+[package]
+name = "plot_program"
+version = "0.1.0"
+authors = ["eduardo"]
+
+[dependencies]
+gnuplot = ">=0.0.0"

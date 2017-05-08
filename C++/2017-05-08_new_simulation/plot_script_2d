@@ -1,0 +1,21 @@
+set terminal pngcairo size 400, 400
+set size square 1,1
+set datafile separator ","
+unset arrow
+set view map
+set tics front
+set cbrange[-2.0:2.0]
+set yrange[0:201]
+set xrange[0:201]
+do for [i = 0:70] {
+w = i * 10
+filename = sprintf("0-snapshot2D_TMZ_%0.f.csv", w)
+termout = sprintf("2D-%0.f.png", w)
+set output termout
+l_title = sprintf("time steps = %0.f", w)
+set xlabel "x"
+set ylabel "y"
+set zlabel "Field intensity"
+set title l_title
+splot filename using 1:2:3 with pm3d title l_title
+}

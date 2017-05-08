@@ -1,0 +1,8 @@
+[package]
+name = "gain_ase_sat_3"
+version = "0.1.0"
+authors = ["eduardo"]
+
+[dependencies]
+gnuplot = ">=0.0.0"
+rand = ">=0.0.0"

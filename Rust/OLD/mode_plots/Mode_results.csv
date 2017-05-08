@@ -1,0 +1,6 @@
+E_x modes
+p,q,width/2 (a),depth/2 (d),cladding ref. index (n_0),core ref. index (n_1),n_eff,containment,k_x,gamma_x,k_y,gamma_y,Propagation constant (beta)
+1,1,0.000004,0.000004,1.45,1.457,1.4540111512409628,0.9288624122271013,272146.57452163554,514882.58639648167,271467.31557274814,515241.0429827155,5894078.388356446
+E_y modes
+p,q,width/2 (a),depth/2 (d),cladding ref. index (n_0),core ref. index (n_1),n_eff,containment,k_x,gamma_x,k_y,gamma_y,Propagation constant (beta)
+1,1,0.000004,0.000004,1.45,1.457,1.4540111512409628,0.9297351010627912,271467.31557274814,515241.0429827155,272146.57452163554,514882.58639648167,5894078.388356446

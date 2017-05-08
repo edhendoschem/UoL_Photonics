@@ -1,0 +1,14 @@
+[root]
+name = "lifetime_ase_sat"
+version = "0.1.0"
+dependencies = [
+ "gnuplot 0.0.21 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "gnuplot"
+version = "0.0.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[metadata]
+"checksum gnuplot 0.0.21 (registry+https://github.com/rust-lang/crates.io-index)" = "584bf0393239edf835f3b7330dc7c44c53d97964eeaf6a03b59962331e66a520"

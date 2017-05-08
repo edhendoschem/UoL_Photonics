@@ -1,0 +1,11 @@
+cladding_index = 1.45
+core_index = 1.4517
+width (micron) = 8
+depth (micron) = 8
+wavelength (nm) = 1550
+find_single_mode = true
+enable_plots (requires gnuplots) = true
+show_interactive_plots (requires gnuplots) = false
+3d_plots (requires gnuplots) = false
+
+
