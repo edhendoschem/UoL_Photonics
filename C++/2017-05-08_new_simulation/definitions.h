@@ -159,8 +159,11 @@ private:
 
 //Helper struct for setting points in the grid, only takes positive values as the grid has no negative values
 struct Point {
-    unsigned long long x, y;
+    unsigned long long x, y, z;
+    //2D constructor
     Point(unsigned long long xx, unsigned long long yy) : x {xx}, y {yy} {};
+    //3D constructor
+    Point(unsigned long long xx, unsigned long long yy, unsigned long long zz) : x {xx}, y {yy}, z{zz} {};
 
 };
 
@@ -168,9 +171,15 @@ struct Point {
 ostream &operator << (ostream &os, Point &a);
 
 struct Params {
+    //2D constructor
     Params(double wavelengthh, unsigned long long max_timee, double ppww, unsigned long long size_xx,
-           unsigned long long size_yy, int source_type, Point tfsf_startt, Point tfsf_endd, int choicee);
-    unsigned long long size_x, size_y, max_time;
+           unsigned long long size_yy, int source_typee, Point tfsf_startt, Point tfsf_endd, int choicee);
+    //3D constructor
+    Params(double wavelengthh, unsigned long long max_timee, double ppww, unsigned long long size_xx,
+           unsigned long long size_yy, unsigned long long size_zz, int source_typee, Point tfsf_startt,
+           Point tfsf_endd, unsigned long long tfsf_radiuss, int choicee);
+
+    unsigned long long size_x, size_y, size_z, max_time, tfsf_radius;
     Point tfsf_start, tfsf_end;
     int source_type, choice;
     double wavelength, ppw;
@@ -197,7 +206,7 @@ private:
     unsigned long long curr_time = 0, max_time, size_x, size_y;
     Point tfsf_start, tfsf_end;
     int source_type, choice = 0;
-    double time_delay, dispersion = 10, ppw, wavelength, min_wavelength, dx, dt, courant = 1.0 / sqrt(2.0);
+    double time_delay, dispersion = 10, ppw, wavelength, min_wavelength, dx, dt, courant;
     double cour_prime, A, B, C, D; //Second order absorbing boundary condition coefficients
 
     bool bounds_check(Point a); //returns true if point is inside boundary. Note it depends on unsigned wraparound behaviour
@@ -262,6 +271,66 @@ private:
     //TFSF function
     void apply_TFSF(Grid1DTE &aux_grid);
     void apply_open_right_TFSF(Grid1DTE &aux_grid);
+
+};
+
+class Grid3D {
+public:
+    //Non-default constructor
+    Grid3D(Params in);
+
+    void save_state();
+    void update_test();
+    void zx_cross_section(unsigned long long y);
+    void xy_cross_section(unsigned long long z);
+    void zy_cross_section(unsigned long long x);
+
+private:
+    Flat_vec Ex, Ey, Ez, Hx, Hy, Hz; //Electric and magnetic fields
+    Flat_vec c1ex, c2ex, c1ey, c2ey, c1ez, c2ez, c1hx, c2hx, c1hy, c2hy, c1hz, c2hz; //Field coefficients
+    Flat_vec Ey_x0, Ez_x0, Ey_xf, Ez_xf, Ex_y0, Ez_y0, Ex_yf, Ez_yf, Ex_z0, Ey_z0, Ex_zf, Ey_zf; //ABC coeff
+    Point tfsf_start, tfsf_end;
+    unsigned long long curr_time = 0, max_time, size_x, size_y, size_z;
+    int source_type, choice = 0;
+    double time_delay = 30, dispersion = 10, ppw, wavelength, min_wavelength, dx, dt, courant = 1.0 / sqrt(3.0);
+    double cour_prime, A, B, C, D; //Second order absorbing boundary condition coefficients
+
+    void update_Hx();
+    void update_Hy();
+    void update_Hz();
+    void update_Ex();
+    void update_Ey();
+    void update_Ez();
+    void update_magnetic();
+    void update_electric();
+    //Second order ABC currently not working
+    //y faces
+    void abc_Ex_y0();
+    void abc_Ez_y0();
+    void abc_Ex_yf();
+    void abc_Ez_yf();
+    //x faces
+    void abc_Ey_x0();
+    void abc_Ez_x0();
+    void abc_Ey_xf();
+    void abc_Ez_xf();
+    //z faces
+    void abc_Ex_z0();
+    void abc_Ey_z0();
+    void abc_Ex_zf();
+    void abc_Ey_zf();
+
+    void apply_abc();
+
+    //First order ABC (less costly than second order abc)
+    void simple_x0();
+    void simple_xf();
+    void simple_y0();
+    void simple_yf();
+    void simple_z0();
+    void simple_zf();
+    void simple_abc();
+
 
 };
 

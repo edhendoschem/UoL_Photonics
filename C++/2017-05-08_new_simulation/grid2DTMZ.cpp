@@ -1,10 +1,18 @@
 /*--------------Grid 2D TMz, #5--------------*/
 #include "definitions.h"
-
+//Params for 2D grids
 Params::Params(double wavelengthh, unsigned long long max_timee, double ppww, unsigned long long size_xx,
            unsigned long long size_yy, int source_typee, Point tfsf_startt, Point tfsf_endd, int choicee)
 : wavelength {wavelengthh}, max_time {max_timee}, size_x {size_xx}, size_y {size_yy}, source_type {source_typee},
 tfsf_start {tfsf_startt}, tfsf_end {tfsf_endd}, choice {choicee}, ppw {ppww} {};
+
+//Params for 3D grids
+Params::Params(double wavelengthh, unsigned long long max_timee, double ppww, unsigned long long size_xx,
+unsigned long long size_yy, unsigned long long size_zz, int source_typee, Point tfsf_startt, Point tfsf_endd,
+unsigned long long tfsf_radiuss, int choicee)
+: wavelength {wavelengthh}, max_time {max_timee}, size_x {size_xx}, size_y {size_yy}, size_z {size_zz},
+source_type {source_typee}, tfsf_start {tfsf_startt}, tfsf_end {tfsf_endd}, tfsf_radius {tfsf_radiuss}, choice {choicee},
+ppw {ppww} {};
 
 Grid2DTMZ::Grid2DTMZ(Params in)
 :wavelength {in.wavelength}, source_type {in.source_type}, Hx{in.size_x, in.size_y}, Hy {in.size_x, in.size_y},
@@ -13,6 +21,7 @@ c2hy {in.size_x, in.size_y}, c1ez {in.size_x, in.size_y}, c2ez {in.size_x, in.si
 tfsf_end {in.tfsf_end}, max_time {in.max_time}, Ez_top {in.size_x, 6}, Ez_bottom {in.size_x, 6}, Ez_left {in.size_y, 6},
 Ez_right {in.size_y, 6}, size_x {in.size_x}, size_y {in.size_y}, choice {in.choice}, ppw {in.ppw}
 {
+    courant = 1.0 / sqrt(2);
     min_wavelength = wavelength;
     dx = wavelength / ppw;
     dt = dx * courant / c0;
@@ -207,7 +216,7 @@ void Grid2DTMZ::apply_TFSF(Grid1DTM &aux_grid) {
     unsigned long long i, j;
     //Correction along the left edge
     i = tfsf_start.x - 1;
-
+    double test = 1.0/sqrt(2);
     for (j = tfsf_start.y; j <= tfsf_end.y; ++j) {
         Hy(i, j) -= c2hy(i,j) * aux_grid.return_Ez(i+1 - tfsf_start.x+1);
     }

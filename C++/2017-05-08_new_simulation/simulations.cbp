@@ -41,10 +41,12 @@
 			<Add option="-Weverything" />
 			<Add option="-fexceptions" />
 		</Compiler>
+		<Unit filename="abc3d.cpp" />
 		<Unit filename="definitions.h" />
 		<Unit filename="grid.cpp" />
 		<Unit filename="grid2DTEZ.cpp" />
 		<Unit filename="grid2DTMZ.cpp" />
+		<Unit filename="grid3d.cpp" />
 		<Unit filename="gridb.cpp" />
 		<Unit filename="main.cpp" />
 		<Unit filename="vectors.cpp" />

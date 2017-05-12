@@ -1,0 +1,24 @@
+set terminal pngcairo size 400, 400
+set view equal xyz
+set datafile separator ","
+unset arrow
+unset label
+set view 45, 45
+set tics front
+set cbrange[-2:2]
+set yrange[0:51]
+set xrange[0:51]
+set zrange[0:51]
+
+do for [i = 0:10] {
+w = i * 10
+filename = sprintf("0-snapshot3D_%0.f.csv", w)
+termout = sprintf("3D-%0.f.png", w)
+set output termout
+l_title = sprintf("time steps = %0.f", w)
+set xlabel "x"
+set ylabel "y"
+set zlabel "z"
+set title l_title offset 0, 1
+splot filename using 1:2:3:(abs($7 * 377) < 0.005 ? NaN:($7*377)) with pm3d notitle
+}

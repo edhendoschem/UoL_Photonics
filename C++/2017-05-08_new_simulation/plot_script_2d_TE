@@ -17,5 +17,5 @@ set xlabel "x"
 set ylabel "y"
 set zlabel "Field intensity"
 set title l_title
-splot filename using 1:2:3 with pm3d title l_title
+splot filename using 1:2:3 with pm3d notitle
 }

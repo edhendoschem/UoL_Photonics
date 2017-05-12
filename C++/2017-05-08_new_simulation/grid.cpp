@@ -2,7 +2,12 @@
 #include "definitions.h"
 
 ostream &operator << (ostream &os, Point &a) {
-    cout<<"x = "<<a.x<<'\t'<<"y = "<<a.y<<'\n';
+    if (a.z < 99999999999999) {
+        cout<<"x = "<<a.x<<'\t'<<"y = "<<a.y<<'\t'<<"z = "<<a.z<<'\n';
+    } else {
+        cout<<"x = "<<a.x<<'\t'<<"y = "<<a.y<<'\n';
+    }
+
     return os;
 }
 
@@ -24,7 +29,7 @@ Ez_right{6} {
 
     for (unsigned long long i = 0; i<c1hy.size(); ++i) {
         c1hy(i) = 1.0;
-        c2hy(i) = courant / imp0;
+        c2hy(i) = courant / (imp0);
     }
 
 }
