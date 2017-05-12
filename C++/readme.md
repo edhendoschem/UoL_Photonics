@@ -12,8 +12,8 @@ produced by the simulation
 
 ###<b>To do list:<\b>
 
-1. ~b~Implement 3D simulation~b~
-2. ~b~Implement first order ABC in 3D~b~
+1. ~Implement 3D simulation~
+2. ~Implement first order ABC in 3D~
 3. Implement TFSF in 3D
 4. Implement Parallel processing in 3D simulation
 5. Implement amplification in 3D simulation
