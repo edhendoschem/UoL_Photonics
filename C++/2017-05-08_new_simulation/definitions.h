@@ -280,10 +280,21 @@ public:
     Grid3D(Params in);
 
     void save_state();
-    void update_test();
-    void zx_cross_section(unsigned long long y);
-    void xy_cross_section(unsigned long long z);
-    void zy_cross_section(unsigned long long x);
+    void update_test(Grid1DTM &aux_grid);
+    void xz_cross_section(unsigned long long y, char w);
+    void xy_cross_section(unsigned long long z, char w);
+    void yz_cross_section(unsigned long long x, char w);
+    void test();
+    void add_pec_rectangle(Point start, Point finish);
+    void add_pec_rectangle_centre(Point centre, unsigned long long xlen, unsigned long long ylen, unsigned long long zlen);
+    void add_diel_rectangle(Point start, Point finish, double eps_r, double sigma, double mu_r, double sigma_m);
+    void add_diel_rectangle_centre(Point centre, unsigned long long xlen, unsigned long long ylen, unsigned long long zlen,
+            double eps_r, double sigma, double mu_r, double sigma_m);
+    void add_diel_sphere(Point centre, unsigned long long radius, double eps_r, double sigma, double mu_r, double sigma_m);
+    void add_pec_sphere(Point centre, unsigned long long radius);
+    void add_pec_cylinder(Point centre, unsigned long long radius, unsigned long long length, char opt);
+    void add_diel_cylinder(Point centre, unsigned long long radius, unsigned long long length, char opt,
+            double eps_r, double sigma, double mu_r, double sigma_m);
 
 private:
     Flat_vec Ex, Ey, Ez, Hx, Hy, Hz; //Electric and magnetic fields
@@ -303,24 +314,6 @@ private:
     void update_Ez();
     void update_magnetic();
     void update_electric();
-    //Second order ABC currently not working
-    //y faces
-    void abc_Ex_y0();
-    void abc_Ez_y0();
-    void abc_Ex_yf();
-    void abc_Ez_yf();
-    //x faces
-    void abc_Ey_x0();
-    void abc_Ez_x0();
-    void abc_Ey_xf();
-    void abc_Ez_xf();
-    //z faces
-    void abc_Ex_z0();
-    void abc_Ey_z0();
-    void abc_Ex_zf();
-    void abc_Ey_zf();
-
-    void apply_abc();
 
     //First order ABC (less costly than second order abc)
     void simple_x0();
@@ -329,8 +322,23 @@ private:
     void simple_yf();
     void simple_z0();
     void simple_zf();
+    //Apply all of the previous functions
     void simple_abc();
 
+    //TFSF formulation
+    void correct_Hy_0(Grid1DTM &aux_grid);
+    void correct_Hy_f(Grid1DTM &aux_grid);
+    void correct_Hx_0(Grid1DTM &aux_grid);
+    void correct_Hx_f(Grid1DTM &aux_grid);
+    void correct_Ez_0(Grid1DTM &aux_grid);
+    void correct_Ez_f(Grid1DTM &aux_grid);
+    void correct_Ex_0(Grid1DTM &aux_grid);
+    void correct_Ex_f(Grid1DTM &aux_grid);
+    //Apply all the previous corrections
+    void apply_TFSF(Grid1DTM &aux_grid);
+
+    //Checks if a point is inside the area
+    bool bounds_check(Point a);
 
 };
 

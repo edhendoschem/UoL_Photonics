@@ -5,10 +5,10 @@ unset arrow
 unset label
 set view 45, 45
 set tics front
-set cbrange[-0.5:0.5]
-set yrange[0:51]
-set xrange[0:51]
-set zrange[0:51]
+set cbrange[-0.4:0.4]
+set yrange[0:50]
+set xrange[0:50]
+set zrange[0:50]
 
 do for [i = 0:30] {
 w = i * 10

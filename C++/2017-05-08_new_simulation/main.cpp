@@ -65,9 +65,10 @@ int main()
     unsigned long long source_loc = 0; //1D source loc
     double ppw = 28; //Set non default ppw
     double delay = (ppw - source_loc) / courant; //this is to make sure it starts at 0
-    Grid1DTM a {duration, 101, 1550e-9, courant, ppw, source_loc, 0}; //Max time, length, wavelength, courant, ppw, source node, source type
+    Grid1DTM a {duration, 123, 1550e-9, courant, ppw, source_loc, 0}; //Max time, length, wavelength, courant, ppw, source node, source type
     //a.set_time_delay(30);
     a.start_source_at_0(); //Makes functions start at 0
+    a.enable_lossy_termination();
     Params b {
         1550.0e-9, //Wavelength
         duration, //Max_time
@@ -105,53 +106,73 @@ int main()
     system("gnuplot plot_script_2d");
 */
 //3D grid test
+    //convert_from_metres(double value, double wavelength, double eps_rel_max, double mu_rel_max, double ppw = 28);
     double courant = 1.0 / sqrt(3.0);
-    //double courant = 1.0;
     unsigned long long duration = 301; //Simulation duration
-    double ppw = 22; //Set non default ppw
+    double ppw = 20; //Set non default ppw
+    unsigned long long source_loc = 0; //1D source loc
+
+    Grid1DTM a {duration, 53, 1550e-9, courant, 20, source_loc, 3}; //Max time, length, wavelength, courant, ppw, source node, source type
+    a.enable_lossy_termination();
+    //Note: Grid1DTM must be 3 points larger than TFSF
+    a.start_source_at_0(); //Makes functions start at 0
 
     Params b {
         1550.0e-9, //Wavelength
         duration, //Max_time
         ppw, //ppw
-        51, //Size_x
-        51, //Size_y
-        51, //Size_z
+        50, //Size_x
+        50, //Size_y
+        50, //Size_z
         0, //Source type
-        {12, 12, 12}, //TFSF start
-        {24, 24, 24},  //TFSF end
+        {10, 10, 10}, //TFSF start
+        {40, 40, 40},  //TFSF end
         0, //TFSF radius
         0           //TFSF choice, 0 completely closed, 1 open at the right hand side
 
     };
 
     Grid3D c {b};
-    //Point s {75, 75}; //Starting point of rectangle
-    //Point f {125, 125}; //Ending point of rectangle
+    Point centre {15,25,15};
+    Point centre2 {22,25,25};
+    Point s {40, 12, 12}; //Starting point of rectangle
+    Point f {50, 37, 37}; //Ending point of rectangle
+    c.add_pec_cylinder(centre, 7, 20, 'x'); //centre, radius, length, axis alignment
+    //c.add_diel_cylinder(centre, 7, 35, 'x', 9.0, 0, 1, 0); //centre, radius, length, axis alignment, eps_r, sigma, mu_r, sigma_m
+    //c.add_pec_rectangle(s, f); //start, finish
+    //c.add_pec_rectangle_centre(centre,  2, 26, 26); //centre, xlen, ylen, zlen
     //Point center {100, 100};
     //c.add_diel_rectangle(s, f, 4.0, 0, 1.0, 0); //Start, end, eps_rel, sigma, mu_rel, sigma_m
-    //c.add_diel_circle(center, 45, 4.0, 0, 1.0, 0); //center, radius, eps_rel, sigma, mu_rel, sigma_m
-    //c.add_pec_circle(center, 50); //center, radius
-    //c.add_pec_rectangle({130,50}, {132, 150}); //start, finish
-
+    //c.add_diel_rectangle_centre(centre, 10, 10, 10, 4.0, 0, 1.0, 0); //centre, xlen, ylen, zlen, eps_rel, sigma, mu_rel,
+                                                                        //sigma_m
+    //c.add_pec_sphere(centre, 7);
+    //c.add_diel_sphere(centre, 7, 4, 0, 1.0, 0); //centre, radius, eps_rel, sigma, mu_rel, sigma_m
+    //c.add_diel_rectangle_centre(centre2,  7, 14, 14, 1.0, 0, 1.0, 0);
 
     for (unsigned long long time = 0; time < duration; ++time) {
-
         if (time % 10 == 0) {
-                cout<<time<<'\n';
+        //if (129 < time && time < 171) {
+                cout<<"time = "<<time<<'\n';
                 c.save_state();
-                c.zx_cross_section(25);
-                c.xy_cross_section(25);
-                c.zy_cross_section(25);
+                c.xz_cross_section(25, 'a');
+                c.xy_cross_section(25, 'a');
+                c.yz_cross_section(25, 'a');
+                //c.test();
                 //a.save_state();
         }
-        c.update_test();
+        c.update_test(a);
     }
 
-    //cout<<"Plotting...\n";
+    //cout<<"Creating 3D plots...\n";
+    //system("gnuplot plot_script_3d_e");
+    cout<<"Creating XY plots...\n";
     system("gnuplot plot_script_3d_e_xy");
-    system("gnuplot plot_script_3d_e_zx");
-    system("gnuplot plot_script_3d_e_zy");
+    cout<<"Creating XZ plots...\n";
+    system("gnuplot plot_script_3d_e_xz");
+    cout<<"Creating YZ plots...\n";
+    system("gnuplot plot_script_3d_e_yz");
+
+
     return 0;
 }
 

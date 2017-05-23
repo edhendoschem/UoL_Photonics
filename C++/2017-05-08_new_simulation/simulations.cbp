@@ -41,7 +41,8 @@
 			<Add option="-Weverything" />
 			<Add option="-fexceptions" />
 		</Compiler>
-		<Unit filename="abc3d.cpp" />
+		<Unit filename="3Dstructs.cpp" />
+		<Unit filename="abc3dsimple.cpp" />
 		<Unit filename="definitions.h" />
 		<Unit filename="grid.cpp" />
 		<Unit filename="grid2DTEZ.cpp" />

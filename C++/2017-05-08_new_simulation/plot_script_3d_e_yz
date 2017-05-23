@@ -6,16 +6,16 @@ unset label
 set view map
 set tics front
 set cbrange[-0.5:0.5]
-set yrange[0:51]
-set xrange[0:51]
+set yrange[0:50]
+set xrange[0:50]
 
 do for [i = 0:30] {
 w = i * 10
-filename = sprintf("0-zx_snapshot3D_%0.f.csv", w)
-termout = sprintf("3D_zx-%0.f.png", w)
+filename = sprintf("0-yz_snapshot3D_a_%0.f.csv", w)
+termout = sprintf("3D_yz-%0.f.png", w)
 set output termout
 l_title = sprintf("time steps = %0.f", w)
-set xlabel "x"
+set xlabel "y"
 set ylabel "z"
 set title l_title offset 0, 1
 splot filename using 1:2:5 with pm3d notitle

@@ -60,9 +60,9 @@ void Grid3D::save_state() {
     return;
 }
 
-void Grid3D::xy_cross_section(unsigned long long z) {
+void Grid3D::xy_cross_section(unsigned long long z, char w) {
     stringstream name;
-    name<<"0-"<<"xy"<<"_snapshot3D_"<<curr_time<<".csv";
+    name<<"0-"<<"xy"<<"_snapshot3D_"<<w<<"_"<<curr_time<<".csv";
     ofstream file {name.str()};
     file<<"#z = "<<z<<'\n';
     for (unsigned long long x = 0; x < size_x; ++x) {
@@ -77,9 +77,9 @@ void Grid3D::xy_cross_section(unsigned long long z) {
     return;
 }
 
-void Grid3D::zy_cross_section(unsigned long long x) {
+void Grid3D::yz_cross_section(unsigned long long x, char w) {
     stringstream name;
-    name<<"0-"<<"zy"<<"_snapshot3D_"<<curr_time<<".csv";
+    name<<"0-"<<"yz"<<"_snapshot3D_"<<w<<"_"<<curr_time<<".csv";
     ofstream file {name.str()};
     file<<"#x = "<<x<<'\n';
     for (unsigned long long y = 0; y < size_y; ++y) {
@@ -94,9 +94,9 @@ void Grid3D::zy_cross_section(unsigned long long x) {
     return;
 }
 
-void Grid3D::zx_cross_section(unsigned long long y) {
+void Grid3D::xz_cross_section(unsigned long long y, char w) {
     stringstream name;
-    name<<"0-"<<"zx"<<"_snapshot3D_"<<curr_time<<".csv";
+    name<<"0-"<<"xz"<<"_snapshot3D_"<<w<<"_"<<curr_time<<".csv";
     ofstream file {name.str()};
     file<<"#y = "<<y<<'\n';
     for (unsigned long long x = 0; x < size_x; ++x) {
@@ -111,6 +111,25 @@ void Grid3D::zx_cross_section(unsigned long long y) {
     return;
 }
 
+void Grid3D::test() {
+    stringstream name;
+    name<<"0-"<<"INFO"<<".csv";
+    ofstream file(name.str(), std::ios_base::app);
+    unsigned long long x, y, z;
+
+    x = 42, y = 42, z = 25;
+    file<<curr_time<<','<<x<<','<<y<<','<<Ex(x,y,z)<<','<<Ey(x,y,z)<<','<<Ez(x,y,z)<<','<<Hx(x,y,z)\
+            <<','<<Hy(x,y,z)<<','<<Hz(x,y,z)<<'\n';
+    x = 42, y = 25, z = 42;
+    file<<curr_time<<','<<x<<','<<z<<','<<Ex(x,y,z)<<','<<Ey(x,y,z)<<','<<Ez(x,y,z)<<','<<Hx(x,y,z)\
+            <<','<<Hy(x,y,z)<<','<<Hz(x,y,z)<<'\n';
+    x = 25, y = 42, z = 42;
+    file<<curr_time<<','<<y<<','<<z<<','<<Ex(x,y,z)<<','<<Ey(x,y,z)<<','<<Ez(x,y,z)<<','<<Hx(x,y,z)\
+            <<','<<Hy(x,y,z)<<','<<Hz(x,y,z)<<'\n';
+
+    file.close();
+    return;
+}
 
 void Grid3D::update_Hx() {
     unsigned long long i, j, k;
@@ -209,25 +228,6 @@ void Grid3D::update_electric() {
     update_Ez();
 }
 
-void Grid3D::apply_abc() {
-    //x faces
-    abc_Ey_x0();
-    abc_Ez_x0();
-    abc_Ey_xf();
-    abc_Ez_xf();
-    //y faces
-    abc_Ex_y0();
-    abc_Ez_y0();
-    abc_Ex_yf();
-    abc_Ez_yf();
-    //z faces
-    abc_Ex_z0();
-    abc_Ey_z0();
-    abc_Ex_zf();
-    abc_Ey_zf();
-
-    return;
-}
 
 void Grid3D::simple_abc() {
     simple_x0();
@@ -238,14 +238,133 @@ void Grid3D::simple_abc() {
     simple_zf();
 }
 
-void Grid3D::update_test() {
+void Grid3D::correct_Hx_0(Grid1DTM &aux_grid) {
+    unsigned long long i,j, k;
+    j = tfsf_start.y;
+
+    for (i = tfsf_start.x; i < tfsf_end.x + 1; ++i) {
+        for (k = tfsf_start.z; k < tfsf_end.z; ++k) {
+            Hx(i, j-1, k) += c2hx(i,j-1,k) * aux_grid.return_Ez(i - tfsf_start.x+1);
+        }
+    }
+
+    return;
+}
+
+void Grid3D::correct_Hx_f(Grid1DTM &aux_grid) {
+    unsigned long long i,j, k;
+    j = tfsf_end.y;
+
+    for (i = tfsf_start.x; i < tfsf_end.x + 1; ++i) {
+        for (k = tfsf_start.z; k < tfsf_end.z; ++k) {
+            Hx(i, j, k) -= c2hx(i,j,k) * aux_grid.return_Ez(i - tfsf_start.x+1);
+        }
+    }
+
+    return;
+}
+
+void Grid3D::correct_Hy_0(Grid1DTM &aux_grid) {
+    unsigned long long i,j, k;
+    i = tfsf_start.x;
+
+    for (j = tfsf_start.y; j < tfsf_end.y + 1; ++j) {
+        for (k = tfsf_start.z; k < tfsf_end.z; ++k) {
+            Hy(i-1, j, k) -= c2hy(i-1,j,k) * aux_grid.return_Ez(i - tfsf_start.x+1);
+        }
+    }
+
+    return;
+}
+
+void Grid3D::correct_Hy_f(Grid1DTM &aux_grid) {
+    unsigned long long i,j, k;
+    i = tfsf_end.x;
+
+    for (j = tfsf_start.y; j < tfsf_end.y + 1; ++j) {
+        for (k = tfsf_start.z; k < tfsf_end.z; ++k) {
+            Hy(i, j, k) += c2hy(i,j,k) * aux_grid.return_Ez(i - tfsf_start.x+1);
+        }
+    }
+
+    return;
+}
+
+void Grid3D::correct_Ez_0(Grid1DTM &aux_grid) {
+    unsigned long long i,j, k;
+    i = tfsf_start.x;
+
+    for (j = tfsf_start.y; j < tfsf_end.y + 1; ++j) {
+        for (k = tfsf_start.z; k < tfsf_end.z; ++k) {
+            Ez(i, j, k) -= c2ez(i,j,k) * aux_grid.return_Hy(i - 1 - tfsf_start.x+1);
+        }
+    }
+
+    return;
+}
+
+void Grid3D::correct_Ez_f(Grid1DTM &aux_grid) {
+    unsigned long long i,j, k;
+    i = tfsf_end.x;
+
+    for (j = tfsf_start.y; j < tfsf_end.y + 1; ++j) {
+        for (k = tfsf_start.z; k < tfsf_end.z; ++k) {
+            Ez(i, j, k) += c2ez(i,j,k) * aux_grid.return_Hy(i - tfsf_start.x+1);
+        }
+    }
+
+    return;
+}
+
+void Grid3D::correct_Ex_0(Grid1DTM &aux_grid) {
+    unsigned long long i,j, k;
+    k = tfsf_start.z;
+
+    for (i = tfsf_start.x; i < tfsf_end.x; ++i) {
+        for (j = tfsf_start.y; j < tfsf_end.y + 1; ++j) {
+            Ex(i, j, k) += c2ex(i,j,k) * aux_grid.return_Hy(i - tfsf_start.x+1);
+        }
+    }
+
+    return;
+}
+
+void Grid3D::correct_Ex_f(Grid1DTM &aux_grid) {
+    unsigned long long i,j, k;
+    k = tfsf_end.z;
+
+    for (i = tfsf_start.x; i < tfsf_end.x; ++i) {
+        for (j = tfsf_start.y; j < tfsf_end.y + 1; ++j) {
+            Ex(i, j, k) -= c2ex(i,j,k) * aux_grid.return_Hy(i - tfsf_start.x+1);
+        }
+    }
+
+    return;
+}
+
+void Grid3D::apply_TFSF(Grid1DTM &aux_grid) {
+    correct_Hy_0(aux_grid);
+    correct_Hy_f(aux_grid);
+    correct_Hx_0(aux_grid);
+    correct_Hx_f(aux_grid);
+    aux_grid.advance_simulation_hs();
+    correct_Ez_0(aux_grid);
+    correct_Ez_f(aux_grid);
+    correct_Ex_0(aux_grid);
+    correct_Ex_f(aux_grid);
+
+}
+
+
+void Grid3D::update_test(Grid1DTM &aux_grid) {
     update_magnetic();
     //Ez(25, 25, 25) = sin(2.0 * PI * (courant * (curr_time-time_delay) - 12.0) / ppw);
     //Hx(25, 25, 25) = sin(2.0 * PI * (courant * (curr_time-time_delay) - 12.0) / ppw);
     //Hy(25, 25, 25) = sin(2.0 * PI * (courant * (curr_time-time_delay) - 12.0) / ppw);
-    Ez(25, 25, 25) = exp(-pow(((curr_time-time_delay) - 2.2 * dispersion)/ dispersion, 2));
-    Hx(25, 25, 25) = exp(-pow(((curr_time-time_delay) - 2.2 * dispersion)/ dispersion, 2));
-    Hy(25, 25, 25) = exp(-pow(((curr_time-time_delay) - 2.2 * dispersion)/ dispersion, 2));
+    //Ez(25, 25, 25) = exp(-pow(((curr_time-time_delay) - 2.2 * dispersion)/ dispersion, 2));
+    //Hx(25, 25, 25) = exp(-pow(((curr_time-time_delay) - 2.2 * dispersion)/ dispersion, 2));
+    //Hy(25, 25, 25) = exp(-pow(((curr_time-time_delay) - 2.2 * dispersion)/ dispersion, 2));
+    apply_TFSF(aux_grid);
     update_electric();
     //apply_abc();
     simple_abc();
