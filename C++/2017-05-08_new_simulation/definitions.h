@@ -232,7 +232,8 @@ private:
 unsigned long long convert_from_metres(double value, double wavelength, double eps_rel_max, double mu_rel_max,
                                        double ppw = 28);
 
-
+double convert_from_nodes(double value, double wavelength, double eps_rel_max, double mu_rel_max,
+                                       double ppw = 28);
 //Mode TMz
 class Grid2DTEZ {
 public:
@@ -280,11 +281,10 @@ public:
     Grid3D(Params in);
 
     void save_state();
-    void update_test(Grid1DTM &aux_grid);
+    void advance_simulation(Grid1DTM &aux_grid);
     void xz_cross_section(unsigned long long y, char w);
     void xy_cross_section(unsigned long long z, char w);
     void yz_cross_section(unsigned long long x, char w);
-    void test();
     void add_pec_rectangle(Point start, Point finish);
     void add_pec_rectangle_centre(Point centre, unsigned long long xlen, unsigned long long ylen, unsigned long long zlen);
     void add_diel_rectangle(Point start, Point finish, double eps_r, double sigma, double mu_r, double sigma_m);
@@ -295,6 +295,8 @@ public:
     void add_pec_cylinder(Point centre, unsigned long long radius, unsigned long long length, char opt);
     void add_diel_cylinder(Point centre, unsigned long long radius, unsigned long long length, char opt,
             double eps_r, double sigma, double mu_r, double sigma_m);
+    void show_params();
+    void parallel_save_all(unsigned long long z, char w);
 
 private:
     Flat_vec Ex, Ey, Ez, Hx, Hy, Hz; //Electric and magnetic fields
@@ -339,6 +341,11 @@ private:
 
     //Checks if a point is inside the area
     bool bounds_check(Point a);
+
+    //Parallel processing functions
+    void parallel_update_magnetic();
+    void parallel_update_electric();
+    void parallel_simple_abc();
 
 };
 

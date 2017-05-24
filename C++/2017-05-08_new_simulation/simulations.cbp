@@ -13,6 +13,7 @@
 				<Option compiler="clang" />
 				<Compiler>
 					<Add option="-ftrapv" />
+					<Add option="-Weverything" />
 					<Add option="-std=c++14" />
 					<Add option="-m64" />
 					<Add option="-g" />

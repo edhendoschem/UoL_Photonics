@@ -106,15 +106,16 @@ int main()
     system("gnuplot plot_script_2d");
 */
 //3D grid test
+    //Pending convert TFSF to parallel processing
     //convert_from_metres(double value, double wavelength, double eps_rel_max, double mu_rel_max, double ppw = 28);
     double courant = 1.0 / sqrt(3.0);
     unsigned long long duration = 301; //Simulation duration
     double ppw = 20; //Set non default ppw
     unsigned long long source_loc = 0; //1D source loc
 
-    Grid1DTM a {duration, 53, 1550e-9, courant, 20, source_loc, 3}; //Max time, length, wavelength, courant, ppw, source node, source type
+    Grid1DTM a {duration, 53, 1550e-9, courant, 20, source_loc, 0}; //Max time, length, wavelength, courant, ppw, source node, source type
     a.enable_lossy_termination();
-    //Note: Grid1DTM must be 3 points larger than TFSF
+    //Note: Grid1DTM must be 3 points larger than TFSF or 23 if enable_lossy_termination() is set
     a.start_source_at_0(); //Makes functions start at 0
 
     Params b {
@@ -133,11 +134,11 @@ int main()
     };
 
     Grid3D c {b};
-    Point centre {15,25,15};
+    Point centre {15,25,25};
     Point centre2 {22,25,25};
     Point s {40, 12, 12}; //Starting point of rectangle
     Point f {50, 37, 37}; //Ending point of rectangle
-    c.add_pec_cylinder(centre, 7, 20, 'x'); //centre, radius, length, axis alignment
+    //c.add_pec_cylinder(centre, 7, 20, 'x'); //centre, radius, length, axis alignment
     //c.add_diel_cylinder(centre, 7, 35, 'x', 9.0, 0, 1, 0); //centre, radius, length, axis alignment, eps_r, sigma, mu_r, sigma_m
     //c.add_pec_rectangle(s, f); //start, finish
     //c.add_pec_rectangle_centre(centre,  2, 26, 26); //centre, xlen, ylen, zlen
@@ -148,29 +149,41 @@ int main()
     //c.add_pec_sphere(centre, 7);
     //c.add_diel_sphere(centre, 7, 4, 0, 1.0, 0); //centre, radius, eps_rel, sigma, mu_rel, sigma_m
     //c.add_diel_rectangle_centre(centre2,  7, 14, 14, 1.0, 0, 1.0, 0);
-
+    c.show_params();
+/*
     for (unsigned long long time = 0; time < duration; ++time) {
         if (time % 10 == 0) {
         //if (129 < time && time < 171) {
                 cout<<"time = "<<time<<'\n';
+
                 c.save_state();
                 c.xz_cross_section(25, 'a');
                 c.xy_cross_section(25, 'a');
                 c.yz_cross_section(25, 'a');
-                //c.test();
+
+                c.parallel_save_all(25, 'a');
                 //a.save_state();
         }
-        c.update_test(a);
+        c.advance_simulation(a);
+    }
+*/
+
+    cout<<"Creating plots...\n";
+
+    vector<thread> plots;
+    //plots.push_back(thread(&system, "gnuplot plot_script_3d_e"));
+    plots.push_back(thread(&system, "gnuplot plot_script_3d_e_xy"));
+    plots.push_back(thread(&system, "gnuplot plot_script_3d_e_xz"));
+    plots.push_back(thread(&system, "gnuplot plot_script_3d_e_yz"));
+    for (thread &t : plots) {
+        t.join();
     }
 
-    //cout<<"Creating 3D plots...\n";
-    //system("gnuplot plot_script_3d_e");
-    cout<<"Creating XY plots...\n";
-    system("gnuplot plot_script_3d_e_xy");
-    cout<<"Creating XZ plots...\n";
-    system("gnuplot plot_script_3d_e_xz");
-    cout<<"Creating YZ plots...\n";
-    system("gnuplot plot_script_3d_e_yz");
+    //convert_from_metres(distance in metres, wavelength, eps_r, mu_r, ppw)
+    cout<<"conversion to nodes= "<<convert_from_metres(1.55e-6, 1.55e-6, 2.56, 1.0, 20)<<'\n';
+
+    //convert_from_nodes(nodes, wavelength, eps_r, mu_r, ppw, courant)
+    //cout<<"conversion to metres = "<<convert_from_nodes(64.0, 1.55e-6, 2.56, 1.0, 18)<<'\n';
 
 
     return 0;

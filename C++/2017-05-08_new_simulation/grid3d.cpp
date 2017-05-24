@@ -111,26 +111,6 @@ void Grid3D::xz_cross_section(unsigned long long y, char w) {
     return;
 }
 
-void Grid3D::test() {
-    stringstream name;
-    name<<"0-"<<"INFO"<<".csv";
-    ofstream file(name.str(), std::ios_base::app);
-    unsigned long long x, y, z;
-
-    x = 42, y = 42, z = 25;
-    file<<curr_time<<','<<x<<','<<y<<','<<Ex(x,y,z)<<','<<Ey(x,y,z)<<','<<Ez(x,y,z)<<','<<Hx(x,y,z)\
-            <<','<<Hy(x,y,z)<<','<<Hz(x,y,z)<<'\n';
-    x = 42, y = 25, z = 42;
-    file<<curr_time<<','<<x<<','<<z<<','<<Ex(x,y,z)<<','<<Ey(x,y,z)<<','<<Ez(x,y,z)<<','<<Hx(x,y,z)\
-            <<','<<Hy(x,y,z)<<','<<Hz(x,y,z)<<'\n';
-    x = 25, y = 42, z = 42;
-    file<<curr_time<<','<<y<<','<<z<<','<<Ex(x,y,z)<<','<<Ey(x,y,z)<<','<<Ez(x,y,z)<<','<<Hx(x,y,z)\
-            <<','<<Hy(x,y,z)<<','<<Hz(x,y,z)<<'\n';
-
-    file.close();
-    return;
-}
-
 void Grid3D::update_Hx() {
     unsigned long long i, j, k;
 
@@ -177,6 +157,20 @@ void Grid3D::update_magnetic() {
     update_Hx();
     update_Hy();
     update_Hz();
+    return;
+}
+
+
+void Grid3D::parallel_update_magnetic() {
+    vector<thread> threads;
+    threads.push_back(thread(&Grid3D::update_Hx, this));
+    threads.push_back(thread(&Grid3D::update_Hy, this));
+    threads.push_back(thread(&Grid3D::update_Hz, this));
+
+    for (thread &t : threads) {
+        t.join();
+    }
+
     return;
 }
 
@@ -228,6 +222,20 @@ void Grid3D::update_electric() {
     update_Ez();
 }
 
+void Grid3D::parallel_update_electric() {
+    vector<thread> threads;
+
+    threads.push_back(thread(&Grid3D::update_Ex, this));
+    threads.push_back(thread(&Grid3D::update_Ey, this));
+    threads.push_back(thread(&Grid3D::update_Ez, this));
+
+    for (thread &t : threads) {
+        t.join();
+    }
+
+    return;
+}
+
 
 void Grid3D::simple_abc() {
     simple_x0();
@@ -237,6 +245,13 @@ void Grid3D::simple_abc() {
     simple_z0();
     simple_zf();
 }
+
+//aquiaqui
+void Grid3D::parallel_simple_abc() {
+
+
+}
+
 
 void Grid3D::correct_Hx_0(Grid1DTM &aux_grid) {
     unsigned long long i,j, k;
@@ -355,19 +370,40 @@ void Grid3D::apply_TFSF(Grid1DTM &aux_grid) {
 
 }
 
-
-void Grid3D::update_test(Grid1DTM &aux_grid) {
-    update_magnetic();
-    //Ez(25, 25, 25) = sin(2.0 * PI * (courant * (curr_time-time_delay) - 12.0) / ppw);
-    //Hx(25, 25, 25) = sin(2.0 * PI * (courant * (curr_time-time_delay) - 12.0) / ppw);
-    //Hy(25, 25, 25) = sin(2.0 * PI * (courant * (curr_time-time_delay) - 12.0) / ppw);
-    //Ez(25, 25, 25) = exp(-pow(((curr_time-time_delay) - 2.2 * dispersion)/ dispersion, 2));
-    //Hx(25, 25, 25) = exp(-pow(((curr_time-time_delay) - 2.2 * dispersion)/ dispersion, 2));
-    //Hy(25, 25, 25) = exp(-pow(((curr_time-time_delay) - 2.2 * dispersion)/ dispersion, 2));
+//aquiaqui
+void Grid3D::advance_simulation(Grid1DTM &aux_grid) {
+    //update_magnetic();
+    parallel_update_magnetic();
     apply_TFSF(aux_grid);
-    update_electric();
+    parallel_update_electric();
+    //update_electric();
     //apply_abc();
     simple_abc();
     ++curr_time;
 }
 
+void Grid3D::show_params() {
+    cout<<"==================================================================\n";
+    cout<<"dx = "<<dx<<" m"<<'\n';
+    cout<<"dt = "<<dt<<" s"<<'\n';
+    cout<<"ppw = "<<ppw<<" points/wavelength"<<'\n';
+    cout<<"wavelength = "<<wavelength<<" m"<<'\n';
+    cout<<"min_wavelength = "<<min_wavelength<<" m"<<'\n';
+    cout<<"courant = "<<courant<<'\n';
+    cout<<"==================================================================\n";
+    return;
+}
+
+void Grid3D::parallel_save_all(unsigned long long z, char w) {
+    vector<thread> threads;
+    threads.push_back(thread(&Grid3D::save_state, this));
+    threads.push_back(thread(&Grid3D::xy_cross_section, this, z, w));
+    threads.push_back(thread(&Grid3D::xz_cross_section, this, z, w));
+    threads.push_back(thread(&Grid3D::yz_cross_section, this, z, w));
+
+    for (thread &t : threads) {
+        t.join();
+    }
+
+    return;
+}

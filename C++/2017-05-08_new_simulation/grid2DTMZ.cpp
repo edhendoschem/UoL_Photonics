@@ -492,11 +492,15 @@ void Grid2DTMZ::add_pec_rectangle(Point start, Point finish) {
 }
 
 unsigned long long convert_from_metres(double value, double wavelength, double eps_rel_max, double mu_rel_max, double ppw) {
-
         double new_min_wl = wavelength / (sqrt(eps_rel_max * mu_rel_max));
-        double courant = 1.0 / sqrt(2.0);
         double new_dx = (new_min_wl / ppw);
-        ppw = wavelength / new_dx;
         unsigned long long result = value / new_dx;
+        return result;
+}
+
+double convert_from_nodes(double value, double wavelength, double eps_rel_max, double mu_rel_max, double ppw) {
+        double new_min_wl = wavelength / (sqrt(eps_rel_max * mu_rel_max));
+        double new_dx = (new_min_wl / ppw);
+        double result = value * new_dx;
         return result;
 }
