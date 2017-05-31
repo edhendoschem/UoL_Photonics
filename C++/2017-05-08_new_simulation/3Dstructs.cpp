@@ -151,11 +151,12 @@ void Grid3D::add_diel_rectangle(Point start, Point finish, double eps_r, double 
 void Grid3D::add_diel_rectangle_centre(Point centre, unsigned long long xlen, unsigned long long ylen, unsigned long long zlen,
             double eps_r, double sigma, double mu_r, double sigma_m) {
     unsigned long long i, j, k;
-    Point start {centre.x - xlen, centre.y - ylen, centre.z - zlen},
-    finish {centre.x + xlen, centre.y + ylen, centre.z + zlen};
     xlen = xlen / 2;
     ylen = ylen / 2;
     zlen = zlen / 2;
+    Point start {centre.x - xlen, centre.y - ylen, centre.z - zlen},
+    finish {centre.x + xlen, centre.y + ylen, centre.z + zlen};
+
 
     double new_min_wl = wavelength / (sqrt(eps_r * mu_r));
     if (bounds_check(start) && bounds_check(finish)) {

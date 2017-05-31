@@ -282,6 +282,7 @@ public:
 
     void save_state();
     void advance_simulation(Grid1DTM &aux_grid);
+    void parallel_advance_simulation(Grid1DTM &aux_grid);
     void xz_cross_section(unsigned long long y, char w);
     void xy_cross_section(unsigned long long z, char w);
     void yz_cross_section(unsigned long long x, char w);
@@ -296,7 +297,8 @@ public:
     void add_diel_cylinder(Point centre, unsigned long long radius, unsigned long long length, char opt,
             double eps_r, double sigma, double mu_r, double sigma_m);
     void show_params();
-    void parallel_save_all(unsigned long long z, char w);
+    void parallel_save_all(unsigned long long xy, unsigned long long xz, unsigned long long yz, char w);
+    void parallel_cross_sections(unsigned long long xy, unsigned long long xz, unsigned long long yz, char w);
 
 private:
     Flat_vec Ex, Ey, Ez, Hx, Hy, Hz; //Electric and magnetic fields
@@ -346,6 +348,7 @@ private:
     void parallel_update_magnetic();
     void parallel_update_electric();
     void parallel_simple_abc();
+    void parallel_apply_TFSF(Grid1DTM &aux_grid);
 
 };
 

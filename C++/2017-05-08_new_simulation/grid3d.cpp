@@ -248,8 +248,28 @@ void Grid3D::simple_abc() {
 
 //aquiaqui
 void Grid3D::parallel_simple_abc() {
+    vector<thread> threads;
+    threads.push_back(thread(&Grid3D::simple_x0, this));
+    threads.push_back(thread(&Grid3D::simple_xf, this));
+    for (thread &t : threads) {
+        t.join();
+    }
+    threads.clear();
 
+    threads.push_back(thread(&Grid3D::simple_y0, this));
+    threads.push_back(thread(&Grid3D::simple_yf, this));
+    for (thread &t : threads) {
+        t.join();
+    }
+    threads.clear();
 
+    threads.push_back(thread(&Grid3D::simple_z0, this));
+    threads.push_back(thread(&Grid3D::simple_zf, this));
+    for (thread &t : threads) {
+        t.join();
+    }
+
+    return;
 }
 
 
@@ -367,18 +387,50 @@ void Grid3D::apply_TFSF(Grid1DTM &aux_grid) {
     correct_Ez_f(aux_grid);
     correct_Ex_0(aux_grid);
     correct_Ex_f(aux_grid);
+    return;
 
 }
 
-//aquiaqui
+void Grid3D::parallel_apply_TFSF(Grid1DTM &aux_grid) {
+    vector<thread> threads;
+    threads.push_back(thread(&Grid3D::correct_Hy_0, this, ref(aux_grid)));
+    threads.push_back(thread(&Grid3D::correct_Hy_f, this, ref(aux_grid)));
+    threads.push_back(thread(&Grid3D::correct_Hx_0, this, ref(aux_grid)));
+    threads.push_back(thread(&Grid3D::correct_Hx_f, this, ref(aux_grid)));
+    for (thread &t : threads) {
+        t.join();
+    }
+    threads.clear();
+
+    aux_grid.advance_simulation_hs();
+
+    threads.push_back(thread(&Grid3D::correct_Ez_0, this, ref(aux_grid)));
+    threads.push_back(thread(&Grid3D::correct_Ez_f, this, ref(aux_grid)));
+    threads.push_back(thread(&Grid3D::correct_Ex_0, this, ref(aux_grid)));
+    threads.push_back(thread(&Grid3D::correct_Ex_f, this, ref(aux_grid)));
+    for (thread &t : threads) {
+        t.join();
+    }
+
+    return;
+
+}
+
 void Grid3D::advance_simulation(Grid1DTM &aux_grid) {
-    //update_magnetic();
-    parallel_update_magnetic();
+    update_magnetic();
     apply_TFSF(aux_grid);
-    parallel_update_electric();
-    //update_electric();
+    update_electric();
     //apply_abc();
     simple_abc();
+    ++curr_time;
+}
+
+//aquiaqui
+void Grid3D::parallel_advance_simulation(Grid1DTM &aux_grid) {
+    parallel_update_magnetic();
+    parallel_apply_TFSF(aux_grid);
+    parallel_update_electric();
+    parallel_simple_abc();
     ++curr_time;
 }
 
@@ -394,12 +446,12 @@ void Grid3D::show_params() {
     return;
 }
 
-void Grid3D::parallel_save_all(unsigned long long z, char w) {
+void Grid3D::parallel_save_all(unsigned long long xy, unsigned long long xz, unsigned long long yz, char w) {
     vector<thread> threads;
     threads.push_back(thread(&Grid3D::save_state, this));
-    threads.push_back(thread(&Grid3D::xy_cross_section, this, z, w));
-    threads.push_back(thread(&Grid3D::xz_cross_section, this, z, w));
-    threads.push_back(thread(&Grid3D::yz_cross_section, this, z, w));
+    threads.push_back(thread(&Grid3D::xy_cross_section, this, xy, w));
+    threads.push_back(thread(&Grid3D::xz_cross_section, this, xz, w));
+    threads.push_back(thread(&Grid3D::yz_cross_section, this, yz, w));
 
     for (thread &t : threads) {
         t.join();
@@ -407,3 +459,17 @@ void Grid3D::parallel_save_all(unsigned long long z, char w) {
 
     return;
 }
+
+void Grid3D::parallel_cross_sections(unsigned long long xy, unsigned long long xz, unsigned long long yz, char w) {
+    vector<thread> threads;
+    threads.push_back(thread(&Grid3D::xy_cross_section, this, xy, w));
+    threads.push_back(thread(&Grid3D::xz_cross_section, this, xz, w));
+    threads.push_back(thread(&Grid3D::yz_cross_section, this, yz, w));
+
+    for (thread &t : threads) {
+        t.join();
+    }
+
+    return;
+}
+
