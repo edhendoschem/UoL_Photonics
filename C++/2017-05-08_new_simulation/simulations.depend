@@ -1,8 +1,8 @@
 # depslib dependency file v1.0
-1495952078 source:/home/eduardo/Desktop/Programming/cpp/FDTD_Book_2/simulations/main.cpp
+1496301282 source:/home/eduardo/Desktop/Programming/cpp/FDTD_Book_2/simulations/main.cpp
 	"definitions.h"
 
-1495722128 /home/eduardo/Desktop/Programming/cpp/FDTD_Book_2/simulations/definitions.h
+1496222378 /home/eduardo/Desktop/Programming/cpp/FDTD_Book_2/simulations/definitions.h
 	<iostream>
 	<string>
 	<vector>
@@ -31,7 +31,7 @@
 1494428432 source:/home/eduardo/Desktop/Programming/cpp/FDTD_Book_2/simulations/grid3D.cpp
 	"definitions.h"
 
-1495787640 source:/home/eduardo/Desktop/Programming/cpp/FDTD_Book_2/simulations/grid3d.cpp
+1496220277 source:/home/eduardo/Desktop/Programming/cpp/FDTD_Book_2/simulations/grid3d.cpp
 	"definitions.h"
 
 1494594583 source:/home/eduardo/Desktop/Programming/cpp/FDTD_Book_2/simulations/abc3d.cpp
@@ -40,6 +40,9 @@
 1494591297 source:/home/eduardo/Desktop/Programming/cpp/FDTD_Book_2/simulations/abc3dsimple.cpp
 	"definitions.h"
 
-1495628167 source:/home/eduardo/Desktop/Programming/cpp/FDTD_Book_2/simulations/3Dstructs.cpp
+1496230150 source:/home/eduardo/Desktop/Programming/cpp/FDTD_Book_2/simulations/3Dstructs.cpp
+	"definitions.h"
+
+1496224589 source:/home/eduardo/Desktop/Programming/cpp/FDTD_Book_2/simulations/TFSF.cpp
 	"definitions.h"
 

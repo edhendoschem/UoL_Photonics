@@ -43,6 +43,7 @@
 			<Add option="-fexceptions" />
 		</Compiler>
 		<Unit filename="3Dstructs.cpp" />
+		<Unit filename="TFSF.cpp" />
 		<Unit filename="abc3dsimple.cpp" />
 		<Unit filename="definitions.h" />
 		<Unit filename="grid.cpp" />

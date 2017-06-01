@@ -6,11 +6,11 @@ unset label
 set view map
 set tics front
 set cbrange[-2.0:2.0]
-set yrange[230:352]
-set xrange[230:352]
+set yrange[0:592]
+set xrange[0:592]
 
-do for [i = 0:60] {
-w = i * 50
+do for [i = 0:100] {
+w = i * 10
 filename = sprintf("0-yz_snapshot3D_5_%0.f.csv", w)
 termout = sprintf("3D_yz_5-%0.f.png", w)
 set output termout

@@ -299,6 +299,8 @@ public:
     void show_params();
     void parallel_save_all(unsigned long long xy, unsigned long long xz, unsigned long long yz, char w);
     void parallel_cross_sections(unsigned long long xy, unsigned long long xz, unsigned long long yz, char w);
+    Point find_TFSF_centre();
+    double find_TFSF_radius();
 
 private:
     Flat_vec Ex, Ey, Ez, Hx, Hy, Hz; //Electric and magnetic fields
@@ -309,6 +311,7 @@ private:
     int source_type, choice = 0;
     double time_delay = 30, dispersion = 10, ppw, wavelength, min_wavelength, dx, dt, courant = 1.0 / sqrt(3.0);
     double cour_prime, A, B, C, D; //Second order absorbing boundary condition coefficients
+
 
     void update_Hx();
     void update_Hy();

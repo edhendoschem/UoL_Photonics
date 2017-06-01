@@ -6,13 +6,13 @@ unset label
 set view map
 set tics front
 set cbrange[-2.0:2.0]
-set yrange[237:347]
-set xrange[237:347]
+set yrange[0:592]
+set xrange[0:592]
 
-do for [i = 0:60] {
-w = i * 50
+do for [i = 0:100] {
+w = i * 10
 filename = sprintf("0-yz_snapshot3D_a_%0.f.csv", w)
-termout = sprintf("3D_yz-%0.f.png", w)
+termout = sprintf("3D_yz_a-%0.f.png", w)
 set output termout
 l_title = sprintf("time steps = %0.f", w)
 set xlabel "y"

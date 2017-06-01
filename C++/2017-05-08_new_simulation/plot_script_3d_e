@@ -1,4 +1,4 @@
-set terminal pngcairo size 600, 600
+set terminal pngcairo size 800, 800
 set view equal xyz
 set datafile separator ","
 unset arrow
@@ -6,11 +6,11 @@ unset label
 set view 45, 45
 set tics front
 set cbrange[-2.0:2.0]
-set yrange[8:68]
+set yrange[0:592]
 #set ytics(0, 100, 180)
-set xrange[0:76]
+set xrange[0:140]
 #set xtics(0, 100, 200, 300, 391)
-set zrange[8:68]
+set zrange[0:592]
 #set ztics(0, 100, 180)
 
 do for [i = 0:100] {

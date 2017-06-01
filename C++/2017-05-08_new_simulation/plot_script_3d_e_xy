@@ -6,8 +6,8 @@ unset label
 set view map
 set tics front
 set cbrange[-2.0:2.0]
-set yrange[0:76]
-set xrange[0:76]
+set yrange[0:592]
+set xrange[0:140]
 
 do for [i = 0:100] {
 w = i * 10
