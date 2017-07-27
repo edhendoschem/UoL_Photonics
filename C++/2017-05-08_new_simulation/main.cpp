@@ -138,21 +138,17 @@ int main()
 
     Grid3D c {b};
     Point centre {16,296,296}; //optic fiber
-    Point centre2 {112,296,296}; //waveguide
-    Point centre3 {112,296,171}; //bulk glass
+    Point centre2 {108,296,296}; //waveguide and bulk glass covering top of the waveguide
+    Point centre3 {108,296,161}; //bulk glass without covering the top of waveguide
     Point centre4 {22, 296, 296}; //cladding
-    //Point s {17,0,0};
-    //Point f {18,23,23};
 
-    //c.add_pec_rectangle(s, f);
-    c.add_diel_rectangle_centre(centre2, 1, 1, 1, 2.56, 0, 1, 0); //increase the ppw
-    c.add_diel_rectangle_centre(centre3, 48, 292, 292, 2.1025, 0, 1, 0); //add the bulk glass
+    c.add_diel_rectangle_centre(centre2, 1, 1, 1, 2.56, 0, 1, 0); //increase the ppw to the max value
+    c.add_diel_rectangle_centre(centre3, 48, 584, 312, 2.1025, 0, 1, 0); //add the bulk glass without covering top of the waveguide
+    //c.add_diel_rectangle_centre(centre2, 48, 584, 584, 2.1025, 0, 1, 0); //add the bulk glass covering the top of the waveguide
     c.add_diel_rectangle_centre(centre2, 48, 42, 42, 2.56, 0, 1, 0); //add the waveguide
-    //c.add_diel_cylinder(centre, 2, 2, 'x', 2.1025, 0, 1, 0); //centre, radius, length, axis alignment, eps_r, sigma, mu_r, sigma_m
-    //c.add_pec_cylinder(centre, 291, 10, 'x');
-    //c.add_diel_cylinder(centre2, 291, 110, 'x', 2.09873169, 0, 1, 0); //centre, radius, length, axis alignment, eps_r, sigma, mu_r, sigma_m
-    c.add_diel_cylinder(centre4, 292, 42, 'x', 2.09873169, 0, 1, 0);
-    c.add_diel_cylinder(centre, 49, 48, 'x', 2.1025, 0, 1, 0); //centre, radius, length, axis alignment, eps_r, sigma, mu_r, sigma_m
+
+    c.add_diel_cylinder(centre4, 292, 42, 'x', 2.085136, 0, 1, 0); //cladding
+    c.add_diel_cylinder(centre, 44, 48, 'x', 2.09525625, 0, 1, 0); //fiber core= centre, radius, length, axis alignment, eps_r, sigma, mu_r, sigma_m
 
     c.show_params();
 
@@ -161,58 +157,46 @@ int main()
 
         if (time % 10 == 0) {
                 cout<<"time = "<<time<<'\n';
-                //c.save_state();
-                //c.xz_cross_section(25, 'a');
-                //c.xy_cross_section(25, 'a');
-                //c.yz_cross_section(25, 'a');
-
-                //c.parallel_save_all(102, 102, 176, 'a');
-                //c.parallel_cross_sections(102, 102, 176, 'a');
                 if (time != duration - 1) {
-                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 17, '1'));
-                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 37, '2'));
-                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 64, '3'));
-                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 74, '4'));
+                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 40, '1'));
+                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 64, '2'));
+                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 84, '3'));
+                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 108, '4'));
                     for (thread &t : proc) {
                         t.join();
                     }
                     proc.clear();
 
-                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 100, '5'));
-                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 120, '6'));
-                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 136, '7'));
+                    proc.push_back(thread(&Grid3D::xy_cross_section, &c, 296, 'a'));
+                    proc.push_back(thread(&Grid3D::xz_cross_section, &c, 296, 'a'));
                     for (thread &t : proc) {
                         t.join();
                     }
                     proc.clear();
-                    c.parallel_cross_sections(12, 12, 12, 'a');
 
                 } else {
 
-                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 17, '1'));
-                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 37, '2'));
-                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 64, '3'));
-                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 74, '4'));
+                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 40, '1'));
+                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 64, '2'));
+                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 84, '3'));
+                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 108, '4'));
                     for (thread &t : proc) {
                         t.join();
                     }
                     proc.clear();
 
-                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 100, '5'));
-                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 120, '6'));
-                    proc.push_back(thread(&Grid3D::yz_cross_section, &c, 136, '7'));
-                    proc.push_back(thread(&Grid3D::save_state, &c));
+                    proc.push_back(thread(&Grid3D::xy_cross_section, &c, 296, 'a'));
+                    proc.push_back(thread(&Grid3D::xz_cross_section, &c, 296, 'a'));
                     for (thread &t : proc) {
                         t.join();
                     }
                     proc.clear();
-                    c.parallel_cross_sections(70, 292, 292, 'a');
-                }
+                    c.save_state();
+                } //End of else
 
-                //a.save_state();
-        }
+        } //End of if time%10
         c.parallel_advance_simulation(a);
-    }
+    } //End of for loop
 
 
     } //End of scope to free memory
@@ -231,17 +215,10 @@ int main()
     }
     plots.clear();
 
-    plots.push_back(thread(&system, "gnuplot plot_script_3d_e_yz-5"));
-    plots.push_back(thread(&system, "gnuplot plot_script_3d_e_yz-6"));
-    plots.push_back(thread(&system, "gnuplot plot_script_3d_e_yz-7"));
-    for (thread &t : plots) {
-        t.join();
-    }
-    plots.clear();
-
     plots.push_back(thread(&system, "gnuplot plot_script_3d_e_xy"));
     plots.push_back(thread(&system, "gnuplot plot_script_3d_e_xz"));
-    plots.push_back(thread(&system, "gnuplot plot_script_3d_e_yz"));
+    plots.push_back(thread(&system, "gnuplot plot_script_3d_e"));
+    plots.push_back(thread(&system, "gnuplot plot_script_3d_h"));
     for (thread &t : plots) {
         t.join();
     }

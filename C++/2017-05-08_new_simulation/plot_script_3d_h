@@ -6,12 +6,15 @@ unset label
 set view 45, 45
 set tics front
 set cbrange[-2:2]
-set yrange[0:51]
-set xrange[0:51]
-set zrange[0:51]
+set yrange[0:592]
+#set ytics(0, 100, 200, 300, 391)
+set xrange[0:140]
+set xtics(0, 70, 140)
+set zrange[0:592]
+#set ztics(0, 100, 200, 300, 391)
 
-do for [i = 0:10] {
-w = i * 10
+do for [i = 0:1] {
+w = i * 1000
 filename = sprintf("0-snapshot3D_%0.f.csv", w)
 termout = sprintf("3D-%0.f.png", w)
 set output termout
@@ -20,5 +23,5 @@ set xlabel "x"
 set ylabel "y"
 set zlabel "z"
 set title l_title offset 0, 1
-splot filename using 1:2:3:(abs($7 * 377) < 0.005 ? NaN:($7*377)) with pm3d notitle
+splot filename using 1:2:3:(abs($7 * 377) < 0.01 ? NaN:($7*377)) with pm3d notitle
 }
