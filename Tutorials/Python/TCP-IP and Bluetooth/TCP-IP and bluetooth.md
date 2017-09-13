@@ -5,7 +5,7 @@
 2. [The socket library](#item2)
 3. [Client side socket](#item3)
 4. [Server side socket](#item4)
-5. [Continuous data streaming](#item5
+5. [Continuous data streaming](#item5)
 6. [Bluetooth client and server](#item6)
 
 
@@ -52,7 +52,7 @@ If the server is listening for connections and we entered all the information co
 and be able to receive information. It is good practice when setting up the server to send a message to the client
 acknowledging the establishment of a connection
 
-<b>Note:<\b>
+<b>Note:</b>
 For testing purposes it is useful to have the computer act as both client and server. In order to do this use as ip
 address '127.0.0.1' for both client and server.
 
