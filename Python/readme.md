@@ -12,10 +12,10 @@ are already in use
 
 <b>Notes:<\b>
 - The power log file will be read from the beginning, if the initial lines need to be skipped, change in line_get():
-```
+```python
 file_handle.seek(0,1)
 ```
 To
-```
+```python
 file_handle.seek(0,2)
 ```
