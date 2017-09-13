@@ -10,7 +10,7 @@ The attenuator in the server machine is controlled using the mouse and keyboard 
 device ports. This is done to prevent problems arising from the control program attempting to acquire resources which
 are already in use by this python script
 
-<b>Notes:<\b>
+<b>Notes:</b>
 - The power log file will be read from the beginning, if the initial lines need to be skipped, change in line_get():
 ```python
 file_handle.seek(0,1)

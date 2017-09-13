@@ -10,7 +10,7 @@ be able to choose from a variety of sources.
 <b>Note:</b> the text files beginning with plot_script_  are GNUPLOT scripts used to quickly visualize the data
 produced by the simulation
 
-###<b>To do list:<\b>
+###<b>To do list:</b>
 
 1. ~Implement 3D simulation~
 2. ~Implement first order ABC in 3D~
