@@ -14,6 +14,7 @@ TCP/IP is the abbreviation for Transmission Control Protocol/Internet Protocol a
 data should be exchanged. This is the protocol the internet uses and can be leveraged in Python to transmit and receive
 useful information and remote control equipment.
 
+
 ## The socket library <a name="item2"></a>
 'socket' is a library in Python that allows us to easily create communication pipelines between a client and a server.
 Newer versions of Python come with the socket library by default, it allows a number of communication protocols and 
@@ -30,6 +31,7 @@ For a bluetooth socket we use:
 import socket
 s = socket.socet(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO)
 ```
+
 
 ## Client side socket <a name="item3"></a>
 Given an ip address and port, the client side will attempt to connect to a server in listening mode.
@@ -149,6 +151,63 @@ connection, address = s.accept()
 received_data = connection.recv(32)
 connection.send(b"Connection established")
 print(received_data) #
+connection.close()
+s.close()
+```
+
+
+## Continuous data streaming <a name="item5"></a>
+In our previous client/server examples, the client and server would each send and receive exactly one packet of data
+which in most cases isn't very useful. In order to have the server continuosly be able and receive data, we need to
+place our send/receive commands inside endless loops. For the server side we have:
+
+```python
+import socket #loads the socket library
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.bind(('127.0.0.1', 5003))
+s.listen(1)
+connection, address = s.accept()
+connection.send(b"Connection established")
+while True: #Endless loop
+    received_data = connection.recv(32) #Receives packets of 32 bytes in size
+    print(received_data) #Prints the data received (optional)
+    if not received_data: #If the connection was closed or an empty packet sent, breaks the endless loop
+        break;
+    connection.send(b"data received") #Sends a message to the client to prompt the next packet
+connection.close()
+s.close()
+```
+
+The previous code allow us to receive endless amount of data and continuously store it in the 'received_data' variable
+to be used however we see fit, before it is overwritten in the next cycle. Since we are not creating new variables
+in each cycle then the amount of RAM memory consumed by the script should remain constant. At the end of the cycle
+a message is sent to the client to unpause its process and prompt the next data packet.
+
+If the client closes the connection then an empty packet will be sent which will trigger the break clause, ending the
+loop
+
+We can use the data to perform any action inside the loop including calling other functions, keep in mind that the data
+received is in bytes and will need to be converted to a string or number depending on what we need. Here is an example
+of writing the data being sent by the client to a file:
+```python
+#Improved Server side script
+import socket #loads the socket library
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.bind(('127.0.0.1', 5003))
+s.listen(1)
+connection, address = s.accept()
+connection.send(b"Connection established")
+file = open("some_file.csv", "a+") #Opens a file and if it doesn't exist creates it, in append mode
+while True:
+    received_data = connection.recv(32)
+    print(received_data)
+    if not received_data:
+        break;
+    #Converts the bytes data to a string, removes the "b" and "'", adds a newline character and stores the result 
+    #at the end of the file
+    file.write(str(received_data).lstrip('b').strip("'")+'\n') 
+    connection.send(b"data processed")
+file.close() #Closes the file
 connection.close()
 s.close()
 ```
