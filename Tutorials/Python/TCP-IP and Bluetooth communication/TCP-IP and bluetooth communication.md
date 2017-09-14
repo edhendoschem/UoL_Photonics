@@ -365,7 +365,7 @@ s = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM
 And instead of using ip addresses, we need to know the MAC address of the server in the form nn:nn:nn:nn:nn:nn, 
 where n can be either a number or a letter e.g 78:F8:2C:F0:2B:EC, and the port can be set to any number between 1 to 30
 
-<b>Note<\b>: Bluetooth socket works fine in linux, but on Windows it doesn't seem to work. The module socket.AF_BLUETOOTH is
+<b>Note</b>: Bluetooth socket works fine in linux, but on Windows it doesn't seem to work. The module socket.AF_BLUETOOTH is
 missing. An alternative could be the pybluez library, but it isn't currently available for Python version 3.6 
 (14/09/2017)
 
