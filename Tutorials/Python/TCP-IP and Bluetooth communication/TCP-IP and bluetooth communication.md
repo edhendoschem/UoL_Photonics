@@ -190,7 +190,6 @@ We can use the data to perform any action inside the loop including calling othe
 received is in bytes and will need to be converted to a string or number depending on what we need. Here is an example
 of writing the data being sent by the client to a file:
 ```python
-#Improved Server side script
 import socket #loads the socket library
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind(('127.0.0.1', 5003))
@@ -211,4 +210,6 @@ file.close() #Closes the file
 connection.close()
 s.close()
 ```
+
+
 
