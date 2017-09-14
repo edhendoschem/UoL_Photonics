@@ -375,10 +375,9 @@ missing. An alternative could be the pybluez library, but it isn't currently ava
 
 
 ## Further reading <a name="item7"></a>
-Sockets:
-https://docs.python.org/3/howto/sockets.html
-
+Sockets:  
+https://docs.python.org/3/howto/sockets.html  
 http://blog.kevindoran.co/bluetooth-programming-with-python-3/
 
-Iterators and generators:
+Iterators and generators:  
 https://docs.python.org/3/howto/functional.html
