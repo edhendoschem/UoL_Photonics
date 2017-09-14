@@ -7,6 +7,7 @@
 4. [Server side socket](#item4)
 5. [Continuous data streaming](#item5)
 6. [Bluetooth client and server](#item6)
+7. [Further reading](#item7)
 
 
 ## What is TCP/IP? <a name="item1"></a>
@@ -226,7 +227,7 @@ s.bind(('127.0.0.1', 5004))
 s.listen(1)
 connection, address = s.accept()
 connection.send(b"Connection established")
-file = open("some_file.csv", "a+")
+file_to_write = open("some_file.csv", "a+")
 while True:
     received_data = connection.recv(128)
     print(received_data, end = '\r') #Will print the data received and continuously overwrite this line
@@ -234,9 +235,9 @@ while True:
         break;
     #Converts the bytes data to a string, removes the "b" and "'", adds a newline character and stores the result 
     #at the end of the file
-    file.write(str(received_data).lstrip('b').strip("'")+'\n')
+    file_to_write.write(str(received_data).lstrip('b').strip("'")+'\n')
     connection.send(b"data processed")
-file.close()
+file_to_write.close()
 connection.close()
 s.close()
 ```
@@ -244,14 +245,16 @@ s.close()
 Now let's say we have a datalog with some measurements being continuously updated, we want to send that data as it
 is being written to our 'server' computer for processing and/or storage. We could try opening the file and then
 setting an endless loop to send the data, however this approach has two problems:
+
 First, the file opened will be a copy of the file being updated by whatever measurement program we're interested in.
 This means, it will contain all the lines up to the point the 'open' command was executed. Any new lines written after
 that will not be included.
+
 Second, even if we create an endless loop to constantly reopen the file to obtain the new data being written, we will
 eventually run out of memory as the file gets progressively larger, not to mention that opening the file will become
 progressively slower.
 
-To deal with this problem we need to use a generator, a function that returns an iterator. The main characteristic of
+To deal with these problems we need to use a generator, a function that returns an iterator. The main characteristic of
 iterators is that they are only 'aware' of the current element and store no previous elements, which makes their memory
 usage small and constant. We can explicitly call the next element on an iterator using the 'next(iterator_name_here)' 
 function or implicitly by using a 'for' loop. In order to define a function that returns an iterator we need to
@@ -272,8 +275,8 @@ def line_get(file_handle):
         yield line
 ```
 
-This function will return an iterator that yields lines on the file we used as argument each time we call
-'next()' explicitly or implicitly, and if it cannot find more lines, waits 10 seconds until attempting to read the
+This function will return an iterator that yields lines on the file we used as argument, each time we call
+'next()' explicitly or implicitly. If it cannot find more lines, waits 10 seconds until attempting to read the
 next line. This function will read the log file from the beginning, but if we are only interested in the most recent
 value, then we can set:
 ```python
@@ -358,5 +361,16 @@ In order to create a client and server in bluetooth we can reuse the same code w
 ```python
 s = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
 ```
-And instead of using ip addresses, we need to know the MAC address of the server: nn:nn:nn:nn:nn:nn, where n can be
-either a number or a letter e.g 78:F8:2C:F0:2B:EC, and the port can be set to 1
+And instead of using ip addresses, we need to know the MAC address of the server in the form nn:nn:nn:nn:nn:nn, 
+where n can be either a number or a letter e.g 78:F8:2C:F0:2B:EC, and the port can be set to any number between 1 to 30
+
+Note: Bluetooth socket works fine in linux, but on Windows it doesn't seem to work. The module socket.AF_BLUETOOTH is
+missing. An alternative could be the pybluez library, but it isn't currently available for Python version 3.6 
+(14/09/2017)
+
+## Further reading <a name="item7"></a>
+Sockets:
+https://docs.python.org/3/howto/sockets.html
+http://blog.kevindoran.co/bluetooth-programming-with-python-3/
+Iterators and generators:
+https://docs.python.org/3/howto/functional.html
