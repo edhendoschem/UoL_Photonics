@@ -196,7 +196,7 @@ s.bind(('127.0.0.1', 5003))
 s.listen(1)
 connection, address = s.accept()
 connection.send(b"Connection established")
-file = open("some_file.csv", "a+") #Opens a file and if it doesn't exist creates it, in append mode
+file = open("test_output.csv", "a+") #Opens a file and if it doesn't exist creates it, in append mode
 while True:
     received_data = connection.recv(32)
     print(received_data)
@@ -341,8 +341,22 @@ except: #Catches the keyboard interrupt and closes the connection
     s.close() #Close the connection
 ```
 
+This code is similar to our original client code but the 'try: except:' clause has been added to catch the 
+KeyboardInterrupt error we get when manually stopping our endless iterator, making sure it closes the connection.
+Successfully closing the connection, will signal our server to stop listening and close the connection as well.
 
+The 'for lines in line_get(file_to_read):' line, endlessly calls on our generator function to provide the lines read
+from the file 'testfile.csv'. An explicit way to write this would be:
+```python
+gen = line_get(file_read) #creates the iterator
+while True:
+    line = next(gen)
+```
 
-
-KeyboardInterrupt
-
+## Bluetooth client and server <a name="item6"></a>
+In order to create a client and server in bluetooth we can reuse the same code with the only change being:
+```python
+s = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
+```
+And instead of using ip addresses, we need to know the MAC address of the server: nn:nn:nn:nn:nn:nn, where n can be
+either a number or a letter e.g 78:F8:2C:F0:2B:EC, and the port can be set to 1
