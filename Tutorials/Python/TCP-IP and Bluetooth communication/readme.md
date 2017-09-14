@@ -41,14 +41,14 @@ and the type:
 ```
 ipconfig
 ```
-From there we record the value for IPv4 ddd.ddd.ddd.ddd  where ddd can be 1, 2 or 3 digits e.g. (10.45.104.2)
+From there we record the value for IPv4 'ddd.ddd.ddd.ddd'  where 'ddd' can be 1, 2 or 3 digits e.g. (10.45.104.2)
 We now need a port value, which can be any integer between 1 to 65535. It is recommended to use a higher value such as
 5000 to avoid interfering with ports regularly used by other programs.
 In order to create the connection with the server we use:
 ```python
 s.connect((ip_address, port))
 ```
-Note that ip_address, port are inside a tuple hence the double (()), one for the function call and the other for the
+Note that ip_address, port are inside a tuple hence the double '(())', one for the function call and the other for the
 tuple.
 
 If the server is listening for connections and we entered all the information correctly then we should be connected
@@ -78,11 +78,11 @@ the string with 'b' and it will be automatically converted:
 s.send(b'hello!')
 ```
 
-If we are expecting a response from the server then we need to use the '.recv()' method:
+If we are expecting a response from the server then we need to use the '.recv(n)' method:
 ```python
 data = s.recv(5)
 ```
-The number used as an argument for '.recv()' is the message size in bytes, if the size is smaller than the message then
+The number 'n' used as an argument for '.recv(n)' is the message size in bytes, if the size is smaller than the message then
 the message will be truncated and the rest of the message will be sent in the next packet or will be lost if the
 client or server closes the connection
 
@@ -90,8 +90,8 @@ Finally, once the connection is no longer needed we close it:
 ```python
 s.close()
 ```
-Once the connection is closed from the client side and if successfully from the server side, then the port will be
-freed and usable again
+Once the connection is closed from the client side and the server side, then the port will be
+freed and usable again.
 
 The entire python script for the client side is in the file TCP-IP_tut_client file:
 ```python
@@ -117,7 +117,7 @@ s.close() #Close the connection
 ## Server side socket <a name="item4"></a>
 
 The server side socket is quite similar to the client side, but instead of using connect, we need to bind and listen 
-for connections and then accept the connection with the methods '.listen()' and '.accept()':
+for connections and then accept the connection with the methods '.listen(n)' and '.accept()':
 ```python
 import socket
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -159,7 +159,7 @@ s.close()
 
 ## Continuous data streaming <a name="item5"></a>
 In our previous client/server examples, the client and server would each send and receive exactly one packet of data
-which in most cases isn't very useful. In order to have the server continuosly be able and receive data, we need to
+which in most cases isn't very useful. In order to have the server continuously be able to send and receive data, we need to
 place our send/receive commands inside endless loops. For the server side we have:
 
 ```python
@@ -181,15 +181,15 @@ s.close()
 
 The previous code allow us to receive endless amount of data and continuously store it in the 'received_data' variable
 to be used however we see fit, before it is overwritten in the next cycle. Since we are not creating new variables
-in each cycle then the amount of RAM memory consumed by the script should remain constant. At the end of the cycle
+in each cycle, then the amount of RAM memory consumed by the script should remain constant. At the end of the cycle
 a message is sent to the client to unpause its process and prompt the next data packet.
 
-If the client closes the connection then an empty packet will be sent which will trigger the break clause, ending the
-loop
+If the client closes the connection then an empty packet is sent by dedaulf which will trigger the break clause, 
+ending the loop.
 
-We can use the data to perform any action inside the loop including calling other functions, keep in mind that the data
-received is in bytes and will need to be converted to a string or number depending on what we need. Here is an example
-of writing the data being sent by the client to a file:
+We can use the data to perform any action inside the loop including calling other functions, keeping in mind that the 
+data received is in bytes and will need to be converted to a string or number depending on what we need. Here is an 
+example of writing the data being sent by the client as .csv (comma separated values) to a file:
 ```python
 import socket #loads the socket library
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -216,9 +216,10 @@ If we are to receive large volumes of data, we might want to avoid the line:
 ```python
 print(received_data)
 ```
-as this will continuosly print what we receive in a new line until the computer runs out of memory. Another way to
-solve this issue would be to use the optional argument for the 'print' function 'end = "\r"' which will continuously 
-overwrite that line, therefore preventing an endless increase of memory usage. Our final server file looks like this:
+as this will continuously print what we receive in a new line until the computer runs out of memory. Another way to
+solve this issue would be to use the optional argument for the 'print' function 'end = "\r"' which will
+overwrite the same line, therefore preventing an endless increase of memory usage. Our final server file looks like 
+this:
 ```python
 #Improved Server side script
 import socket #loads the socket library
@@ -257,14 +258,15 @@ progressively slower.
 To deal with these problems we need to use a generator, a function that returns an iterator. The main characteristic of
 iterators is that they are only 'aware' of the current element and store no previous elements, which makes their memory
 usage small and constant. We can explicitly call the next element on an iterator using the 'next(iterator_name_here)' 
-function or implicitly by using a 'for' loop. In order to define a function that returns an iterator we need to
+function, or implicitly by using a 'for' loop. In order to define a function that returns an iterator we need to
 end it in 'yield' instead of 'return'.
 
-To create a function that returns an iterator of lines in a file we write:
+To create a function that returns an iterator of lines in a file we use:
 ```python
 def line_get(file_handle):
     """
-    Returns a generator that endlessly reads a file while occupying constant memory. requires file_handle(file object)
+    Returns a generator that endlessly reads a file while occupying constant memory. 
+    requires file_handle(file object)
     """
     file_handle.seek(0,1) #Change this from (0,1) to (0,2) if you want to start reading from the last line
     while True:
@@ -292,7 +294,8 @@ simulate a file being written we have provided data_logging.ipynb which continuo
 import time
 import numpy as np
 
-file_handle = open("testfile.csv", 'a+', 1) #Opens in append mode to add to the end of the file, flushes after every line
+file_handle = open("testfile.csv", 'a+', 1) #Opens in append mode to add to the end of the file, 
+					    #flushes (copies to file) after every line
 try:
     while True: #Needs to be stopped manually by clicking or selecting interrupt kernel in jupyter notebook
         rand1 = str(np.random.randint(0,100000)) #Random data
@@ -320,7 +323,8 @@ def packet(obj):
 
 def line_get(file_handle):
     """
-    Returns a generator that endlessly reads a file while occupying constant memory. requires file_handle(file object)
+    Returns a generator that endlessly reads a file while occupying constant memory. 
+    requires file_handle(file object)
     """
     file_handle.seek(0,1) #Change this to (0,2) if you want to start reading from the last line
     while True:
@@ -344,9 +348,9 @@ except: #Catches the keyboard interrupt and closes the connection
     s.close() #Close the connection
 ```
 
-This code is similar to our original client code but the 'try: except:' clause has been added to catch the 
+This code is similar to our original client code, however the 'try: except:' clause has been added to catch the 
 KeyboardInterrupt error we get when manually stopping our endless iterator, making sure it closes the connection.
-Successfully closing the connection, will signal our server to stop listening and close the connection as well.
+Successfully closing the connection is important to signal our server to stop listening and close the connection.
 
 The 'for lines in line_get(file_to_read):' line, endlessly calls on our generator function to provide the lines read
 from the file 'testfile.csv'. An explicit way to write this would be:
@@ -362,7 +366,7 @@ In order to create a client and server in bluetooth we can reuse the same code w
 ```python
 s = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
 ```
-And instead of using ip addresses, we need to know the MAC address of the server in the form nn:nn:nn:nn:nn:nn, 
+And instead of using ip addresses, we need to know the MAC address of the server in the form 'nn:nn:nn:nn:nn:nn', 
 where n can be either a number or a letter e.g 78:F8:2C:F0:2B:EC, and the port can be set to any number between 1 to 30
 
 <b>Note</b>: Bluetooth socket works fine in linux, but on Windows it doesn't seem to work. The module socket.AF_BLUETOOTH is
@@ -373,6 +377,8 @@ missing. An alternative could be the pybluez library, but it isn't currently ava
 ## Further reading <a name="item7"></a>
 Sockets:
 https://docs.python.org/3/howto/sockets.html
+
 http://blog.kevindoran.co/bluetooth-programming-with-python-3/
+
 Iterators and generators:
 https://docs.python.org/3/howto/functional.html
