@@ -196,7 +196,7 @@ s.bind(('127.0.0.1', 5003))
 s.listen(1)
 connection, address = s.accept()
 connection.send(b"Connection established")
-file = open("test_output.csv", "a+") #Opens a file and if it doesn't exist creates it, in append mode
+file_to_write = open("test_output.csv", "a+") #Opens a file and if it doesn't exist creates it, in append mode
 while True:
     received_data = connection.recv(32)
     print(received_data)
@@ -204,9 +204,9 @@ while True:
         break;
     #Converts the bytes data to a string, removes the "b" and "'", adds a newline character and stores the result 
     #at the end of the file
-    file.write(str(received_data).lstrip('b').strip("'")+'\n') 
+    file_to_write.write(str(received_data).lstrip('b').strip("'")+'\n') 
     connection.send(b"data processed")
-file.close() #Closes the file
+file_to_write.close() #Closes the file
 connection.close()
 s.close()
 ```
@@ -229,7 +229,7 @@ connection.send(b"Connection established")
 file = open("some_file.csv", "a+")
 while True:
     received_data = connection.recv(128)
-    print(received_data, end = '\r') #Will print the data received and continuosly overwrite this line
+    print(received_data, end = '\r') #Will print the data received and continuously overwrite this line
     if not received_data:
         break;
     #Converts the bytes data to a string, removes the "b" and "'", adds a newline character and stores the result 
@@ -336,7 +336,7 @@ try:
     for lines in line_get(file_to_read):#Needs to be manually interrupted using the stop button in jupyter notebook
         s.send(packet(lines)) #Send the message as a bytes object
         data = s.recv(128) #Receive a message, cycle stops here until the message is received
-        print(data, end = '\r') #Print the received message, will continuosly overwrite this line
+        print(data, end = '\r') #Print the received message, will continuously overwrite this line
 except: #Catches the keyboard interrupt and closes the connection
     s.close() #Close the connection
 ```
