@@ -211,5 +211,138 @@ connection.close()
 s.close()
 ```
 
+If we are to receive large volumes of data, we might want to avoid the line:
+```python
+print(received_data)
+```
+as this will continuosly print what we receive in a new line until the computer runs out of memory. Another way to
+solve this issue would be to use the optional argument for the 'print' function 'end = "\r"' which will continuously 
+overwrite that line, therefore preventing an endless increase of memory usage. Our final server file looks like this:
+```python
+#Improved Server side script
+import socket #loads the socket library
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.bind(('127.0.0.1', 5004))
+s.listen(1)
+connection, address = s.accept()
+connection.send(b"Connection established")
+file = open("some_file.csv", "a+")
+while True:
+    received_data = connection.recv(128)
+    print(received_data, end = '\r') #Will print the data received and continuosly overwrite this line
+    if not received_data:
+        break;
+    #Converts the bytes data to a string, removes the "b" and "'", adds a newline character and stores the result 
+    #at the end of the file
+    file.write(str(received_data).lstrip('b').strip("'")+'\n')
+    connection.send(b"data processed")
+file.close()
+connection.close()
+s.close()
+```
 
+Now let's say we have a datalog with some measurements being continuously updated, we want to send that data as it
+is being written to our 'server' computer for processing and/or storage. We could try opening the file and then
+setting an endless loop to send the data, however this approach has two problems:
+First, the file opened will be a copy of the file being updated by whatever measurement program we're interested in.
+This means, it will contain all the lines up to the point the 'open' command was executed. Any new lines written after
+that will not be included.
+Second, even if we create an endless loop to constantly reopen the file to obtain the new data being written, we will
+eventually run out of memory as the file gets progressively larger, not to mention that opening the file will become
+progressively slower.
+
+To deal with this problem we need to use a generator, a function that returns an iterator. The main characteristic of
+iterators is that they are only 'aware' of the current element and store no previous elements, which makes their memory
+usage small and constant. We can explicitly call the next element on an iterator using the 'next(iterator_name_here)' 
+function or implicitly by using a 'for' loop. In order to define a function that returns an iterator we need to
+end it in 'yield' instead of 'return'.
+
+To create a function that returns an iterator of lines in a file we write:
+```python
+def line_get(file_handle):
+    """
+    Returns a generator that endlessly reads a file while occupying constant memory. requires file_handle(file object)
+    """
+    file_handle.seek(0,1) #Change this from (0,1) to (0,2) if you want to start reading from the last line
+    while True:
+        line = file_handle.readline()
+        if not line:
+            time.sleep(10) #Waits 10 seconds before attempting to read the next line
+            continue
+        yield line
+```
+
+This function will return an iterator that yields lines on the file we used as argument each time we call
+'next()' explicitly or implicitly, and if it cannot find more lines, waits 10 seconds until attempting to read the
+next line. This function will read the log file from the beginning, but if we are only interested in the most recent
+value, then we can set:
+```python
+file_handle.seek(0,2)
+```
+This makes the function start at the end of the current file, which means only any new lines written after that will
+be read.
+
+With that function we can now define our client to read and transmit data from a file as it is being written. To
+simulate a file being written we have provided data_logging.ipynb which continuously appends data to a the file
+'testfile.csv' in 5 second intervals:
+```python
+import time
+import numpy as np
+
+file_handle = open("testfile.csv", 'a+', 1) #Opens in append mode to add to the end of the file, flushes after every line
+try:
+    while True: #Needs to be stopped manually by clicking or selecting interrupt kernel in jupyter notebook
+        rand1 = str(np.random.randint(0,100000)) #Random data
+        rand2 = str(np.random.randint(0,100000)) #Random data
+        rand3 = str(np.random.randint(0,100000)) #Random data
+        file_handle.write(rand1+','+rand2+','+rand3+'\n') #write the random data
+        time.sleep(5) #wait 5 seconds
+except: #will catch the manual stop and close the file
+    file_handle.close()
+```
+
+The client can be defined as:
+```python
+#Improved client side script, endlessly read a log file
+import socket #loads the socket library
+import time
+
+def packet(obj):
+    """
+    Takes as argument any object that can be converted to string and converts it to bytes
+    """
+    obj = str(obj)
+    obj = bytes(obj, 'utf-8')
+    return obj
+
+def line_get(file_handle):
+    """
+    Returns a generator that endlessly reads a file while occupying constant memory. requires file_handle(file object)
+    """
+    file_handle.seek(0,1) #Change this to (0,2) if you want to start reading from the last line
+    while True:
+        line = file_handle.readline()
+        if not line:
+            time.sleep(10) #Waits 10 seconds before attempting to read the next line
+            continue
+        yield line
+    
+
+file_to_read = open('testfile.csv', 'r')
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) #Establish the type of socket we want
+s.connect(('127.0.0.1', 5004)) #Connect to the desired ip address and port
+print(s.recv(128)) #Prints connection established message from server
+try:
+    for lines in line_get(file_to_read):#Needs to be manually interrupted using the stop button in jupyter notebook
+        s.send(packet(lines)) #Send the message as a bytes object
+        data = s.recv(128) #Receive a message, cycle stops here until the message is received
+        print(data, end = '\r') #Print the received message, will continuosly overwrite this line
+except: #Catches the keyboard interrupt and closes the connection
+    s.close() #Close the connection
+```
+
+
+
+
+KeyboardInterrupt
 
