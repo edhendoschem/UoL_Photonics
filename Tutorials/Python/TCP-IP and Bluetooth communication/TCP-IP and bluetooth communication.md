@@ -356,6 +356,7 @@ while True:
     line = next(gen)
 ```
 
+
 ## Bluetooth client and server <a name="item6"></a>
 In order to create a client and server in bluetooth we can reuse the same code with the only change being:
 ```python
@@ -367,6 +368,7 @@ where n can be either a number or a letter e.g 78:F8:2C:F0:2B:EC, and the port c
 Note: Bluetooth socket works fine in linux, but on Windows it doesn't seem to work. The module socket.AF_BLUETOOTH is
 missing. An alternative could be the pybluez library, but it isn't currently available for Python version 3.6 
 (14/09/2017)
+
 
 ## Further reading <a name="item7"></a>
 Sockets:
