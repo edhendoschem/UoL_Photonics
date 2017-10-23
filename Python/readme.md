@@ -1,7 +1,7 @@
 # Table of contents
 
 ## 1. [TCP-IP control](#item1)
-## 2. [lifetime_processor](#item1)
+## 2. [lifetime_processor](#item2)
 
 ## TCP-IP control <a name = "item1"></a>
 This is a client and server jupyter notebook pair, created to continuosly read data from a power log file as it is being
