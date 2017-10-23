@@ -1,6 +1,7 @@
 # Table of contents
 
 ## 1. [TCP-IP control](#item1)
+## 2. [lifetime_processor](#item1)
 
 ## TCP-IP control <a name = "item1"></a>
 This is a client and server jupyter notebook pair, created to continuosly read data from a power log file as it is being
@@ -11,11 +12,20 @@ device ports. This is done to prevent problems arising from the control program 
 are already in use by this python script
 
 <b>Notes:</b>
-- The power log file will be read from the beginning, if the initial lines need to be skipped, change in line_get():
-```python
-file_handle.seek(0,1)
-```
-To
+- The power log file will be read from the end, if the initial lines need to be skipped, change in line_get():
 ```python
 file_handle.seek(0,2)
 ```
+To
+```python
+file_handle.seek(0,1)
+```
+
+
+## lifetime_processor <a name = "item2"></a>
+This is a simple program to extract the lifetime data from the .txt files created by the Steady State Time Resolved 
+Fluorescence Spectrometer. It uses the Trust Region Reflective algorithm. If the curve fitter fails to properly fit the
+curve, you may be in the presence of a double exponential or some other behaviour
+
+In order to use it, place the lifetime measurement files in the 
+
