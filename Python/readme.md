@@ -27,5 +27,16 @@ This is a simple program to extract the lifetime data from the .txt files create
 Fluorescence Spectrometer. It uses the Trust Region Reflective algorithm. If the curve fitter fails to properly fit the
 curve, you may be in the presence of a double exponential or some other behaviour
 
-In order to use it, place the lifetime measurement files in the 
+In order to use it, place the lifetime measurement files in the folder with the .ipynb file and click on "run cell,
+select below" twice or alternatively press shift+enter twice.
+
+If you want to save the plots as well, change
+```python
+save_data("results.csv", "\t", False, False)
+```
+To
+```python
+save_data("results.csv", "\t", False, True)
+```
+ Before pressing shift+enter twice or clicking "run cell, select below" button
 
