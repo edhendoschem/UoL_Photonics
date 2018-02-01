@@ -7,8 +7,8 @@ This repository was created to share the knowledge with the rest of the Leeds Ph
 It is organized by programming language, each folder contains a readme file that explains the use of
 each of the programs, and a folder named 'OLD'.
 
-The 'OLD' folder, contains versions of programs which were written when I was learning that particular language, 
-and therefore may be disorganized and/or difficult to read but they work! and could prove useful
+The 'OLD' folder, contains old projects which were written when I was learning programming or were discontinued, 
+and therefore may be disorganized and/or difficult to read. They may also contain unfinished and/or untestedcode
 
 If you have any comments or suggestions, please let me know at pm14ehds@leeds.ac.uk
 
@@ -18,4 +18,4 @@ as possible!
 **Note2:** Let me know if you find any spelling and grammatical errors.
 
 ## Copyright
-Copyright 2017, Eduardo Henriques Dos Santos, All rights reserved.
+Copyright 2018, Eduardo Henriques Dos Santos, All rights reserved.

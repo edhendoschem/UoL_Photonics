@@ -12,6 +12,13 @@ be able to choose from a variety of sources.
 produced by the simulation
 
 ## useful_headers <a name = "it2"></a>
-Headers containing Monte Carlo integration, bisection method, Runge Kutta method, useful constants and flat_vectors with
-matrix operations defined
+Contains:
+
+- aux_maths: Contains Monte Carlo integration, bisection method, Runge Kutta method, useful constants 
+- Flat_vec: A vector with defined access operator in order to be able to access the data by xyz or ijk coordinates, 
+stored as a single flat vector instead of a vector of pointers to a vector of pointers to a vector of T's. 
+Contains overloaded +, -, /, *.
+- Matrix and QR_Fact: Contains a Matrix class with all the usual matrix operations (multiply, add and substract as 
+overloaded *, +, -) plus transpose, invert and QR factorization via Gram-Schmidt orthonormalization converting any 
+invertible matrix into a product of an orthonormal Q matrix and a upper triangular R matrix.
 
