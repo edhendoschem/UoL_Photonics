@@ -415,7 +415,7 @@ Flat_vec<T> operator / (Flat_vec<T> const& a, Flat_vec<T> const& b) noexcept
             if (b[i] != 0) {
                 output[i] = a[i] / b[i];
             } else {
-                output[i] = std::numeric_limits<double>::infinity();
+                output[i] = std::numeric_limits<T>::infinity();
                 warn_flag = true;
             }
 
@@ -437,7 +437,7 @@ Flat_vec<T> operator / (Flat_vec<T> const& a, T const b)
         if(b != 0) {
             output[i] /= b;
         } else {
-            output[i] = std::numeric_limits<double>::infinity();
+            output[i] = std::numeric_limits<T>::infinity();
         }
     }
 
@@ -455,7 +455,7 @@ Flat_vec<T> operator / (T const b, Flat_vec<T> const& a)
         if(b != 0) {
             output[i] /= b;
         } else {
-            output[i] = std::numeric_limits<double>::infinity();
+            output[i] = std::numeric_limits<T>::infinity();
         }
     }
 
