@@ -135,8 +135,8 @@ public:
 
         default:
             {
-                std::cout<<"Error in operator(): invalid char\n";
-                Matrix<T> output;
+                std::cout<<"Error in operator(): invalid option. returning default constructed matrix\n";
+                Matrix<T> output{};
                 return output;
             }
 
@@ -325,8 +325,8 @@ template<typename T>
 Matrix<T> operator + (Matrix<T> const& matrix_a, Matrix<T> const& matrix_b) noexcept
 {
     if (matrix_a.max_rows() != matrix_b.max_rows() || matrix_a.max_cols() != matrix_b.max_cols()) {
-        std::cout<<"Error in operator +: Incompatible matrix dimensions\n";
-        Matrix<T> output;
+        std::cout<<"Error in operator +: Incompatible matrix dimensions. Returning default constructed matrix\n";
+        Matrix<T> output{};
         return output;
     }
 
@@ -377,7 +377,7 @@ template<typename T>
 Matrix<T> operator - (Matrix<T> const& matrix_a, Matrix<T> const& matrix_b) noexcept
 {
     if (matrix_a.max_rows() != matrix_b.max_rows() || matrix_a.max_cols() != matrix_b.max_cols()) {
-        std::cout<<"Error in operator +: Incompatible matrix dimensions\n";
+        std::cout<<"Error in operator +: Incompatible matrix dimensions. Returning default constructed matrix\n";
         Matrix<T> output;
         return output;
     }
@@ -399,7 +399,7 @@ template<typename T>
 Matrix<T> operator * (Matrix<T> const& matrix_a, Matrix<T> const& matrix_b) noexcept
 {
     if (matrix_a.max_cols() != matrix_b.max_rows()) {
-        std::cout<<"Error in operator *: Incompatible matrix dimensions\n";
+        std::cout<<"Error in operator *: Incompatible matrix dimensions. Returning default constructed matrix\n";
         Matrix<T> output;
         return output;
     }
@@ -452,15 +452,17 @@ Matrix<T> operator * (T const c, Matrix<T> const& matrix_a) noexcept
 }
 
 
-//Multiplies all elements of the matrix by a constant
+//Divides all elements of the matrix by a constant
 template<typename T>
 Matrix<T> operator / (Matrix<T> const& matrix_a, T const c) noexcept
 {
-    Matrix<T> output{matrix_a};
     if (!(c*c > 0)) {
-        std::cout<<"Error in operator /: Division by zero encountered\n";
+        std::cout<<"Error in operator /: Division by zero encountered. Returning default constructed matrix\n";
+        Matrix<T> output{};
         return output;
     }
+
+    Matrix<T> output{matrix_a};
 
     for (auto i = 0; i < output.max_rows(); ++i) {
         for (auto j = 0; j < output.max_cols(); ++j) {

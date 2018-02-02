@@ -167,8 +167,8 @@ Matrix<T> invert(Matrix<T> const& A_) noexcept
 {
     //Check if it is a square matrix
     if (A_.max_cols()!=A_.max_rows()) {
-        std::cout<<"Error in invert(): Not a square matrix (m != n)\n";
-        Matrix<T> output;
+        std::cout<<"Error in invert(): Not a square matrix (m != n). Returning default constructed matrix\n";
+        Matrix<T> output{};
         return output;
     }
 
@@ -199,7 +199,6 @@ Matrix<T> invert(Matrix<T> const& A_) noexcept
 
     sz_t m_ = A.max_rows()-1;
     sz_t n_ = A.max_cols()-1;
-    std::cout<<A<<'\n';
     //Make the upper triangular part of the matrix 0 and obtain the inverse in output. Start from the bottom
     for (auto i = 0; i < A.max_rows(); ++i) {
 

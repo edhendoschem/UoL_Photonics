@@ -2,7 +2,7 @@
 #define FLAT_VEC_H_INCLUDED
 #include <vector>
 #include <iostream>
-#include <limits>
+
 
 using sz_t = std::size_t;
 
@@ -271,7 +271,8 @@ template<typename T>
 Flat_vec<T> operator + (Flat_vec<T> const& a, Flat_vec<T> const& b) noexcept
 {
         if (a.size() != b.size()) {
-            std::cout<<"Error in operator +: a.size() = "<<a.size()<<" != b.size() = "<<b.size()<<'\n';
+            std::cout<<"Error in operator +: a.size() = "<<a.size()<<" != b.size() = "<<b.size()<<
+            ". Returning default constructed Flat_vec\n";
             Flat_vec<T> output{};
             return output;
         }
@@ -359,7 +360,8 @@ template<typename T>
 Flat_vec<T> operator * (Flat_vec<T> const& a, Flat_vec<T> const& b) noexcept
 {
         if (a.size() != b.size()) {
-            std::cout<<"Error in operator *: a.size() = "<<a.size()<<" != b.size() = "<<b.size()<<'\n';
+            std::cout<<"Error in operator /: a.size() = "<<a.size()<<" != b.size() = "<<b.size()<<
+            ". Returning default constructed Flat_vec\n";
             Flat_vec<T> output{};
             return output;
         }
@@ -403,42 +405,48 @@ template<typename T>
 Flat_vec<T> operator / (Flat_vec<T> const& a, Flat_vec<T> const& b) noexcept
 {
         if (a.size() != b.size()) {
-            std::cout<<"Error in operator / : a.size() = "<<a.size()<<" != b.size() = "<<b.size()<<'\n';
+            std::cout<<"Error in operator /: a.size() = "<<a.size()<<" != b.size() = "<<b.size()<<
+            ". Returning default constructed Flat_vec\n";
             Flat_vec<T> output{};
             return output;
         }
 
         Flat_vec<T> output{a};
         bool warn_flag = false;
+        sz_t index = 0;
 
         for (unsigned long long i = 0; i < a.size(); ++i) {
             if (b[i] != 0) {
                 output[i] = a[i] / b[i];
             } else {
-                output[i] = std::numeric_limits<T>::infinity();
+                index = i;
                 warn_flag = true;
+                break;
             }
 
         }
 
-        if (warn_flag == true) std::cout<<"Warning in operator /: Division by zero encountered in some or all elements\n";
+        if (warn_flag == true) {
+        std::cout<<"Warning in operator /: Division by zero encountered at index "<<index<<". Stopping operation\n";
+        }
 
         return output;
 }
 
 
-//Divide a Flat_vec by a constant
+//Divide a Flat_vec by a constant.
 template<typename T>
 Flat_vec<T> operator / (Flat_vec<T> const& a, T const b)
 {
-    if (b == 0) std::cout<<"Warning operator /: Division by zero encountered\n";
+    if (b == 0) {
+        std::cout<<"Warning in operator /: Division by zero encountered. Returning default constructed Flat_vec\n";
+        Flat_vec<T> output{};
+        return output;
+    }
+
     Flat_vec<T> output {a};
     for (auto i = 0; i < a.size(); ++i) {
-        if(b != 0) {
-            output[i] /= b;
-        } else {
-            output[i] = std::numeric_limits<T>::infinity();
-        }
+        output[i] /= b;
     }
 
     return output;
@@ -449,14 +457,15 @@ Flat_vec<T> operator / (Flat_vec<T> const& a, T const b)
 template<typename T>
 Flat_vec<T> operator / (T const b, Flat_vec<T> const& a)
 {
-    if (b == 0) std::cout<<"Warning operator /: Division by zero encountered\n";
+    if (b == 0) {
+        std::cout<<"Warning in operator /: Division by zero encountered. Returning default constructed Flat_vec\n";
+        Flat_vec<T> output{};
+        return output;
+    }
+
     Flat_vec<T> output {a};
     for (auto i = 0; i < a.size(); ++i) {
-        if(b != 0) {
-            output[i] /= b;
-        } else {
-            output[i] = std::numeric_limits<T>::infinity();
-        }
+        output[i] /= b;
     }
 
     return output;
