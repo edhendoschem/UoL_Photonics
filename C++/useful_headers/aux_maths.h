@@ -160,10 +160,9 @@ double runge_kutta(std::vector<double> params, T& fn_ptr, R& obj_ptr, unsigned l
 
     return y;
 }
-#endif // AUX_MATHS_H_INCLUDED
+
 
 //Bisection method
-
 struct Res_type { //Auxiliary struct to signal whether a result is in the valid state
     Res_type(double _value, bool _valid)
     : value{_value}, valid{_valid} {};
@@ -215,3 +214,7 @@ Res_type bisection(std::vector<double> x_lims, T& fn_ptr,
     Res_type result {c_c, false};
     return result;
 }
+
+
+
+#endif // AUX_MATHS_H_INCLUDED

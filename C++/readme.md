@@ -18,8 +18,9 @@ Contains:
 - Flat_vec: A vector with defined access operator in order to be able to access the data by xyz or ijk coordinates, 
 stored as a single flat vector instead of a vector of pointers to a vector of pointers to a vector of T's. 
 Contains overloaded +, -, /, *.
-- Matrix and QR_fact: Contains a Matrix class with all the usual matrix operations (multiply, add and substract as 
+- Matrix and matrix_fact: Contains a Matrix class with all the usual matrix operations (multiply, add and substract as 
 overloaded *, +, -) plus transpose, matrix slicing by row or column, row slice operations, invert and QR factorization 
 via Gram-Schmidt orthonormalization converting any invertible matrix into a product of an orthonormal Q matrix and a 
-upper triangular R matrix.
+upper triangular R matrix, LU factorization which converts a given matrix into the product of a lower triangular with
+an upper triangular and matrix determinant.
 
