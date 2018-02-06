@@ -204,14 +204,11 @@ Matrix_pair<T> lu_factorize(Matrix<T>& A) noexcept
 template<typename T>
 T determinant(Matrix_pair<T> const& LU) noexcept
 {
-    T result_1 = 1;
-    T result_2 = 1;
-    for (auto i = 0; i < LU.first.max_cols(); ++i) {
-        result_1 *= LU.first(i,i);
-        result_2 *= LU.second(i,i);
-    }
+    T output = 1;
 
-    T output = result_1 * result_2;
+    for (auto i = 0; i < LU.first.max_cols(); ++i) {
+        output *= LU.second(i,i);
+    }
 
     return output;
 }
@@ -220,14 +217,11 @@ T determinant(Matrix_pair<T> const& LU) noexcept
 template<typename T>
 T determinant(Matrix_system<T> const& LU) noexcept
 {
-    T result_1 = 1;
-    T result_2 = 1;
-    for (auto i = 0; i < LU.first.max_cols(); ++i) {
-        result_1 *= LU.first(i,i);
-        result_2 *= LU.second(i,i);
-    }
+    T output = 1;
 
-    T output = result_1 * result_2;
+    for (auto i = 0; i < LU.first.max_cols(); ++i) {
+        output *= LU.second(i,i);
+    }
 
     return output;
 }
