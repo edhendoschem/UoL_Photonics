@@ -22,5 +22,5 @@ Contains overloaded +, -, /, *.
 overloaded *, +, -) plus transpose, matrix slicing by row or column, row slice operations, invert and QR factorization 
 via Gram-Schmidt orthonormalization converting any invertible matrix into a product of an orthonormal Q matrix and a 
 upper triangular R matrix, LU factorization which converts a given matrix into the product of a lower triangular with
-an upper triangular and matrix determinant.
-
+an upper triangular and matrix determinant. Cholesky factorize which is a highly robust and more numerically efficient
+LU decomposition, only applicable for symmetric, positive definite matrices

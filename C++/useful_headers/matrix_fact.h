@@ -3,6 +3,94 @@
 #include <math.h>
 #include "Matrix.h"
 
+//Cholesky factorization
+//Auxiliary function to determine symmetry
+template<typename T>
+bool is_symmetric(Matrix_system<T> const& m_sys) noexcept
+{
+    if (m_sys.first.max_cols()  == m_sys.first.max_rows()  &&
+        m_sys.second.max_cols() == m_sys.second.max_rows() &&
+        m_sys.third.max_cols()  == m_sys.third.max_rows())
+    {
+        for (auto i = 0; i < m_sys.first.max_rows(); ++i) {
+            for (auto j = i+1; j < m_sys.first.max_cols(); ++j) {
+                if (m_sys.first(i,j)  == m_sys.first(j,i)  &&
+                    m_sys.second(i,j) == m_sys.second(j,i) &&
+                    m_sys.third(i,j)  == m_sys.third(j,i))
+                {
+                    continue;
+                } else {
+                    return false;
+                }
+
+            }
+        }
+    } else {
+        return false;
+    }
+
+    return true;
+}
+
+
+//Auxiliary function to determine symmetry
+template<typename T>
+bool is_symmetric(Matrix<T> const& m_sys) noexcept
+{
+    if (m_sys.max_cols()  == m_sys.max_rows())
+    {
+        for (auto i = 0; i < m_sys.max_rows(); ++i) {
+            for (auto j = i+1; j < m_sys.max_cols(); ++j) {
+                if (m_sys(i,j)  == m_sys(j,i)) {continue;}
+                else {return false;}
+            }
+        }
+    } else {
+        return false;
+    }
+
+    return true;
+}
+
+
+//Cholesky factorization, output matrix pair
+template<typename T>
+Matrix_pair<T> cholesky_factorize(Matrix<T> const& A) noexcept
+{
+    if (is_symmetric(A) == false) {
+        Matrix_pair<T> result {};
+        std::cout<<"Error in cholesky_factorize(): Matrix not symmetrical. Returning default Matrix_pair\n";
+        return result;
+    }
+
+    Matrix<T> B {A.max_rows(), A.max_cols()}; //Lower triangular
+    Matrix<T> C {A.max_rows(), A.max_cols()}; //Upper triangular
+    T sum_result = 0.0;
+
+    for (auto i = 0; i < A.max_rows(); ++i) {
+        for (auto j = i; j < A.max_cols(); ++j) {
+            for (auto k = 0; k < i; ++k) {
+                sum_result += B(i,k) * B(i,k);
+            }
+
+            B(i,i) = sqrt(A(i,i) - sum_result);
+            sum_result = 0;
+
+            for (auto k = 0; k < i; ++k) {
+                sum_result += B(i,k) * B(j,k);
+            }
+
+            B(j,i) = (1.0/B(i,i)) * (A(i,j) - sum_result);
+            sum_result = 0;
+        }
+    }
+
+    C = transpose(B);
+    Matrix_pair<T> result {B, C};
+
+    return result;
+}
+
 
 //Modified version of Matrix.h's row_slice_op to be used only with lu_factorize function
 template<typename T>
