@@ -219,12 +219,12 @@ public:
             }
         } else {
             auto k = 0;
-            auto counter = m-1;
-            for (auto i = 0; i < data.size(); ++i) {
-                new_vector[k] = data[i];
+            auto counter = m_-1;
+            for (auto i = 0; i < new_vector.size(); ++i) {
+                new_vector[i] = data[k];
                 if(i == counter) {
-                    k += 1-difference;
-                    counter += m;
+                    k += 1+difference;
+                    counter += m_;
                 } else {
                     ++k;
                 }
@@ -245,7 +245,6 @@ public:
             return;
         }
 
-        sz_t difference = n > n_ ? n-n_:n_-n;
         std::vector<T> new_vector;
         new_vector.resize(m*n_, 0);
 
@@ -254,7 +253,7 @@ public:
                 new_vector[j] = data[j];
             }
         } else {
-            for (auto j = 0; j < data.size() - difference; ++j) {
+            for (auto j = 0; j < new_vector.size(); ++j) {
                 new_vector[j] = data[j];
             }
         }
