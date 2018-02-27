@@ -165,7 +165,7 @@ public:
     }
 
 
-    //Change the underliying vector
+    //Change the underlying vector
     void set_data(std::vector<T> const& data_) noexcept
     {
         data = data_;
@@ -558,6 +558,13 @@ Matrix<T> operator + (T const c, Matrix<T> const& matrix_a) noexcept
 template<typename T>
 Matrix<T> operator + (Matrix<T> const& matrix_a, Matrix<T> const& matrix_b) noexcept
 {
+    if (matrix_b.max_cols() == 1 && matrix_b.max_rows() == 1) {
+        Matrix<T> output {matrix_a};
+        T const temp = matrix_b(0,0);
+        output = output + temp;
+        return output;
+    }
+
     if (matrix_a.max_rows() != matrix_b.max_rows() || matrix_a.max_cols() != matrix_b.max_cols()) {
         std::cout<<"Error in operator +: Incompatible matrix dimensions. Returning default constructed matrix\n";
         Matrix<T> output{};
@@ -610,8 +617,15 @@ Matrix<T> operator - (T const c, Matrix<T> const& matrix_a) noexcept
 template<typename T>
 Matrix<T> operator - (Matrix<T> const& matrix_a, Matrix<T> const& matrix_b) noexcept
 {
+    if (matrix_b.max_cols() == 1 && matrix_b.max_rows() == 1) {
+        Matrix<T> output {matrix_a};
+        T const temp = matrix_b(0,0);
+        output = output - temp;
+        return output;
+    }
+
     if (matrix_a.max_rows() != matrix_b.max_rows() || matrix_a.max_cols() != matrix_b.max_cols()) {
-        std::cout<<"Error in operator +: Incompatible matrix dimensions. Returning default constructed matrix\n";
+        std::cout<<"Error in operator -: Incompatible matrix dimensions. Returning default constructed matrix\n";
         Matrix<T> output;
         return output;
     }
@@ -621,32 +635,6 @@ Matrix<T> operator - (Matrix<T> const& matrix_a, Matrix<T> const& matrix_b) noex
     for (auto i = 0; i < output.max_rows(); ++i) {
         for (auto j = 0; j < output.max_cols(); ++j) {
             output(i,j) = matrix_a(i,j) - matrix_b(i,j);
-        }
-    }
-
-    return output;
-}
-
-
-//Multiplies two matrices of compatible dimensions
-template<typename T>
-Matrix<T> operator * (Matrix<T> const& matrix_a, Matrix<T> const& matrix_b) noexcept
-{
-    if (matrix_a.max_cols() != matrix_b.max_rows()) {
-        std::cout<<"Error in operator *: Incompatible matrix dimensions. Returning default constructed matrix\n";
-        Matrix<T> output;
-        return output;
-    }
-
-    sz_t m_ = matrix_a.max_rows();
-    sz_t n_ = matrix_b.max_cols();
-    Matrix<T> output(m_, n_);
-
-    for (auto i = 0; i < matrix_a.max_rows(); ++i) {
-        for (auto j = 0; j < matrix_b.max_cols(); ++j) {
-            for (auto k = 0; k < matrix_a.max_cols(); ++k) {
-                output(i, j) += matrix_a(i, k) * matrix_b(k, j);
-            }
         }
     }
 
@@ -684,6 +672,40 @@ Matrix<T> operator * (T const c, Matrix<T> const& matrix_a) noexcept
 
     return output;
 }
+
+
+//Multiplies two matrices of compatible dimensions
+template<typename T>
+Matrix<T> operator * (Matrix<T> const& matrix_a, Matrix<T> const& matrix_b) noexcept
+{
+    if (matrix_b.max_cols() == 1 && matrix_b.max_rows() == 1) {
+        Matrix<T> output {matrix_a};
+        T const temp = matrix_b(0,0);
+        output = output * temp;
+        return output;
+    }
+
+    if (matrix_a.max_cols() != matrix_b.max_rows()) {
+        std::cout<<"Error in operator *: Incompatible matrix dimensions. Returning default constructed matrix\n";
+        Matrix<T> output;
+        return output;
+    }
+
+    sz_t m_ = matrix_a.max_rows();
+    sz_t n_ = matrix_b.max_cols();
+    Matrix<T> output(m_, n_);
+
+    for (auto i = 0; i < matrix_a.max_rows(); ++i) {
+        for (auto j = 0; j < matrix_b.max_cols(); ++j) {
+            for (auto k = 0; k < matrix_a.max_cols(); ++k) {
+                output(i, j) += matrix_a(i, k) * matrix_b(k, j);
+            }
+        }
+    }
+
+    return output;
+}
+
 
 //Multiplies all elements of the matrix pair by a constant
 template<typename T>
@@ -889,129 +911,14 @@ void row_slice_op(Matrix_system<T>& m_sys, Matrix_system<T>& row_slice, sz_t row
         return;
     }
 
-    switch(op)
-    {
-    case '+':
-        {
-            for (auto j = 0; j < m_sys.first.max_cols(); ++j) {
-                m_sys.first(row, j) = m_sys.first(row, j) + row_slice.first[j];
-
-            }
-
-            for (auto j = 0; j < m_sys.second.max_cols(); ++j) {
-                m_sys.second(row, j) = m_sys.second(row, j) + row_slice.second[j];
-
-            }
-
-            for (auto j = 0; j < m_sys.third.max_cols(); ++j) {
-                m_sys.third(row, j) = m_sys.third(row, j) + row_slice.third[j];
-
-            }
-            return;
-        }
-
-    case '-':
-        {
-            for (auto j = 0; j < m_sys.first.max_cols(); ++j) {
-                m_sys.first(row, j) = m_sys.first(row, j) - row_slice.first[j];
-
-            }
-
-            for (auto j = 0; j < m_sys.second.max_cols(); ++j) {
-                m_sys.second(row, j) = m_sys.second(row, j) - row_slice.second[j];
-
-            }
-
-            for (auto j = 0; j < m_sys.third.max_cols(); ++j) {
-                m_sys.third(row, j) = m_sys.third(row, j) - row_slice.third[j];
-
-            }
-
-            return;
-        }
-
-    case '*':
-        {
-            for (auto j = 0; j < m_sys.first.max_cols(); ++j) {
-                m_sys.first(row, j) = m_sys.first(row, j) * row_slice.first[j];
-
-            }
-
-            for (auto j = 0; j < m_sys.second.max_cols(); ++j) {
-                m_sys.second(row, j) = m_sys.second(row, j) * row_slice.second[j];
-
-            }
-
-            for (auto j = 0; j < m_sys.third.max_cols(); ++j) {
-                m_sys.third(row, j) = m_sys.third(row, j) * row_slice.third[j];
-
-            }
-
-            return;
-        }
-
-    case '/':
-        {
-
-            for (auto j = 0; j < m_sys.first.max_cols(); ++j) {
-                if (!(row_slice.first[j]*row_slice.first[j] > 0)) {
-                    std::cout<<"Error in row_slice_op(): Division by zero\n";
-                    return;
-                }
-
-                m_sys.first(row, j) = m_sys.first(row, j) / row_slice.first[j];
-            }
-
-            for (auto j = 0; j < m_sys.second.max_cols(); ++j) {
-                if (!(row_slice.second[j]*row_slice.second[j] > 0)) {
-                    std::cout<<"Error in row_slice_op(): Division by zero\n";
-                    return;
-                }
-
-                m_sys.second(row, j) = m_sys.second(row, j) / row_slice.second[j];
-
-            }
-
-            for (auto j = 0; j < m_sys.third.max_cols(); ++j) {
-                if (!(row_slice.third[j]*row_slice.third[j] > 0)) {
-                    std::cout<<"Error in row_slice_op(): Division by zero\n";
-                    return;
-                }
-
-                m_sys.third(row, j) = m_sys.third(row, j) / row_slice.third[j];
-
-            }
-
-            return;
-        }
-
-
-    case '=':
-        {
-            for (auto j = 0; j < m_sys.first.max_cols(); ++j) {
-                m_sys.first(row, j) = row_slice.first[j];
-
-            }
-
-            for (auto j = 0; j < m_sys.second.max_cols(); ++j) {
-                m_sys.second(row, j) = row_slice.second[j];
-
-            }
-
-            for (auto j = 0; j < m_sys.third.max_cols(); ++j) {
-                m_sys.third(row, j) = row_slice.third[j];
-
-            }
-
-            return;
-        }
-
-    default:
-        {
-            std::cout<<"Error in row_slice_op(): Unknown operation\n";
-            return;
-        }
+    if (op != '+' && op != '-' && op != '*' && op != '/' && op != '=') {
+        std::cout<<"Error in row_slice_op(): Unknown operation\n";
+        return;
     }
+
+    row_slice_op(m_sys.first, row_slice.first, row, op);
+    row_slice_op(m_sys.second, row_slice.second, row, op);
+    row_slice_op(m_sys.third, row_slice.third, row, op);
 
     return;
 }
@@ -1029,100 +936,129 @@ void row_slice_op(Matrix_pair<T>& m_sys, Matrix_pair<T>& row_slice, sz_t row, ch
         return;
     }
 
+    if (op != '+' && op != '-' && op != '*' && op != '/' && op != '=') {
+        std::cout<<"Error in row_slice_op(): Unknown operation\n";
+        return;
+    }
+
+    row_slice_op(m_sys.first, row_slice.first, row, op);
+    row_slice_op(m_sys.second, row_slice.second, row, op);
+
+}
+
+
+//Performs the specified operation between a particular matrix column and a column slice. E.G. col_slice_op(A, S, 3, '+'); adds
+//to column 3 of matrix A the slice S
+template<typename T>
+void col_slice_op(Matrix<T>& matrix, Matrix<T>& col_slice, sz_t col, char op) noexcept
+{
+    if (matrix.max_rows() != col_slice.size()) {
+        std::cout<<"Error in row_slice_op(): Matrix row size is different than slice size\n";
+        return;
+    }
+
     switch(op)
     {
     case '+':
         {
-            for (auto j = 0; j < m_sys.first.max_cols(); ++j) {
-                m_sys.first(row, j) = m_sys.first(row, j) + row_slice.first[j];
-
+            for (auto i = 0; i < matrix.max_rows(); ++i) {
+                matrix(i, col) = matrix(i, col) + col_slice[i];
             }
-
-            for (auto j = 0; j < m_sys.second.max_cols(); ++j) {
-                m_sys.second(row, j) = m_sys.second(row, j) + row_slice.second[j];
-
-            }
-
             return;
         }
 
     case '-':
         {
-            for (auto j = 0; j < m_sys.first.max_cols(); ++j) {
-                m_sys.first(row, j) = m_sys.first(row, j) - row_slice.first[j];
-
+            for (auto i = 0; i < matrix.max_rows(); ++i) {
+                matrix(i, col) = matrix(i, col) - col_slice[i];
             }
-
-            for (auto j = 0; j < m_sys.second.max_cols(); ++j) {
-                m_sys.second(row, j) = m_sys.second(row, j) - row_slice.second[j];
-
-            }
-
             return;
         }
-
     case '*':
         {
-            for (auto j = 0; j < m_sys.first.max_cols(); ++j) {
-                m_sys.first(row, j) = m_sys.first(row, j) * row_slice.first[j];
-
+            for (auto i = 0; i < matrix.max_rows(); ++i) {
+                matrix(i, col) = matrix(i, col) * col_slice[i];
             }
-
-            for (auto j = 0; j < m_sys.second.max_cols(); ++j) {
-                m_sys.second(row, j) = m_sys.second(row, j) * row_slice.second[j];
-
-            }
-
             return;
         }
 
     case '/':
         {
-
-            for (auto j = 0; j < m_sys.first.max_cols(); ++j) {
-                if (!(row_slice.first[j]*row_slice.first[j] > 0)) {
-                    std::cout<<"Error in row_slice_op(): Division by zero\n";
+            for (auto i = 0; i < matrix.max_rows(); ++i) {
+                if (!(col_slice[i]*col_slice[i] > 0 )) {
+                    std::cout<<"Error in col_slice_op(): Division by zero\n";
                     return;
                 }
 
-                m_sys.first(row, j) = m_sys.first(row, j) / row_slice.first[j];
+                matrix(i, col) = matrix(i, col) / col_slice[i];
             }
-
-            for (auto j = 0; j < m_sys.second.max_cols(); ++j) {
-                if (!(row_slice.second[j]*row_slice.second[j] > 0)) {
-                    std::cout<<"Error in row_slice_op(): Division by zero\n";
-                    return;
-                }
-
-                m_sys.second(row, j) = m_sys.second(row, j) / row_slice.second[j];
-
-            }
-
             return;
         }
 
-
     case '=':
         {
-            for (auto j = 0; j < m_sys.first.max_cols(); ++j) {
-                m_sys.first(row, j) = row_slice.first[j];
-
+            for (auto i = 0; i < matrix.max_rows(); ++i) {
+                matrix(i, col) = col_slice[i];
             }
-
-            for (auto j = 0; j < m_sys.second.max_cols(); ++j) {
-                m_sys.second(row, j) = row_slice.second[j];
-
-            }
-
             return;
         }
 
     default:
         {
-            std::cout<<"Error in row_slice_op(): Unknown operation\n";
+            std::cout<<"Error in col_slice_op(): Unknown operation\n";
             return;
         }
     }
+
+    return;
+}
+
+
+//Performs the specified operation between a particular matrix_system column and a column slice. E.G. col_slice_op(A, S, 3, '+');
+//adds to column 3 of the first, second and third matrices the first, second and third slices from col_slice
+template<typename T>
+void col_slice_op(Matrix_system<T>& m_sys, Matrix_system<T>& col_slice, sz_t col, char op) noexcept
+{
+    if (m_sys.first.max_rows()  != col_slice.first.size()  ||
+        m_sys.second.max_rows() != col_slice.second.size() ||
+        m_sys.third.max_rows()  != col_slice.third.size())
+    {
+        std::cout<<"Error in col_slice_op(): Matrix(ces) row size(s) is/are different than slice size(s)\n";
+        return;
+    }
+
+    if (op != '+' && op != '-' && op!= '*' && op != '/' && op != '=') {
+        std::cout<<"Error in col_slice_op(): Unknown operation\n";
+        return;
+    }
+
+    col_slice_op(m_sys.first, col_slice.first, col, op);
+    col_slice_op(m_sys.second, col_slice.second, col, op);
+    col_slice_op(m_sys.third, col_slice.third, col, op);
+
+    return;
+}
+
+
+//Performs the specified operation between a particular Matrix_pair row and a Matrix_pair row slice. E.G.
+//row_slice_op(A, S, 3, '+'); adds to row 3 of the first and second matrices, the first and second slices from S
+template<typename T>
+void col_slice_op(Matrix_pair<T>& m_sys, Matrix_pair<T>& col_slice, sz_t col, char op) noexcept
+{
+    if (m_sys.first.max_rows()  != col_slice.first.size()  ||
+        m_sys.second.max_rows() != col_slice.second.size())
+    {
+        std::cout<<"Error in col_slice_op(): Matrix(ces) row size(s) is/are different than slice size(s)\n";
+        return;
+    }
+
+    if (op != '+' && op != '-' && op!= '*' && op != '/' && op != '=') {
+        std::cout<<"Error in col_slice_op(): Unknown operation\n";
+        return;
+    }
+
+    col_slice_op(m_sys.first, col_slice.first, col, op);
+    col_slice_op(m_sys.second, col_slice.second, col, op);
 
     return;
 }

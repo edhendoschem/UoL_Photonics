@@ -19,7 +19,7 @@ Contains:
 stored as a single flat vector instead of a vector of pointers to a vector of pointers to a vector of T's. 
 Contains overloaded +, -, /, *.
 - Matrix and matrix_fact: Contains a Matrix class with all the usual matrix operations (multiply, add and substract as 
-overloaded *, +, -) plus transpose, matrix slicing by row or column, row slice operations, invert and QR factorization 
+overloaded *, +, -) plus transpose, matrix slicing by row or column, row slice operations, column slice operations, invert and QR factorization 
 via Gram-Schmidt orthonormalization converting any invertible matrix into a product of an orthonormal Q matrix and a 
 upper triangular R matrix, LU factorization which converts a given matrix into the product of a lower triangular with
 an upper triangular and matrix determinant. Cholesky factorize which is a highly robust and more numerically efficient

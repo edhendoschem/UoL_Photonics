@@ -59,7 +59,7 @@ Matrix_pair<T> cholesky_factorize(Matrix<T> const& A) noexcept
 {
     if (is_symmetric(A) == false) {
         Matrix_pair<T> result {};
-        std::cout<<"Error in cholesky_factorize(): Matrix not symmetrical. Returning default Matrix_pair\n";
+        std::cout<<"Error in cholesky_factorize(): Matrix not symmetric. Returning default Matrix_pair\n";
         return result;
     }
 
