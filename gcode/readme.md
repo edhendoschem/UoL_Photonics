@@ -1,5 +1,4 @@
-<b>Description<\b>
-The following codes are intented to use with the Aerotech A3200 controller
+<b>Note:</b> The following codes are intented for the Aerotech A3200 controller
 
 # Table of contents
 
