@@ -11,4 +11,4 @@ Program to create a series of lines at different focal lengths, the rate of chan
 the max variation in focus denoted by the variable $targety.
 
 ## prepare_subs <a name = "it2"></a>
-Program to create ridges in a substrate. Will require previous information about the spot size
+Program to create ridges in a substrate. Requires previous information about the spot size
