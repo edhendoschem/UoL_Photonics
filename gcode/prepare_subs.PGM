@@ -1,0 +1,54 @@
+//Program to prepare the silica glass substrate start location assumed to be upper left corner at Working distance of the lens
+//The speed at which the depth increases varies from line to line
+DVAR $xlength $xdir $spotsize $ridgesize $xspeed $ychange $ydir $targetdepth $nlines $ncycles $zchange $yspeed $zspeed
+DVAR $targetdepthspeed $linesep $zdir $linesepspeed
+
+G91 		//Incremental programming mode
+G71 		//Metric programming mode
+G76 		//Distance units/seconds
+G92 X0 Y0 Z0 	//Software home, set preset positions at 4 um before working distance
+
+//variable set up
+$xlength = 32 //Length of the lines in mm
+$xdir = -1 //x axis move start direction, -1 = stage moves to the left, 1 stage moves to the right
+$spotsize = 0.020  //Spot size in mm, required to help calculate the translation
+$ridgesize = 0.0020 //The desired ridge size
+$xspeed = 1 //translation speed in mm/s in the x direction
+$ychange = 0.002  //Change in the focus per pass
+$ydir = 1  //-1 Write from top to bottom position, 1 write from bottom to top position
+$zdir = -1 //-1 stage moves away from the user, 1 stage moves towards the user
+$targetdepth = 0.02 //Note target depth must be divisible by $y_change
+$nlines = 8  //Number of ridge waveguides we want to create
+$linesep = 0.2 //Separation between the lines
+
+//Starting calculations and assignments
+$ncycles = $targetdepth/$ychange 
+$zchange = $spotsize + $ridgesize
+$zspeed = $zchange
+$zchange = $zdir * $zchange
+$linesepspeed = $linesep
+$linesep = $zdir * $linesep
+$yspeed = $ychange
+$xlength = $xlength * $xdir
+$ychange = $ychange * $ydir
+$targetdepthspeed = $targetdepth
+$targetdepth = -1 * $ydir * $targetdepth //Go in the opposite direction of ydir
+
+REPEAT ($nlines)
+	REPEAT ($ncycles)
+		G1 X($xlength) F($xspeed)
+		G1 Y($ychange) F($yspeed)
+		$xlength = -1.0 * $xlength
+	ENDRPT
+	G1 Y($targetdepth) F($targetdepthspeed)
+	G1 Z($zchange) F($zspeed)
+	REPEAT ($ncycles)
+		G1 X($xlength) F($xspeed)
+		G1 Y($ychange) F($yspeed)
+		$xlength = -1.0 * $xlength
+	ENDRPT
+	G1 Y($targetdepth) F($targetdepthspeed)
+	G1 Z($linesep) F($linesepspeed)
+	
+ENDRPT
+M2     //End of program signal
