@@ -6,35 +6,6 @@
 //Cholesky factorization
 //Auxiliary function to determine symmetry
 template<typename T>
-bool is_symmetric(Matrix_system<T> const& m_sys) noexcept
-{
-    if (m_sys.first.max_cols()  == m_sys.first.max_rows()  &&
-        m_sys.second.max_cols() == m_sys.second.max_rows() &&
-        m_sys.third.max_cols()  == m_sys.third.max_rows())
-    {
-        for (auto i = 0; i < m_sys.first.max_rows(); ++i) {
-            for (auto j = i+1; j < m_sys.first.max_cols(); ++j) {
-                if (m_sys.first(i,j)  == m_sys.first(j,i)  &&
-                    m_sys.second(i,j) == m_sys.second(j,i) &&
-                    m_sys.third(i,j)  == m_sys.third(j,i))
-                {
-                    continue;
-                } else {
-                    return false;
-                }
-
-            }
-        }
-    } else {
-        return false;
-    }
-
-    return true;
-}
-
-
-//Auxiliary function to determine symmetry
-template<typename T>
 bool is_symmetric(Matrix<T> const& m_sys) noexcept
 {
     if (m_sys.max_cols()  == m_sys.max_rows())
@@ -238,32 +209,6 @@ void row_slice_op2(Matrix_pair<T>& m_sys, Matrix_pair<T>& row_slice, sz_t row, s
 
 //Lower Upper (LU) factorization. Converts a matrix A into the product of a lower triangular matrix and an upper triangular matrix
 template<typename T>
-Matrix_system<T> lu_factorize(Matrix<T>& A, Matrix<T>& constants) noexcept
-{
-
-    Matrix<T> L(A.max_rows(), A.max_cols());
-    make_identity(L);
-    Matrix<T> U = A;
-    Matrix_system<T> output {L, U, constants};
-
-    sz_t m = output.first.max_rows();
-    sz_t n = output.first.max_cols();
-
-    for (auto j = 0; j < n; ++j) {
-        for (auto i = j+1; i < m; ++i) {
-            Matrix_system<T> row_slices = output.slice(j, 'r');
-            T const mult = output.second(i,j) / row_slices.second[j];
-            row_slices = mult * row_slices;
-            row_slice_op2(output, row_slices, i, j, '-');
-        }
-    }
-
-    return output;
-}
-
-
-//LU factorize without constants matrix
-template<typename T>
 Matrix_pair<T> lu_factorize(Matrix<T>& A) noexcept
 {
 
@@ -291,19 +236,6 @@ Matrix_pair<T> lu_factorize(Matrix<T>& A) noexcept
 //Calculate the determinant value by using LU factorization
 template<typename T>
 T determinant(Matrix_pair<T> const& LU) noexcept
-{
-    T output = 1;
-
-    for (auto i = 0; i < LU.first.max_cols(); ++i) {
-        output *= LU.second(i,i);
-    }
-
-    return output;
-}
-
-//Calculate the determinant value by using LU factorization
-template<typename T>
-T determinant(Matrix_system<T> const& LU) noexcept
 {
     T output = 1;
 

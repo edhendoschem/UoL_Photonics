@@ -424,7 +424,7 @@ std::ostream& operator << (std::ostream& os, Matrix<T> matrix) noexcept
     for (auto i = 0; i < matrix.max_rows(); ++i) {
         for (auto j = 0; j < matrix.max_cols(); ++j) {
             if (j != matrix.max_cols()-1) {
-                os<<matrix(i,j)<<'\t'<<'\t';
+                os<<matrix(i,j)<<' '<<' ';
             } else {
                 os<<matrix(i,j)<<'\n';
             }
@@ -443,7 +443,7 @@ std::ostream& operator << (std::ostream& os, Matrix_pair<T> matrix) noexcept
     for (auto i = 0; i < matrix.first.max_rows(); ++i) {
         for (auto j = 0; j < matrix.first.max_cols(); ++j) {
             if (j != matrix.first.max_cols()-1) {
-                os<<matrix.first(i,j)<<'\t'<<'\t';
+                os<<matrix.first(i,j)<<' '<<' ';
             } else {
                 os<<matrix.first(i,j)<<'\n';
             }
@@ -454,7 +454,7 @@ std::ostream& operator << (std::ostream& os, Matrix_pair<T> matrix) noexcept
     for (auto i = 0; i < matrix.second.max_rows(); ++i) {
         for (auto j = 0; j < matrix.second.max_cols(); ++j) {
             if (j != matrix.second.max_cols()-1) {
-                os<<matrix.second(i,j)<<'\t'<<'\t';
+                os<<matrix.second(i,j)<<' '<<' ';
             } else {
                 os<<matrix.second(i,j)<<'\n';
             }
@@ -473,7 +473,7 @@ std::ostream& operator << (std::ostream& os, Matrix_system<T> matrix) noexcept
     for (auto i = 0; i < matrix.first.max_rows(); ++i) {
         for (auto j = 0; j < matrix.first.max_cols(); ++j) {
             if (j != matrix.first.max_cols()-1) {
-                os<<matrix.first(i,j)<<'\t'<<'\t';
+                os<<matrix.first(i,j)<<' '<<' ';
             } else {
                 os<<matrix.first(i,j)<<'\n';
             }
@@ -484,7 +484,7 @@ std::ostream& operator << (std::ostream& os, Matrix_system<T> matrix) noexcept
     for (auto i = 0; i < matrix.second.max_rows(); ++i) {
         for (auto j = 0; j < matrix.second.max_cols(); ++j) {
             if (j != matrix.second.max_cols()-1) {
-                os<<matrix.second(i,j)<<'\t'<<'\t';
+                os<<matrix.second(i,j)<<' '<<' ';
             } else {
                 os<<matrix.second(i,j)<<'\n';
             }
@@ -495,7 +495,7 @@ std::ostream& operator << (std::ostream& os, Matrix_system<T> matrix) noexcept
     for (auto i = 0; i < matrix.third.max_rows(); ++i) {
         for (auto j = 0; j < matrix.third.max_cols(); ++j) {
             if (j != matrix.third.max_cols()-1) {
-                os<<matrix.third(i,j)<<'\t'<<'\t';
+                os<<matrix.third(i,j)<<' '<<' ';
             } else {
                 os<<matrix.third(i,j)<<'\n';
             }
