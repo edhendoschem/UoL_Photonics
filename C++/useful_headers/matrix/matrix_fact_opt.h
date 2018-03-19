@@ -1,7 +1,7 @@
 #ifndef MATRIX_FACT_OPT_H_INCLUDED
 #define MATRIX_FACT_OPT_H_INCLUDED
 #include <math.h>
-#include "Matrix_opt.h"
+#include "matrix_opt.h"
 
 //Cholesky factorization
 //Auxiliary function to determine symmetry
