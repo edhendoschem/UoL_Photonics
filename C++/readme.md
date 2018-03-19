@@ -18,9 +18,11 @@ Contains:
 - Flat_vec: A vector with defined access operator in order to be able to access the data by xyz or ijk coordinates, 
 stored as a single flat vector instead of a vector of pointers to a vector of pointers to a vector of T's. 
 Contains overloaded +, -, /, *.
-- Matrix and matrix_fact: Contains a Matrix class with all the usual matrix operations (multiply, add and substract as 
-overloaded *, +, -) plus transpose, matrix slicing by row or column, row slice operations, column slice operations, invert and QR factorization 
-via Gram-Schmidt orthonormalization converting any invertible matrix into a product of an orthonormal Q matrix and a 
-upper triangular R matrix, LU factorization which converts a given matrix into the product of a lower triangular with
+- matrix_opt and matrix_fact_opt: Contains a Matrix class with all the usual matrix operations (multiply, add and substract as 
+overloaded *, +, -) plus transpose, matrix slicing by row or column, row slice operations, column slice operations, invert and
+QR factorization via Gram-Schmidt orthonormalization converting any invertible matrix into a product of an orthonormal Q matrix 
+and a upper triangular R matrix, LU factorization which converts a given matrix into the product of a lower triangular with
 an upper triangular and matrix determinant. Cholesky factorize which is a highly robust and more numerically efficient
-LU decomposition, only applicable for symmetric, positive definite matrices
+LU decomposition, only applicable for symmetric, positive definite matrices. <b>Note</b>: If the size of the matrix is 
+larger than 1000x1000, parallel processing will be used in the following functions: lu_factorize, cholesky_factorize, transpose
+

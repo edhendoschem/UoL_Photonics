@@ -1,12 +1,22 @@
-#ifndef MATRIX_H_INCLUDED
-#define MATRIX_H_INCLUDED
+#ifndef MATRIX_OPT_H_INCLUDED
+#define MATRIX_OPT_H_INCLUDED
+//Include list
 #include <iostream>
 #include <vector>
+#include <thread>
+#include <future>
+#include <chrono>
+
+//Number of threads available in this machine
+static std::atomic<std::size_t> THREADS {std::thread::hardware_concurrency()};
 
 using sz_t = std::size_t;
 using sz_t = std::size_t;
 
 
+//Stores data as a flat vector, with overloaded call operator to be able to access the data as a 0 indexed matrix
+//e.g. A(0,1) returns the element on the first row and second column. Recommended types: float, double. It also supports
+//other types but factorizations will no longer work properly
 template<typename T>
 class Matrix
 {
@@ -17,7 +27,7 @@ private:
 
 public:
     //Constructors
-    //Default constructor
+    //Default constructor, single zero matrix
     Matrix() noexcept:
         m{1}, n{1}
     {
@@ -25,7 +35,7 @@ public:
     }
 
 
-    //Construct matrix given dimensions
+    //Construct matrix of zeros given dimensions
     Matrix(sz_t m_, sz_t n_) noexcept:
         m{m_}, n{n_}
     {
@@ -38,16 +48,22 @@ public:
     }
 
 
-    //Copy constructor
-    Matrix(Matrix const& matrix) noexcept:
-        m{matrix.max_rows()}, n{matrix.max_cols()}
-    {
-        data = std::move(matrix.get_data());
-    }
+    //Constructor moving the potentially large data_
+    Matrix(sz_t m_, sz_t n_, std::vector<T>&& data_) noexcept:
+        m{m_}, n{n_}, data{std::move(data_)} {}
+
+
+    //Constructor copying the potentially large data_
+    Matrix(sz_t m_, sz_t n_, std::vector<T> const& data_) noexcept:
+        m{m_}, n{n_}, data{data_} {}
+
+
+    //Move constructor
+    Matrix(Matrix&& matrix) noexcept = default;
 
 
     //Overloaded operators
-    //Access an element by inputting the row and column value, constat version
+    //Access an element by inputting the row and column value, constant version
     T const& operator () (sz_t const i, sz_t const j) const noexcept
     {
         if (i < m && j < n) {
@@ -103,8 +119,8 @@ public:
     }
 
 
-    //Copy assignment operator
-    Matrix<T>& operator = (Matrix<T> const& matrix) = default;
+    //Move assignment operator
+    Matrix<T>& operator = (Matrix<T>&& matrix) noexcept = default;
 
 
     //Utility functions
@@ -115,8 +131,6 @@ public:
         {
         case 'c':
             {
-
-
                 if ((m-1)+k*m < data.size()) {
                     Matrix<T> output(m,1);
                     for (auto i = 0; i < m; ++i) {
@@ -165,17 +179,27 @@ public:
     }
 
 
-    //Change the underlying vector
-    void set_data(std::vector<T> const& data_) noexcept
+    //Change the underliying vector
+    void set_data(std::vector<T>& data_) noexcept
     {
         data = data_;
+        return;
     }
 
 
     //Return the underlying vector
-    std::vector<T> const& get_data() const noexcept
+    std::vector<T>& get_data() const noexcept
     {
         return data;
+    }
+
+
+    //Return a copy of this matrix
+    Matrix<T> make_copy() const noexcept
+    {
+        Matrix<T> output{m, n, data};
+        return output;
+
     }
 
 
@@ -233,6 +257,7 @@ public:
 
         m = m_;
         data = std::move(new_vector);
+        return;
     }
 
 
@@ -260,6 +285,7 @@ public:
 
         n = n_;
         data = std::move(new_vector);
+        return;
     }
 
 
@@ -304,17 +330,16 @@ struct Matrix_pair {
 
 
     //Constructor from two matrices
-    Matrix_pair(Matrix<T> const& first_, Matrix<T> const& second_) noexcept:
-        first{first_}, second{second_} {};
+    Matrix_pair(Matrix<T>&& first_, Matrix<T>&& second_) noexcept:
+        first{std::move(first_)}, second{std::move(second_)} {};
 
 
-    //Copy constructor
-    Matrix_pair(Matrix_pair<T> const& S_) noexcept:
-        first{S_.first}, second{S_.second} {};
+    //Move constructor
+    Matrix_pair(Matrix_pair<T>&& S_) noexcept = default;
 
 
-    //Copy assignment operator
-    Matrix_pair<T>& operator = (Matrix_pair<T> const& B) = default;
+    //Move assignment operator
+    Matrix_pair<T>& operator = (Matrix_pair<T>&& B) noexcept = default;
 
 
     //Returns a column slice or row slice of the entire system. Note: This slice is a copy and not part of the matrix
@@ -327,7 +352,7 @@ struct Matrix_pair {
             {
                 Matrix<T> A = first.slice(k, 'c');
                 Matrix<T> B = second.slice(k, 'c');
-                Matrix_pair<T> output {A, B};
+                Matrix_pair<T> output {std::move(A), std::move(B)};
                 return output;
             }
 
@@ -335,7 +360,7 @@ struct Matrix_pair {
             {
                 Matrix<T> A = first.slice(k, 'r');
                 Matrix<T> B = second.slice(k, 'r');
-                Matrix_pair<T> output {A, B};
+                Matrix_pair<T> output {std::move(A), std::move(B)};
                 return output;
             }
 
@@ -364,20 +389,20 @@ struct Matrix_system {
         first{Matrix<T>()}, second{Matrix<T>()}, third{Matrix<T>()} {};
 
     //Constructor for homogeneous matrices system
-    Matrix_system(Matrix<T> const& first_, Matrix<T> const& second_) noexcept:
-        first{first_}, second{second_}, third{Matrix<T>(second_.max_rows(), 1)} {};
+    Matrix_system(Matrix<T>&& first_, Matrix<T>&& second_) noexcept:
+        first{std::move(first_)}, second{std::move(second_)}, third{Matrix<T>(second_.max_rows(), 1)} {};
 
     //Constructor for three matrices system
-    Matrix_system(Matrix<T> const& first_, Matrix<T> const& second_, Matrix<T> const& third_) noexcept:
-        first{first_}, second{second_}, third{third_} {};
-
-    //Copy constructor
-    Matrix_system(Matrix_system<T> const& S_) noexcept:
-        first{S_.first}, second{S_.second}, third{S_.third} {};
+    Matrix_system(Matrix<T>&& first_, Matrix<T>&& second_, Matrix<T>&& third_) noexcept:
+        first{std::move(first_)}, second{std::move(second_)}, third{std::move(third_)} {};
 
 
-    //Copy assignment operator
-    Matrix_system<T>& operator = (Matrix_system<T> const& B) = default;
+    //Move constructor
+    Matrix_system(Matrix_system<T>&& S_) noexcept = default;
+
+
+    //Move assignment operator
+    Matrix_system<T>& operator = (Matrix_system<T>&& B) = default;
 
 
     //Returns a column slice or row slice of the entire system. Note: This slice is a copy and not part of the matrix
@@ -391,7 +416,7 @@ struct Matrix_system {
                 Matrix<T> A = first.slice(k, 'c');
                 Matrix<T> B = second.slice(k, 'c');
                 Matrix<T> C = third.slice(k, 'c');
-                Matrix_system<T> output {A, B, C};
+                Matrix_system<T> output {std::move(A), std::move(B), std::move(C)};
                 return output;
             }
 
@@ -400,7 +425,7 @@ struct Matrix_system {
                 Matrix<T> A = first.slice(k, 'r');
                 Matrix<T> B = second.slice(k, 'r');
                 Matrix<T> C = third.slice(k, 'r');
-                Matrix_system<T> output {A, B, C};
+                Matrix_system<T> output {std::move(A), std::move(B), std::move(C)};
                 return output;
             }
 
@@ -417,9 +442,9 @@ struct Matrix_system {
 
 
 //Other operators
-//Overloading << operator to help print the matrix
+//Overloading << operator to help print the matrix or store it in a file.
 template<typename T>
-std::ostream& operator << (std::ostream& os, Matrix<T> matrix) noexcept
+std::ostream& operator << (std::ostream& os, Matrix<T> const& matrix) noexcept
 {
     for (auto i = 0; i < matrix.max_rows(); ++i) {
         for (auto j = 0; j < matrix.max_cols(); ++j) {
@@ -437,7 +462,7 @@ std::ostream& operator << (std::ostream& os, Matrix<T> matrix) noexcept
 
 //Overloaded << operator to print a matrix pair
 template<typename T>
-std::ostream& operator << (std::ostream& os, Matrix_pair<T> matrix) noexcept
+std::ostream& operator << (std::ostream& os, Matrix_pair<T> const& matrix) noexcept
 {
     std::cout<<"First matrix\n";
     for (auto i = 0; i < matrix.first.max_rows(); ++i) {
@@ -467,7 +492,7 @@ std::ostream& operator << (std::ostream& os, Matrix_pair<T> matrix) noexcept
 
 //Overloaded << operator to print a matrix system
 template<typename T>
-std::ostream& operator << (std::ostream& os, Matrix_system<T> matrix) noexcept
+std::ostream& operator << (std::ostream& os, Matrix_system<T> const& matrix) noexcept
 {
     std::cout<<"First matrix\n";
     for (auto i = 0; i < matrix.first.max_rows(); ++i) {
@@ -507,7 +532,7 @@ std::ostream& operator << (std::ostream& os, Matrix_system<T> matrix) noexcept
 
 //Specialized << operator, to print a vector of column matrixes
 template<typename T>
-std::ostream& operator << (std::ostream& os, std::vector<Matrix<T>> vec) noexcept
+std::ostream& operator << (std::ostream& os, std::vector<Matrix<T>> const& vec) noexcept
 {
 
     for (auto j = 0; j < vec[0].size(); ++j) {
@@ -524,171 +549,133 @@ std::ostream& operator << (std::ostream& os, std::vector<Matrix<T>> vec) noexcep
 }
 
 
-//Adds a constant to every element of the matrix, outputs a new matrix
+//Adds a constant to every element of the matrix,
 template<typename T>
-Matrix<T> operator + (Matrix<T> const& matrix_a, T const c) noexcept
+void operator + (Matrix<T>& matrix_a, T const c) noexcept
 {
-    Matrix<T> output = matrix_a;
-    for (auto i = 0; i < output.max_rows(); ++i) {
-        for (auto j = 0; j < output.max_cols(); ++j) {
-            output(i,j) += c;
+    for (auto i = 0; i < matrix_a.max_rows(); ++i) {
+        for (auto j = 0; j < matrix_a.max_cols(); ++j) {
+            matrix_a(i,j) += c;
         }
     }
 
-    return output;
+    return;
 }
 
 
-//Adds a constant to every element of the matrix, outputs a new matrix
+//Adds a constant to every element of the matrix
 template<typename T>
-Matrix<T> operator + (T const c, Matrix<T> const& matrix_a) noexcept
+void operator + (T const c, Matrix<T>& matrix_a) noexcept
 {
-    Matrix<T> output = matrix_a;
-    for (auto i = 0; i < output.max_rows(); ++i) {
-        for (auto j = 0; j < output.max_cols(); ++j) {
-            output(i,j) += c;
-        }
-    }
-
-    return output;
+    matrix_a + c;
+    return;
 }
 
 
-//Adds two matrices together
+//Adds matrix_b to matrix_a
 template<typename T>
-Matrix<T> operator + (Matrix<T> const& matrix_a, Matrix<T> const& matrix_b) noexcept
+void operator + (Matrix<T>& matrix_a, Matrix<T> const& matrix_b) noexcept
 {
-    if (matrix_b.max_cols() == 1 && matrix_b.max_rows() == 1) {
-        Matrix<T> output {matrix_a};
-        T const temp = matrix_b(0,0);
-        output = output + temp;
-        return output;
+    if (matrix_b.max_rows() == 1 && matrix_b.max_cols() == 1) {
+        T const val = matrix_b(0,0);
+        matrix_a + val;
+        return;
     }
 
     if (matrix_a.max_rows() != matrix_b.max_rows() || matrix_a.max_cols() != matrix_b.max_cols()) {
-        std::cout<<"Error in operator +: Incompatible matrix dimensions. Returning default constructed matrix\n";
-        Matrix<T> output{};
-        return output;
+        std::cout<<"Error in operator +: Incompatible matrix dimensions.\n";
+        return;
     }
 
-    Matrix<T> output(matrix_a.max_rows(), matrix_a.max_cols());
-
-    for (auto i = 0; i < output.max_rows(); ++i) {
-        for (auto j = 0; j < output.max_cols(); ++j) {
-            output(i,j) = matrix_a(i,j) + matrix_b(i,j);
+    for (auto i = 0; i < matrix_a.max_rows(); ++i) {
+        for (auto j = 0; j < matrix_a.max_cols(); ++j) {
+            matrix_a(i,j) = matrix_a(i,j) + matrix_b(i,j);
         }
     }
 
-    return output;
+    return;
 }
 
 
 //Substracts a constant to all elements of the matrix, the output is a new matrix
 template<typename T>
-Matrix<T> operator - (Matrix<T> const& matrix_a, T const c) noexcept
+void operator - (Matrix<T>& matrix_a, T const c) noexcept
 {
-    Matrix<T> output = matrix_a;
-    for (auto i = 0; i < output.max_rows(); ++i) {
-        for (auto j = 0; j < output.max_cols(); ++j) {
-            output(i,j) -= c;
+    for (auto i = 0; i < matrix_a.max_rows(); ++i) {
+        for (auto j = 0; j < matrix_a.max_cols(); ++j) {
+            matrix_a(i,j) -= c;
         }
     }
 
-    return output;
+    return;
 }
 
 
 //Substracts a constant to all elements of the matrix, the output is a new matrix
 template<typename T>
-Matrix<T> operator - (T const c, Matrix<T> const& matrix_a) noexcept
+void operator - (T const c, Matrix<T>& matrix_a) noexcept
 {
-    Matrix<T> output = matrix_a;
-    for (auto i = 0; i < output.max_rows(); ++i) {
-        for (auto j = 0; j < output.max_cols(); ++j) {
-            output(i,j) = c - output(i,j);
+    for (auto i = 0; i < matrix_a.max_rows(); ++i) {
+        for (auto j = 0; j < matrix_a.max_cols(); ++j) {
+            matrix_a(i,j) = c - matrix_a(i,j);
         }
     }
 
-    return output;
+    return;
 }
 
 
-//Substracts two matrices
+//Substracts matrix_b from matrix_a
 template<typename T>
-Matrix<T> operator - (Matrix<T> const& matrix_a, Matrix<T> const& matrix_b) noexcept
+void operator - (Matrix<T>& matrix_a, Matrix<T> const& matrix_b) noexcept
 {
-    if (matrix_b.max_cols() == 1 && matrix_b.max_rows() == 1) {
-        Matrix<T> output {matrix_a};
-        T const temp = matrix_b(0,0);
-        output = output - temp;
-        return output;
+    if (matrix_b.max_rows() == 1 && matrix_b.max_cols() == 1) {
+        T const val = matrix_b(0,0);
+        matrix_a - val;
+        return;
     }
-
     if (matrix_a.max_rows() != matrix_b.max_rows() || matrix_a.max_cols() != matrix_b.max_cols()) {
-        std::cout<<"Error in operator -: Incompatible matrix dimensions. Returning default constructed matrix\n";
-        Matrix<T> output;
-        return output;
+        std::cout<<"Error in operator -: Incompatible matrix dimensions.\n";
+        return;
     }
 
-    Matrix<T> output(matrix_a.max_rows(), matrix_a.max_cols());
-
-    for (auto i = 0; i < output.max_rows(); ++i) {
-        for (auto j = 0; j < output.max_cols(); ++j) {
-            output(i,j) = matrix_a(i,j) - matrix_b(i,j);
+    for (auto i = 0; i < matrix_a.max_rows(); ++i) {
+        for (auto j = 0; j < matrix_a.max_cols(); ++j) {
+            matrix_a(i,j) = matrix_a(i,j) - matrix_b(i,j);
         }
     }
 
-    return output;
+    return;
 }
 
 
 //Multiplies all elements of the matrix by a constant
 template<typename T>
-Matrix<T> operator * (Matrix<T> const& matrix_a, T const c) noexcept
+void operator * (Matrix<T>& matrix_a, T const c) noexcept
 {
-    Matrix<T> output{matrix_a};
-
-    for (auto i = 0; i < output.max_rows(); ++i) {
-        for (auto j = 0; j < output.max_cols(); ++j) {
-            output(i,j) *= c;
+    for (auto i = 0; i < matrix_a.max_rows(); ++i) {
+        for (auto j = 0; j < matrix_a.max_cols(); ++j) {
+            matrix_a(i,j) *= c;
         }
     }
 
-    return output;
+    return;
 }
 
 
-//Multiplies all elements of the matrix by a constant
+//Multiplies two matrices of compatible dimensions, the result is stored in the first matrix
 template<typename T>
-Matrix<T> operator * (T const c, Matrix<T> const& matrix_a) noexcept
+void operator * (Matrix<T>& matrix_a, Matrix<T> const& matrix_b) noexcept
 {
-    Matrix<T> output{matrix_a};
-
-    for (auto i = 0; i < output.max_rows(); ++i) {
-        for (auto j = 0; j < output.max_cols(); ++j) {
-            output(i,j) *= c;
-        }
-    }
-
-    return output;
-}
-
-
-//Multiplies two matrices of compatible dimensions
-template<typename T>
-Matrix<T> operator * (Matrix<T> const& matrix_a, Matrix<T> const& matrix_b) noexcept
-{
-    if (matrix_b.max_cols() == 1 && matrix_b.max_rows() == 1) {
-        Matrix<T> output {matrix_a};
-        T const temp = matrix_b(0,0);
-        output = output * temp;
-        return output;
+    if (matrix_b.max_rows() == 1 && matrix_b.max_cols() == 1) {
+        T const val = matrix_b(0,0);
+        matrix_a * val;
+        return;
     }
 
     if (matrix_a.max_cols() != matrix_b.max_rows()) {
-        std::cout<<"Error in operator *: Incompatible matrix dimensions. Returning default constructed matrix\n";
-        Matrix<T> output;
-        return output;
+        std::cout<<"Error in operator *: Incompatible matrix dimensions.\n";
+        return;
     }
 
     sz_t m_ = matrix_a.max_rows();
@@ -703,132 +690,241 @@ Matrix<T> operator * (Matrix<T> const& matrix_a, Matrix<T> const& matrix_b) noex
         }
     }
 
-    return output;
+    matrix_a = std::move(output);
+    return;
+}
+
+
+//Multiplies all elements of the matrix by a constant
+template<typename T>
+void operator * (T const c, Matrix<T>& matrix_a) noexcept
+{
+    matrix_a * c;
+    return;
 }
 
 
 //Multiplies all elements of the matrix pair by a constant
 template<typename T>
-Matrix_pair<T> operator * (T const c, Matrix_pair<T> const& matrix_a) noexcept
+void operator * (T const c, Matrix_pair<T>& matrix_a) noexcept
 {
-    Matrix_pair<T> output{matrix_a};
 
-    for (auto i = 0; i < output.first.max_rows(); ++i) {
-        for (auto j = 0; j < output.first.max_cols(); ++j) {
-            output.first(i,j) *= c;
+    for (auto i = 0; i < matrix_a.first.max_rows(); ++i) {
+        for (auto j = 0; j < matrix_a.first.max_cols(); ++j) {
+            matrix_a.first(i,j) *= c;
         }
     }
 
-    for (auto i = 0; i < output.second.max_rows(); ++i) {
-        for (auto j = 0; j < output.second.max_cols(); ++j) {
-            output.second(i,j) *= c;
+    for (auto i = 0; i < matrix_a.second.max_rows(); ++i) {
+        for (auto j = 0; j < matrix_a.second.max_cols(); ++j) {
+            matrix_a.second(i,j) *= c;
         }
     }
 
-    return output;
+    return;
 }
 
 
 //Multiplies all elements of the matrix pair by a constant
 template<typename T>
-Matrix_pair<T> operator * (Matrix_pair<T> const& matrix_a, T const c) noexcept
+void operator * (Matrix_pair<T>& matrix_a, T const c) noexcept
 {
-    Matrix_pair<T> output{matrix_a};
-    output = c * output;
-    return output;
+    c * matrix_a;
+    return;
 }
 
 
 //Multiplies all elements of the matrix system by a constant
 template<typename T>
-Matrix_system<T> operator * (T const c, Matrix_system<T> const& matrix_a) noexcept
+void operator * (T const c, Matrix_system<T>& matrix_a) noexcept
 {
-    Matrix_system<T> output{matrix_a};
 
-    for (auto i = 0; i < output.first.max_rows(); ++i) {
-        for (auto j = 0; j < output.first.max_cols(); ++j) {
-            output.first(i,j) *= c;
+    for (auto i = 0; i < matrix_a.first.max_rows(); ++i) {
+        for (auto j = 0; j < matrix_a.first.max_cols(); ++j) {
+            matrix_a.first(i,j) *= c;
         }
     }
 
-    for (auto i = 0; i < output.second.max_rows(); ++i) {
-        for (auto j = 0; j < output.second.max_cols(); ++j) {
-            output.second(i,j) *= c;
+    for (auto i = 0; i < matrix_a.second.max_rows(); ++i) {
+        for (auto j = 0; j < matrix_a.second.max_cols(); ++j) {
+            matrix_a.second(i,j) *= c;
         }
     }
 
-    for (auto i = 0; i < output.third.max_rows(); ++i) {
-        for (auto j = 0; j < output.third.max_cols(); ++j) {
-            output.third(i,j) *= c;
+    for (auto i = 0; i < matrix_a.third.max_rows(); ++i) {
+        for (auto j = 0; j < matrix_a.third.max_cols(); ++j) {
+            matrix_a.third(i,j) *= c;
         }
     }
 
-    return output;
+    return;
 }
 
 
 //Multiplies all elements of the matrix system by a constant
 template<typename T>
-Matrix_system<T> operator * (Matrix_system<T> const& matrix_a, T const c) noexcept
+void operator * (Matrix_system<T>& matrix_a, T const c) noexcept
 {
-    Matrix_system<T> output{matrix_a};
-    output = c * output;
-    return output;
+    c * matrix_a;
+    return;
 }
 
 
 //Divides all elements of the matrix by a constant
 template<typename T>
-Matrix<T> operator / (Matrix<T> const& matrix_a, T const c) noexcept
+void operator / (Matrix<T>& matrix_a, T const c) noexcept
 {
     if (!(c*c > 0)) {
-        std::cout<<"Error in operator /: Division by zero encountered. Returning default constructed matrix\n";
-        Matrix<T> output{};
-        return output;
+        std::cout<<"Error in operator /: Division by zero encountered.\n";
+        return;
     }
 
-    Matrix<T> output{matrix_a};
-
-    for (auto i = 0; i < output.max_rows(); ++i) {
-        for (auto j = 0; j < output.max_cols(); ++j) {
-            output(i,j) /= c;
+    for (auto i = 0; i < matrix_a.max_rows(); ++i) {
+        for (auto j = 0; j < matrix_a.max_cols(); ++j) {
+            matrix_a(i,j) /= c;
         }
     }
 
-    return output;
+    return;
 }
 
 
 //Utility functions
-//Switches the rows with the columns of the matrix
-template<typename T>
-Matrix<T> transpose(Matrix<T> const& matrix_a) noexcept
+//Sets all available threads to work on a function.
+template<typename f_ptr, typename...ARGS>
+void launch_task (f_ptr F, sz_t starts, sz_t ends,
+                  int delay_ms, ARGS...args) noexcept
 {
-    Matrix<T> output(matrix_a.max_cols(), matrix_a.max_rows());
+    sz_t new_start = starts;
+    sz_t new_end = 0;
 
-    for (auto i = 0; i < matrix_a.max_rows(); ++i) {
-        for (auto j = 0; j < matrix_a.max_cols(); ++j) {
-            output(j,i) = matrix_a(i,j);
-        }
+    std::vector<std::thread> threads;
+    for (auto i = 0; i < THREADS; ++i) {
+        new_end = (i+1) * ends/THREADS; //Splits the load evenly between all threads
+        std::thread t {F, new_start, new_end, args...};
+        threads.push_back(std::move(t));
+        new_start = new_end;
+        std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms));
     }
 
-    return output;
+    for (auto i = 0; i < threads.size(); ++i) {
+        threads[i].join();
+    }
+
+    return;
 }
 
 
-//Creates a matrix with 0 in all the elements except those in the diagonal wich are equal to 1
+//Switches the rows with the columns of the matrix
 template<typename T>
-void make_identity(Matrix<T>& matrix_a) noexcept
+void transpose(Matrix<T>& matrix_a_, sz_t limit = 1000000) noexcept
 {
-    for (auto i = 0; i < matrix_a.max_rows(); ++i) {
-        for (auto j = 0; j < matrix_a.max_cols(); ++j) {
-            if (i == j) {
-                matrix_a(i,j) = 1;
-            } else {
-                matrix_a(i,j) = 0;
+
+    auto transpose_ = [] (sz_t starts, sz_t ends, Matrix<T>& matrix_a)
+    {
+        sz_t m_ = 0;
+        sz_t n_ = 0;
+
+        if (matrix_a.max_cols() > matrix_a.max_rows()) {
+            m_ = matrix_a.max_rows();
+            n_ = matrix_a.max_cols();
+            matrix_a.set_rows(n_);
+
+            for (auto i = starts; i < ends; ++i) {
+                for (auto j = i; j < n_; ++j) {
+                    T const temp = matrix_a(j,i);
+                    matrix_a(j,i) = matrix_a(i,j);
+                    matrix_a(i,j) = temp;
+                }
+            }
+
+        } else if (matrix_a.max_cols() < matrix_a.max_rows()) {
+            m_ = matrix_a.max_rows();
+            n_ = matrix_a.max_cols();
+            matrix_a.set_cols(m_);
+
+            for (auto j = starts; j < ends; ++j) {
+                for (auto i = j; i < m_; ++i) {
+                    T const temp = matrix_a(j,i);
+                    matrix_a(j,i) = matrix_a(i,j);
+                    matrix_a(i,j) = temp;
+                }
+            }
+
+        } else {
+            m_ = matrix_a.max_rows();
+            n_ = matrix_a.max_cols();
+
+            for (auto i = starts; i < ends; ++i) {
+                for (auto j = i; j < n_; ++j) {
+                    T const temp = matrix_a(j,i);
+                    matrix_a(j,i) = matrix_a(i,j);
+                    matrix_a(i,j) = temp;
+                }
             }
         }
+
+        return;
+    };
+
+    size_t m__ = matrix_a_.max_rows();
+    size_t n__ = matrix_a_.max_cols();
+
+    if (matrix_a_.max_rows() < matrix_a_.max_cols()) {
+        if (limit < matrix_a_.size() && limit > THREADS) {
+            launch_task(transpose_, 0, matrix_a_.max_rows(), 0, std::ref(matrix_a_));
+        } else {
+            transpose_(0, matrix_a_.max_rows(), matrix_a_);
+        }
+
+        matrix_a_.set_cols(m__);
+
+    } else if (matrix_a_.max_rows() > matrix_a_.max_cols()) {
+        if (limit < matrix_a_.size() && limit > THREADS) {
+            launch_task(transpose_, 0, matrix_a_.max_cols(), 0, std::ref(matrix_a_));
+        } else {
+            transpose_(0, matrix_a_.max_cols(), matrix_a_);
+        }
+
+        matrix_a_.set_rows(n__);
+
+    } else {
+        if (limit < matrix_a_.size() && limit > THREADS){
+            launch_task(transpose_, 0, matrix_a_.max_rows(), 0, std::ref(matrix_a_));
+        } else  {
+            transpose_(0, matrix_a_.max_rows(), matrix_a_);
+        }
     }
+
+    return;
+}
+
+
+//optimizable
+//Creates a matrix with 0 in all the elements except those in the diagonal wich are equal to 1
+template<typename T>
+void make_identity(Matrix<T>& matrix_a, sz_t limit = 10000) noexcept
+{
+    auto make_id_ = [] (sz_t starts, sz_t ends, Matrix<T>& matrix_a_)
+    {
+        for (auto i = starts; i < ends; ++i) {
+            for (auto j = 0; j < matrix_a_.max_cols(); ++j) {
+                if (i == j) {
+                    matrix_a_(i,j) = 1;
+                } else {
+                    matrix_a_(i,j) = 0;
+                }
+            }
+        }
+    };
+
+    if (limit < matrix_a.size()) {
+        launch_task(make_id_, 0, matrix_a.max_rows(), 0, std::ref(matrix_a));
+    } else {
+        make_id_(0, matrix_a.max_rows(), matrix_a);
+    }
+
+    return;
 }
 
 
@@ -944,6 +1040,7 @@ void row_slice_op(Matrix_pair<T>& m_sys, Matrix_pair<T>& row_slice, sz_t row, ch
     row_slice_op(m_sys.first, row_slice.first, row, op);
     row_slice_op(m_sys.second, row_slice.second, row, op);
 
+    return;
 }
 
 
@@ -1075,33 +1172,36 @@ Matrix<T> invert(Matrix<T> const& A_) noexcept
         return output;
     }
 
-    Matrix<T> output = A_; //Create a copy of the matrix to convert to identity
+    Matrix<T> output {std::move(A_.make_copy())}; //Create a copy of the matrix to convert to identity
     make_identity(output); //Convert it to identity matrix
-    Matrix<T> A = A_; //Create another copy of the original matrix
+    Matrix<T> A {std::move(A_.make_copy())}; //Create another copy of the original matrix
 
     //Make A a lower triangular matrix and its diagonal 1
     for (auto i = 0; i < A.max_rows(); ++i) {
         //create a pivot
         T const mult = A(i,i);
-        Matrix<T> slice_A = A.slice(i, 'r');
-        Matrix<T> slice_output = output.slice(i, 'r');
-        slice_A = slice_A / mult;
-        slice_output = slice_output / mult;
+        Matrix<T> slice_A {std::move(A.slice(i, 'r'))};
+        Matrix<T> slice_output {std::move(output.slice(i, 'r'))};
+        slice_A / mult;
+        slice_output / mult;
         row_slice_op(A, slice_A, i, '=');
         row_slice_op(output, slice_output, i, '=');
 
         //Make all numbers below pivot zero
         for (auto j = i+1; j < A.max_cols(); ++j) {
             if (i == A.max_rows()-1) break;
-            Matrix<T> temp_slice_1 = slice_A * A(j, i);
-            Matrix<T> temp_slice_2 = slice_output * A(j, i);
-            row_slice_op(A, temp_slice_1, j, '-');
-            row_slice_op(output, temp_slice_2, j, '-');
+            Matrix<T> temp_slice_0 {std::move(slice_A.make_copy())};
+            temp_slice_0 * A(j, i);
+            Matrix<T> temp_slice_1 {std::move(slice_output.make_copy())};
+            temp_slice_1 * A(j, i);
+            row_slice_op(A, temp_slice_0, j, '-');
+            row_slice_op(output, temp_slice_1, j, '-');
         }
     }
 
     sz_t m_ = A.max_rows()-1;
     sz_t n_ = A.max_cols()-1;
+
     //Make the upper triangular part of the matrix 0 and obtain the inverse in output. Start from the bottom
     for (auto i = 0; i < A.max_rows(); ++i) {
 
@@ -1111,14 +1211,17 @@ Matrix<T> invert(Matrix<T> const& A_) noexcept
         //Use bottom pivot and make elements above it zero
         for (auto j = i+1; j < A.max_cols(); ++j) {
             if (i == A.max_rows()-1) break; //Ignore first row (i.e. last value of the loop)
-            Matrix<T> temp_slice_1 = slice_A * A(n_-j, m_-i);
-            Matrix<T> temp_slice_2 = slice_output * A(n_-j, m_-i);
-            row_slice_op(A, temp_slice_1, n_-j, '-');
-            row_slice_op(output, temp_slice_2, n_-j, '-');
+            Matrix<T> temp_slice_0 {std::move(slice_A.make_copy())};
+            temp_slice_0 * A(n_-j, m_-i);
+            Matrix<T> temp_slice_1 {std::move(slice_output.make_copy())};
+            temp_slice_1 * A(n_-j, m_-i);
+            row_slice_op(A, temp_slice_0, n_-j, '-');
+            row_slice_op(output, temp_slice_1, n_-j, '-');
         }
     }
 
     return output;
 }
 
-#endif // MATRIX_H_INCLUDED
+
+#endif // MATRIX_OPT_H_INCLUDED
