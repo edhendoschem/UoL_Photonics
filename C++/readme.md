@@ -19,8 +19,10 @@ Contains:
 stored as a single flat vector instead of a vector of pointers to a vector of pointers to a vector of T's. 
 Contains overloaded +, -, /, *.
 - matrix_opt and matrix_fact_opt Contains: 
-	* a Matrix class with all the usual matrix operations (multiply, add and substract as 
-overloaded *, +, -) plus transpose, matrix slicing by row or column, row slice operations, column slice operations and invert
+	* A move only Matrix class with all the usual matrix operations (multiply, add and substract as 
+overloaded *, +, - operators) which are stored in the first matrix for memory efficiency e.g a+b will add b to a, the result
+will be stored in a. A "make_copy()" member function is provided should the need for copying arise
+	* Other operations such as transpose, matrix slicing by row or column, row slice operations, column slice operations and invert
 	* QR factorization via Gram-Schmidt orthonormalization converting any invertible matrix into a product of an orthonormal Q matrix 
 and a upper triangular R matrix 
 	* LU factorization which converts a given matrix into the product of a lower triangular with an upper triangular and matrix determinant 
