@@ -29,3 +29,4 @@ and a upper triangular R matrix
 	* Cholesky factorize which is a highly robust and more numerically efficient LU decomposition, only applicable for symmetric, positive definite matrices. 
 <b>Note</b>: If the size of the matrix is 
 larger than 1000x1000, parallel processing will be used in the following functions: lu_factorize, cholesky_factorize, transpose
+	* Matrix linear equation system solvers using the aforementioned methods lu_solve, cholesky_solve and qr_solve
