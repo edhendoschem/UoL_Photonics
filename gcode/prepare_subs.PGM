@@ -1,18 +1,17 @@
 //Program to prepare the silica glass substrate start location assumed to be upper left corner at Working distance of the lens
 //The speed at which the depth increases varies from line to line
 DVAR $xlength $xdir $spotsize $ridgesize $xspeed $ychange $ydir $targetdepth $nlines $ncycles $zchange $yspeed $zspeed
-DVAR $targetdepthspeed $linesep $zdir $linesepspeed
-
-G91 		//Incremental programming mode
-G71 		//Metric programming mode
-G76 		//Distance units/seconds
+DVAR $targetdepthspeed $linesep $zdir $linesepspeed $sepchange
+G91 			//Incremental programming mode
+G71 			//Metric programming mode
+G76 			//Distance units/seconds
 G92 X0 Y0 Z0 	//Software home, set preset positions at 4 um before working distance
-
 //variable set up
 $xlength = 32 //Length of the lines in mm
 $xdir = -1 //x axis move start direction, -1 = stage moves to the left, 1 stage moves to the right
 $spotsize = 0.020  //Spot size in mm, required to help calculate the translation
-$ridgesize = 0.0020 //The desired ridge size
+$sepchange = -0.005 //Change in the separation between laser lines
+$ridgesize = 0.0016 //The desired ridge size
 $xspeed = 1 //translation speed in mm/s in the x direction
 $ychange = 0.002  //Change in the focus per pass
 $ydir = 1  //-1 Write from top to bottom position, 1 write from bottom to top position
@@ -47,6 +46,7 @@ REPEAT ($nlines)
 		G1 Y($ychange) F($yspeed)
 		$xlength = -1.0 * $xlength
 	ENDRPT
+	$zchange = $zchange + $sepchange
 	G1 Y($targetdepth) F($targetdepthspeed)
 	G1 Z($linesep) F($linesepspeed)
 	

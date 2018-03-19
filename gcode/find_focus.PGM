@@ -2,9 +2,9 @@
 //The speed at which the depth increases varies from line to line
 DVAR $xlength $xspeed $ychange $yspeed $separation $zspeed $nrep $halfy
 
-G91 		//Incremental programming mode
-G71 		//Metric programming mode
-G76 		//Distance units/seconds
+G91 			//Incremental programming mode
+G71 			//Metric programming mode
+G76 			//Distance units/seconds
 G92 X0 Y0 Z0 	//Software home, set preset positions at 4 um before working distance
 
 //variable set up (upper left corner of the sample start)
