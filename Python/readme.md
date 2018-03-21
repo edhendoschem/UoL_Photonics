@@ -1,7 +1,9 @@
 # Table of contents
 
 ## 1. [TCP-IP control](#item1)
-## 2. [lifetime_processor](#item2)
+## 2. [direct_att_control](#item2)
+## 3. [lifetime_processor](#item3)
+
 
 ## TCP-IP control <a name = "item1"></a>
 This is a client and server jupyter notebook pair, created to continuosly read data from a power log file as it is being
@@ -21,8 +23,12 @@ To
 file_handle.seek(0,1)
 ```
 
+## direct_att_control <a name = "item2"></a>
+Similarly to TCP-IP, this is a program designed to continuously read from a datafile, extract the power and attenuator 
+values from an internal power meter and adjust the attenuator accordingly to maintain the target value. There is no data
+transmitted by TCP-IP and no need to manually measure data as the program will self calibrate.
 
-## lifetime_processor <a name = "item2"></a>
+## lifetime_processor <a name = "item3"></a>
 This is a simple program to extract the lifetime data from the .txt files created by the Steady State Time Resolved 
 Fluorescence Spectrometer. It uses the Trust Region Reflective algorithm. If the curve fitter fails to properly fit the
 curve, you may be in the presence of a double exponential or some other behaviour
