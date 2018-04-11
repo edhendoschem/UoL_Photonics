@@ -1,6 +1,6 @@
 //Program to find the focus height
 //The speed at which the depth increases varies from line to line
-DVAR $xlength $xspeed $ychange $yspeed $separation $zspeed $nrep $halfy
+DVAR $xlength $xspeed $ychange $yspeed $separation $zspeed $nrep $halfy $targety $zdir $zmove
 
 G91 			//Incremental programming mode
 G71 			//Metric programming mode
@@ -10,20 +10,22 @@ G92 X0 Y0 Z0 	//Software home, set preset positions at 4 um before working dista
 //variable set up (upper left corner of the sample start)
 $xlength = 5 	//Line size in mm
 $xspeed = 2.0   //Translation speed in mm/s
-$ychange = 0.5  //Change of focus in mm
-$targety = 3.0  //Target focus change, must be divisible by $ychange starts at -targety/2 and ends at +targety/2
-$separation = 2 //Separation between rows in mm
+$ychange = 0.1  //Change of focus in mm
+$targety = 2.0  //Target focus change, must be divisible by $ychange starts at -targety/2 and ends at +targety/2
+$separation = 0.5 //Separation (in the z direction) between rows in mm
+$zdir = -1 //1 moves the stage towards the user, -1 away from the user
 
 //Starting calculations and assignments
 $yspeed = $ychange * 2
-$zspeed = -1 * $separation * 2
+$zspeed = $separation * 2
 $nrep = $targety / $ychange
 $halfy = -1 * $targety / 2
+$zmove = $zdir * $separation
 
 G1 Y($halfy) F($yspeed) //Starting position at -targety/2
 REPEAT ($nrep)
 	G1 X($xlength) F($xspeed)
-	G1 Z($separation) F($zspeed)
+	G1 Z($zmove) F($zspeed)
 	G1 Y($ychange) F($yspeed)
 	$xlength = -1 * $xlength
 ENDRPT
