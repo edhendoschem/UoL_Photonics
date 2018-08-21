@@ -1,220 +1,312 @@
 #ifndef AUX_MATHS_H_INCLUDED
 #define AUX_MATHS_H_INCLUDED
 
-#include <cmath> //Allows the use of cmath functions
-#include <complex> //Allows the use of complex numbers and functions
-#include <numeric>
-#include <vector> //enables std::vector
-#include <array> //enables std::array
-#include <random> //Enables random numbers
 #include <iostream>
-#include "Flat_vec.h" //Enables Flat_vec class
+#include <vector>
+#include <array>
+#include <cmath>
+#include "/home/eduardo/Desktop/Programming/cpp/2018-02-09_Parallel_Matrix/matrix_fact_opt.h"
 
-
-//Mersenne Twister recommended initialization
-inline std::mersenne_twister_engine<std::uint_fast64_t, 64, 312, 156, 31,
-                             0xb5026f5aa96619e9, 29,
-                             0x5555555555555555, 17,
-                             0x71d67fffeda60000, 37,
-                             0xfff7eee000000000, 43, 6364136223846793005> Mersenne_Twister{};
-using Rand_e = decltype(Mersenne_Twister);
-
-
-//Absolute value that returns double
-inline double abs_d(double val) {
-    if (val < 0.0) {
-        return -1.0 * val;
-    } else {
-        return val;
-    }
-}
-
-//Integrates functions using Monte Carlo, res = number of points, n_cycles is number of cycles
-//Free function calculator
-template<typename T>
-decltype(auto) integrate_fn(std::vector<double> a, std::vector<double> b,  T& fn_ptr,
-                            unsigned long long res = 800000, unsigned long long n_cycles = 1,
-                            Rand_e rand_eng = Mersenne_Twister)
-                            noexcept {
-    std::vector<std::uniform_real_distribution<>> distributions;
-    std::vector<double> args(a.size(), 0.0);
-    double multiplier = 1.0;
-    double res_d = static_cast<double>(res);
-    double n_cycles_d = static_cast<double>(n_cycles);
-    double sum = 0;
-    double sum_total = 0;
-
-    for (auto i = 0; i < a.size(); ++i) {
-        std::uniform_real_distribution<> unif_real{a[i], b[i]};
-        distributions.push_back(unif_real);
-        multiplier *= (b[i] - a[i]);
-    }
-
-
-    for (auto cycles = 0; cycles < n_cycles; ++cycles) {
-        for (unsigned long long i = 0; i < res; ++i) {
-            for (auto j = 0; j < distributions.size(); ++j) {
-                double const arg = distributions[j](rand_eng);
-                args[j] = arg;
+namespace Maths
+{
+    //Returns absolute value
+    double abs_val(double const x) noexcept;
+    
+    //Compares equality with double values
+    bool cmp_dbl(double x1, double x2, double tol = 0.00001) noexcept;
+    
+    //Compares the sign of two double values, returns true if they are the same
+    bool sign(double const a, double const b) noexcept;
+    
+    //Applies the bisection method to find the root, the f_ptr must be a function that takes a
+    //double as an argument
+    template<typename T>
+    double bisection(double const start, 
+                    double const end, 
+                    T f_ptr, 
+                    double tol = 0.01,
+                    unsigned int n_it= 10000,
+                    bool pos_only = false, //Allow only positive roots
+                    bool warn = false) noexcept
+    {
+        double x0 {start};
+        double x1 {end};
+        double xn {0.0};
+        unsigned int count {0};
+        
+        while (count < n_it)
+        {
+            xn = {(x0 + x1) / 2.0};
+            double const y0 {f_ptr(x0)};
+            double const y1 {f_ptr(x1)};
+            double const yn {f_ptr(xn)};
+            if (warn && count % 10 == 0) std::cout<<"iteration = "<<count<<", yn = "<<yn<<'\n';
+            if (Maths::abs_val(yn) < tol) 
+            {
+                if (pos_only) {
+                    if (xn > 0.0) return xn;
+                    x0 = xn;
+                    x1 = end;
+                    count = 0;
+                } else {
+                    return xn;
+                }
             }
-
-            sum += fn_ptr(args);
-        }
-
-        sum /= res_d;
-        sum_total += sum;
-        sum = 0;
-    }
-
-    sum_total = sum_total * multiplier / n_cycles_d;
-    return sum_total;
-}
-
-
-//Static member function calculator
-template<typename T, typename R>
-decltype(auto) integrate_fn(std::vector<double> a, std::vector<double> b,  T& fn_ptr, R& obj_ptr,
-                            unsigned long long res = 800000, unsigned long long n_cycles = 1,
-                            Rand_e rand_eng = Mersenne_Twister)
-                            noexcept {
-    std::vector<std::uniform_real_distribution<>> distributions;
-    std::vector<double> args(a.size(), 0.0);
-    double multiplier = 1.0;
-    double res_d = static_cast<double>(res);
-    double n_cycles_d = static_cast<double>(n_cycles);
-    double sum = 0;
-    double sum_total = 0;
-
-    for (auto i = 0; i < a.size(); ++i) {
-        std::uniform_real_distribution<> unif_real{a[i], b[i]};
-        distributions.push_back(unif_real);
-        multiplier *= (b[i] - a[i]);
-    }
-
-
-    for (auto cycles = 0; cycles < n_cycles; ++cycles) {
-        for (unsigned long long i = 0; i < res; ++i) {
-            for (auto j = 0; j < distributions.size(); ++j) {
-                double const arg = distributions[j](rand_eng);
-                args[j] = arg;
+            if (Maths::sign(y0, yn))
+            {
+                x0 = xn;
+            } else {
+                x1 = xn;
             }
-            //std::cout<<"fn_ptr val = "<<fn_ptr(args, obj_ptr)<<'\n';
-            sum += fn_ptr(args, obj_ptr);
+        
+            ++count;
+        
+            if (count == n_it && warn)
+            {
+                std::cout<<"============================================\n";
+                std::cout<<"Error in Maths::Bisection(), max number of iterations reached.\n";
+                std::cout<<"Returning current value = "<<xn<<'\n';
+                std::cout<<"Residual = "<<yn<<'\n';
+                std::cout<<"============================================\n";
+            }
+        } //End of while loop
+        
+        return xn;
+        
+    } //End of bisection
+    
+    template<typename T>
+    std::vector<double> bisection(std::vector<std::array<double, 2>> const& root_candidate, 
+                    T f_ptr, 
+                    double tol = 0.01,
+                    unsigned int n_it= 10000,
+                    bool pos_only = false, //Allow only positive roots
+                    bool warn = false) noexcept
+    {
+        std::vector<double> root_values;
+        
+        for (auto j : root_candidate)
+        {
+            double const start {j[0]};
+            double const end   {j[1]};
+            double const x     {Maths::bisection(start, end, f_ptr, tol, n_it)};
+            root_values.emplace_back(x);
         }
-
-        sum /= res_d;
-        sum_total += sum;
-        sum = 0;
-    }
-
-    sum_total = sum_total * multiplier / n_cycles_d;
-    return sum_total;
-}
-
-
-//Returns the result of ordinary differential equations dy/dx = f(x,y) with y(x_0) = y0
-
-//Runge-Kutta for free functions
-template<typename T>
-double runge_kutta(std::vector<double> params, T& fn_ptr, unsigned long long h = 100000) noexcept {
-    double const h_d = static_cast<double> (h);
-    double const x0 = params[0];
-    double const y0 = params[1];
-    double const x_max = params[2];
-    double h_sz = x_max / h_d;
-    double x{x0}, y{y0}, dxy {0}, k1{0}, k2{0}, k3{0}, k4{0};
-
-    for (auto i = 0; i < h; ++i) {
-        dxy += fn_ptr(x, y);
-        k1 = h_sz * fn_ptr(x, y);
-        k2 = h_sz * fn_ptr(x + 0.5 * h_sz, y + 0.5*k1);
-        k3 = h_sz * fn_ptr(x + 0.5 * h_sz, y + 0.5*k2);
-        k4 = h_sz * fn_ptr(x + h_sz, y + k3);
-        y = y + (k1/6.0) + (k2/3.0) + (k3/3.0) + (k4/6.0);
-        x = x + h_sz;
-    }
-
-    return y;
-}
-
-
-//Runge-Kutta for static functions inside classes/structs
-template<typename T, typename R>
-double runge_kutta(std::vector<double> params, T& fn_ptr, R& obj_ptr, unsigned long long h = 100000) noexcept {
-    double const h_d = static_cast<double> (h);
-    double const x0 = params[0];
-    double const y0 = params[1];
-    double const x_max = params[2];
-    double h_sz = x_max / h_d;
-    double x{x0}, y{y0}, dxy {0}, k1{0}, k2{0}, k3{0}, k4{0};
-
-    for (auto i = 0; i < h; ++i) {
-        dxy += fn_ptr(x, y, obj_ptr);
-        k1 = h_sz * fn_ptr(x, y, obj_ptr);
-        k2 = h_sz * fn_ptr(x + 0.5 * h_sz, y + 0.5*k1, obj_ptr);
-        k3 = h_sz * fn_ptr(x + 0.5 * h_sz, y + 0.5*k2, obj_ptr);
-        k4 = h_sz * fn_ptr(x + h_sz, y + k3, obj_ptr);
-        y = y + (k1/6.0) + (k2/3.0) + (k3/3.0) + (k4/6.0);
-        x = x + h_sz;
-    }
-
-    return y;
-}
-
-
-//Bisection method
-struct Res_type { //Auxiliary struct to signal whether a result is in the valid state
-    Res_type(double _value, bool _valid)
-    : value{_value}, valid{_valid} {};
-
-    double value {0.0};
-    bool valid {false};
-};
-
-template<typename T, typename... ARGS>
-Res_type bisection(std::vector<double> x_lims, T& fn_ptr,
-                 double tol, unsigned long long steps, ARGS&... args) noexcept {
-
-    double a_a = x_lims[0];
-    double b_b = x_lims[1];
-    double c_c = 0.0;
-    double f_a_a = fn_ptr(a_a, args...);
-    double f_b_b = fn_ptr(b_b, args...);
-    double f_c_c = 0.0;
-    if (abs_d(f_a_a) < tol) {
-        Res_type result {a_a, true};
-        return result;
-    }
-    if (abs_d(f_b_b) < tol) {
-        Res_type result {b_b, true};
-        return result;
-    }
-
-    if (f_a_a > 0 && f_b_b > 0 || f_a_a < 0 && f_b_b < 0) {
-        std::cout<<"Bisection(): Upper and lower intervals have the same sign, no root finding possible, returning 0.0\n";
-        Res_type result {0.0, false};
-        return result;
-    }
-
-    for (auto i = 0; i < steps; ++i) {
-        c_c = (a_a + b_b) / 2.0;
-        f_c_c = fn_ptr(c_c, (args)...);
-
-        if (abs_d(f_c_c) < tol) {
-            Res_type result {c_c, true};
-            return result;
+        
+        return root_values;
+    } //End of bisection vector
+    
+    
+    //Returns the Jacobian matrix (first derivative with respect all variables for all funcs)
+    template <typename T>
+    Matrix<double> jacobian(std::vector<T> const& f, 
+                            std::vector<double> const& x, 
+                            double h = 0.00001) noexcept
+    {
+        std::vector<double> f_output(f.size(), 0.0);
+        Matrix<double> output {f.size(), x.size()};
+        
+        for (auto i = 0; i < f_output.size(); ++i)
+        {
+            f_output[i] = f[i](x);
         }
-        if (f_c_c < 0) {
-            a_a = c_c;
-        } else {
-            b_b = c_c;
+        
+        for (auto i = 0; i < f_output.size(); ++i)
+        {
+            for (auto j = 0; j < x.size(); ++j)
+            {
+                std::vector<double> x_ {x};
+                x_[j] += h;
+                output(i,j) = (f[i](x_) - f_output[i]) / h;
+            }
         }
-    }
+        
+        return output;
+    } //End of jacobian function
+    
+    //Overload that takes matrices instead of vectors
+    template <typename T>
+    Matrix<double> jacobian(Matrix<T> const& f, Matrix<double> const& x, double h = 0.00001)
+    {
+        std::vector<T> const f_ {f.copy_vector()};
+        std::vector<double> const x_ {x.copy_vector()};
+        return jacobian(f_, x_, h);
+    } //End of jacobian function with matrices
+    
+    //Overload that accepts a function that takes a vector of variables + additional 
+    //non variable args (i.e. arguments that wont affect the function/derivative value)
+    template <typename T, typename... ARGS>
+    Matrix<double> jacobian(std::vector<T> const& f, 
+                            std::vector<double> const& x, 
+                            double const h = 0.0001, 
+                            ARGS... args) noexcept
+    {
+        std::vector<double> f_output(f.size(), 0.0);
+        Matrix<double> output {f.size(), x.size()};
+        
+        for (auto i = 0; i < f_output.size(); ++i)
+        {
+            f_output[i] = f[i](x, args...);
+        }
+        
+        for (auto i = 0; i < f_output.size(); ++i)
+        {
+            for (auto j = 0; j < x.size(); ++j)
+            {
+                std::vector<double> x_ {x};
+                x_[j] += h;
+                output(i,j) = (f[i](x_, args...) - f_output[i]) / h;
+            }
+        }
+        
+        return output;
+    } //End of jacobian function
+    
+    
+    template <typename T, typename... ARGS>
+    Matrix<double> jacobian(Matrix<T> const& f, 
+                            Matrix<double> const& x_, 
+                            double const h, 
+                            ARGS... args) noexcept
+    {
+        std::vector<double> f_output(f.size(), 0.0);
+        Matrix<double> output {f.size(), x_.size()};
+        std::vector<double> x {x_.copy_vector()};
 
-    Res_type result {c_c, false};
-    return result;
-}
+        for (auto i = 0; i < f_output.size(); ++i)
+        {
+            f_output[i] = f[i](x, args...);
+        }
+        
+        for (auto i = 0; i < f_output.size(); ++i)
+        {
+            for (auto j = 0; j < x.size(); ++j)
+            {
+                std::vector<double> x_ {x};
+                x_[j] += h;
+                output(i,j) = (f[i](x_, args...) - f_output[i]) / h;
+            }
+        }
+        
+        return output;
+    } //End of jacobian function
+    
+    
+    
+    //Jacobian Newton-Raphson, will return a vector with the first few elements as the solution
+    //and the last one is the residual
+    template <typename T, typename... ARGS>
+    std::vector<double> jac_newton_method(std::vector<T> const& f, 
+                                          std::vector<double> const& x, 
+                                          double const h,
+                                          double const tol,
+                                          unsigned int n_it,
+                                          ARGS... args) noexcept
+    {
+        Matrix<double> x0 {x.size(), 1, std::move(x)};
+        Matrix<double> y {f.size(), 1};
+        Matrix<T> f_m {f.size(), 1, std::move(f)};
+        std::vector<double> output {x0.copy_vector()};
+        double norm {0.0};
+        
+        for (auto i = 0; i < n_it; ++i)
+        {
+            Matrix<double> jac {Maths::jacobian(f_m.make_copy(), x0, h, args...)};
+            Matrix<double> inv_jac {invert(jac)};
+            for (auto j = 0; j < y.size(); ++j)
+            {
+                y(j, 0) = f_m[j](x0.copy_vector(), args...);
+                norm += y(j,0) * y(j,0);
+            }
+            
+            inv_jac * y;
+            x0 - inv_jac;
+            norm = sqrt(norm);
+            
+            if (norm < tol) 
+            {
+                output = x0.copy_vector();
+                output.push_back(norm);
+                break;
+            }
+            
+            if (i == n_it-1) 
+            {
+                std::cout<<"jac_newton_method warning: Max iterations reached\n";
+                std::cout<<"Residual = "<<norm<<'\n';
+                output = x0.copy_vector();
+                output.push_back(norm);
+            }
+            norm = 0.0;
+        }
+        
+        
+        
+        return output;
+    } //End of vector jac_newton_method
+    
+    //Matrix jac_newton_method
+    template <typename T, typename... ARGS>
+    Matrix<double> jac_newton_method(Matrix<T> const& f, 
+                                          Matrix<double> const& x, 
+                                          double const h,
+                                          double const tol,
+                                          unsigned int n_it,
+                                          ARGS... args) noexcept
+    {
+        Matrix<double> x0 {std::move(x.make_copy())};
+        Matrix<double> y {f.size(), 1};
+        Matrix<T> f_m {std::move(f.make_copy())};
+        Matrix<double> output {x0.size()+1, 1};
+        double norm {0.0};
+        
+        for (auto i = 0; i < n_it; ++i)
+        {
+            Matrix<double> jac {Maths::jacobian(f_m.make_copy(), x0, h, args...)};
+            Matrix<double> inv_jac {invert(jac)};
+            for (auto j = 0; j < y.size(); ++j)
+            {
+                y(j, 0) = f_m[j](x0.copy_vector(), args...);
+                norm += y(j,0) * y(j,0);
+            }
+            
+            inv_jac * y;
+            x0 - inv_jac;
+            norm = sqrt(norm);
+            
+            if (norm < tol) 
+            {
+                for (auto j = 0; j < x0.size(); ++j)
+                {
+                    output(j, 0) = x0(j, 0);
+                }
+                
+                output(x0.size(), 0) = norm;
+                break;
+            }
+            
+            if (i == n_it-1) 
+            {
+                std::cout<<"jac_newton_method warning: Max iterations reached\n";
+                std::cout<<"Residual = "<<norm<<'\n';
+                for (auto j = 0; j < x0.size(); ++j)
+                {
+                    output(j, 0) = x0(j, 0);
+                }
+                
+                output(x0.size(), 0) = norm;
+            }
+            
+            norm = 0.0;
+        }
+        
+        return output;
+    } //End of jac_newton_method with matrices
+    
+    
 
 
+} //namespace Maths
 
-#endif // AUX_MATHS_H_INCLUDED
+
+#endif

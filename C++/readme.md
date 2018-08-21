@@ -2,6 +2,7 @@
 
 ## 1. [new_simulation](#it1)
 ## 2. [useful_headers](#it2)
+## 3. [EDWA_sim] (#it3)
 
 ## new_simulation <a name = "it1"></a>
 This is a finite difference time domain method solver for Maxwell's Equations, featuring second order absorbing boundary
@@ -14,7 +15,7 @@ produced by the simulation
 ## useful_headers <a name = "it2"></a>
 Contains:
 
-- aux_maths: Contains Monte Carlo integration, bisection method, Runge Kutta method, useful constants 
+- aux_maths: Contains Bisection method, Jacobian matrix calculation, Newton method, other useful functions
 - Flat_vec: A vector with defined access operator in order to be able to access the data by xyz or ijk coordinates, 
 stored as a single flat vector instead of a vector of pointers to a vector of pointers to a vector of T's. 
 Contains overloaded +, -, /, *.
@@ -30,3 +31,7 @@ and a upper triangular R matrix
 <b>Note</b>: If the size of the matrix is 
 larger than 1000x1000, parallel processing will be used in the following functions: lu_factorize, cholesky_factorize, transpose
 	* Matrix linear equation system solvers using the aforementioned methods lu_solve, cholesky_solve and qr_solve
+
+## 2018-06-13_EDWA_sim (in progress) <a name = "it3"></a>
+Four level Erbium, 2 level Ytterbium simulation which takes into account up-conversion, cross-relaxation between Ytterbium and Erbium. Currently in progress. Requires
+matrix and aux_maths
