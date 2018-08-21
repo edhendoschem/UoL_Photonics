@@ -1,5 +1,8 @@
 #include "edwa_simulation.h"
 
+//Using abbreviations
+
+
 //Constructor based on initial state
 void Simulation::Result::initialize_ASE() noexcept
 {
@@ -25,7 +28,8 @@ Simulation::Result::Result(Simulation::Init_params const& initial_state) noexcep
         data.emplace_back(Simulation::Step{});
         data[i].Pp_f = p.Pp0_f;     //Initial forwards pump
         data[i].Pp_b = p.Pp0_b;     //Initial backwards pump
-        data[i].Ps   = p.Ps0;        //Initial signal
+        data[i].Ps   = p.Ps0;       //Initial signal
+        data[i].curr_step = i;      //Step number
     }
     
     initialize_ASE();           //Fills the ASE maps for every step with 0.0
@@ -43,7 +47,8 @@ Simulation::Result::Result() noexcept
         data.emplace_back(Simulation::Step{});
         data[i].Pp_f = p.Pp0_f;     //Initial forwards pump
         data[i].Pp_b = p.Pp0_b;     //Initial backwards pump
-        data[i].Ps   = p.Ps0;        //Initial signal
+        data[i].Ps   = p.Ps0;       //Initial signal
+        data[i].curr_step = i;      //Step number
     }
     
     initialize_ASE();           //Fills the ASE maps for every step with 0.0
@@ -735,7 +740,7 @@ void Simulation::Result::simulate (double const h, double const tol, u_int n_it)
 
 void Simulation::Result::simulate_debug (double const h, double const tol, u_int n_it) noexcept
 {
-    for (int n = 0; n < 10; ++n)
+    for (int n = 0; n < 5; ++n)
     {
     std::cout<<"===================cycle "<<n<<"===============\n";
     //report_step(0, true);
@@ -760,12 +765,13 @@ void Simulation::Result::simulate_debug (double const h, double const tol, u_int
             data[i].n6 < 0.0)
         {
             std::cout<<"Warning in simulate: negative value found at step "<<i<<'\n';
+            report_step(i, true);
         }
     } //End of fowards iteration
     
     //Reset PASE_b to 0 and Pp_b to Pp0_b
     std::cout<<"before back regress step data\n";
-    report_step(data.size()/2, true);
+    //report_step(data.size()/2, true);
     reset_end();
     
     for (int i = data.size()-1; i >= 0 ; --i)
@@ -790,6 +796,7 @@ void Simulation::Result::simulate_debug (double const h, double const tol, u_int
             data[i].n6 < 0.0)
         {
             std::cout<<"Warning in simulate: negative value found at step "<<i<<'\n';
+            report_step(i, true);
         }
         
     } //End of backwards iteration
@@ -800,167 +807,52 @@ void Simulation::Result::simulate_debug (double const h, double const tol, u_int
     //Resets Ps to Ps0, PASE_f to 0, Pp_f to Pp0_f
     reset_start();
     std::cout<<"end step data\n";
-    report_step(data.size()/2, true);
+    //report_step(data.size()/2, true);
     //report_step(data.size()-1, true);
     std::cout<<"==================///////////////============\n";
     }//End of cycle
 }
 
 
-
-
-////////////////////////////////////////
-//Experimental advance/regress signal
-////////////////////////////////////////
-void Simulation::Result::advance_signal_2(u_int const z, double sign) noexcept
+void Simulation::Result::plot_steps(std::string const filename) noexcept
 {
-    double const h {
-        (static_cast<double>(z+1) * p.step_size - static_cast<double>(z) * p.step_size) / 1000.0};
+    std::cout<<"Writing file: "<<filename<<'\n';
+    std::ofstream file_handle {filename};
     
-    auto st_it {data[z].Ps.begin()}; //start iterator
-    auto ed_it {data[z].Ps.end()};   //End iterator
-    int sign_ {static_cast<int>(sign)};
+    file_handle<<"distance,n1,n2,n3,n4,n5,n6,Ps,Pp_f,Pp_b,PASE_f,PASE_b\n";
     
-    //Starting values of Runge - Kutta
-    for (st_it; st_it != ed_it; ++st_it)
+    for (auto i = 0; i < data.size(); ++i)
     {
-        int const wl {st_it->first};
-        double const P0 {st_it->second};
-        double const k1 {h * sign * dPs_ind(z, wl, P0)};
-        double const k2 {h * sign * dPs_ind(z, wl, (P0 + k1/2.0))};
-        double const k3 {h * sign * dPs_ind(z, wl, (P0 + k2/2.0))};
-        double const k4 {h * sign * dPs_ind(z, wl, (P0 + k3))};
-        data[z+sign_*1].Ps.at(wl) = P0 + (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
+        double const i_d {static_cast<double>(i)};
+        file_handle<<(p.step_size*i_d*100.0)
+                   <<','
+                   <<data[i].n1
+                   <<','
+                   <<data[i].n2
+                   <<','
+                   <<data[i].n3
+                   <<','
+                   <<data[i].n4
+                   <<','
+                   <<data[i].n5
+                   <<','
+                   <<data[i].n6
+                   <<','
+                   <<data[i].Ps.at(1533000)
+                   <<','
+                   <<data[i].Pp_f.at(976000)
+                   <<','
+                   <<data[i].Pp_b.at(976000)
+                   <<','
+                   <<data[i].PASE_f.at(1533000)
+                   <<','
+                   <<data[i].PASE_b.at(1533000)
+                   <<'\n';
     }
     
-    return;
-}
-
-
-//Advances forwad pump one step forwards or backwards
-void Simulation::Result::advance_pump_f_2(u_int const z, double sign) noexcept
-{
-    double const h {p.step_size};
-    auto st_it {data[z].Pp_f.begin()}; //start iterator
-    auto ed_it {data[z].Pp_f.end()};   //End iterator
-    int sign_ {static_cast<int>(sign)};
+    file_handle.close();
+    std::cout<<"Finished writing file\n";
+    system("gnuplot plot_script.txt");
     
-    //Starting values of Runge - Kutta
-    for (st_it; st_it != ed_it; ++st_it)
-    {
-        int const wl {st_it->first};
-        double const P0 {st_it->second};
-        double const k1 {h * sign * dPp_f_ind(z, wl, P0)};
-        double const k2 {h * sign * dPp_f_ind(z, wl, (P0 + k1/2.0))};
-        double const k3 {h * sign * dPp_f_ind(z, wl, (P0 + k2/2.0))};
-        double const k4 {h * sign * dPp_f_ind(z, wl, (P0 + k3))};
-        data[z+sign_*1].Pp_f.at(wl) = P0 + (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
-    }
-    
-    return;
-}
-
-
-//Advances backwards pump one step forward or backwards
-void Simulation::Result::advance_pump_b_2(u_int const z, double sign) noexcept
-{
-    double const h {p.step_size};
-    auto st_it {data[z].Pp_b.begin()}; //start iterator
-    auto ed_it {data[z].Pp_b.end()};   //End iterator
-    int sign_ {static_cast<int>(sign)};
-    
-    //Starting values of Runge - Kutta
-    for (st_it; st_it != ed_it; ++st_it)
-    {
-        int const wl {st_it->first};
-        double const P0 {st_it->second};
-        double const k1 {h * sign * dPp_b_ind(z, wl, P0)};
-        double const k2 {h * sign * dPp_b_ind(z, wl, (P0 + k1/2.0))};
-        double const k3 {h * sign * dPp_b_ind(z, wl, (P0 + k2/2.0))};
-        double const k4 {h * sign * dPp_b_ind(z, wl, (P0 + k3))};
-        data[z+sign_*1].Pp_b.at(wl) = P0 + (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
-    }
-    
-    return;
-}
-
-
-//Advances forward ASE one step forward or backwards
-void Simulation::Result::advance_ASE_f_2(u_int const z, double sign) noexcept
-{
-    double const h {p.step_size};
-    auto st_it {data[z].PASE_f.begin()}; //start iterator
-    auto ed_it {data[z].PASE_f.end()};   //End iterator
-    int sign_ {static_cast<int>(sign)};
-    //Starting values of Runge - Kutta
-    for (st_it; st_it != ed_it; ++st_it)
-    {
-        int const wl {st_it->first};
-        double const P0 {st_it->second};
-        double const k1 {h * sign * dPASE_f_ind(z, wl, P0)};
-        double const k2 {h * sign * dPASE_f_ind(z, wl, (P0 + k1/2.0))};
-        double const k3 {h * sign * dPASE_f_ind(z, wl, (P0 + k2/2.0))};
-        double const k4 {h * sign * dPASE_f_ind(z, wl, (P0 + k3))};
-        data[z+sign_*1].PASE_f.at(wl) = P0 + (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
-    }
-    
-    return;
-}
-
-
-//Advances backward ASE one step forward or backwards
-void Simulation::Result::advance_ASE_b_2(u_int const z, double sign) noexcept
-{
-    double const h {p.step_size};
-    auto st_it {data[z].PASE_b.begin()}; //start iterator
-    auto ed_it {data[z].PASE_b.end()};   //End iterator
-    int sign_ {static_cast<int>(sign)};
-    
-    //Starting values of Runge - Kutta
-    for (st_it; st_it != ed_it; ++st_it)
-    {
-        int const wl {st_it->first};
-        double const P0 {st_it->second};
-        double const k1 {h * sign * dPASE_b_ind(z, wl, P0)};
-        double const k2 {h * sign * dPASE_b_ind(z, wl, (P0 + k1/2.0))};
-        double const k3 {h * sign * dPASE_b_ind(z, wl, (P0 + k2/2.0))};
-        double const k4 {h * sign * dPASE_b_ind(z, wl, (P0 + k3))};
-        
-        data[z+sign_*1].PASE_b.at(wl) = P0 + (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
-    }
-    
-    return;
-}
-
-void Simulation::Result::advance_step_2 (u_int const z, double const h, double const tol, u_int n_it) noexcept
-{
-    find_all_n(z, h, tol, n_it);
-    
-    if (z < data.size()-1)
-    {
-        advance_signal_2 (z); //Advances 1 step the signal
-        advance_pump_f_2 (z); //Advances 1 step back pump
-        advance_pump_b_2 (z); //Advances 1 step forward pump
-        advance_ASE_f_2  (z); //Advances 1 step forward ASE
-        advance_ASE_b_2  (z); //Advances 1 step back ASE
-    }
-
-    return;
-}
-
-
-void Simulation::Result::regress_step_2 (u_int const z, double const h, double const tol, u_int n_it) noexcept
-{
-    find_all_n(z, h, tol, n_it, -1);
-    
-    if (z > 0)
-    {
-        advance_signal_2 (z, -1.0); //Advances 1 step the signal
-        advance_pump_f_2 (z, -1.0); //Advances 1 step back pump
-        advance_pump_b_2 (z, -1.0); //Advances 1 step forward pump
-        advance_ASE_f_2  (z, -1.0); //Advances 1 step forward ASE
-        advance_ASE_b_2  (z, -1.0); //Advances 1 step back ASE
-    }
-
     return;
 }

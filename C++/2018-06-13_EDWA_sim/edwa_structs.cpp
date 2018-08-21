@@ -16,9 +16,9 @@ Simulation::Init_params::Init_params() noexcept
     S_end     = 1533000;       
     n_signals = 1;     
     n_ASE     = 101;         
-    steps     = 100;         
+    steps     = 101;         
 
-    step_size = l / static_cast<double>(steps);
+    step_size = l / static_cast<double>(steps-1);
     //Fill the channel spacing map
     int const step_size_ {100000 / (n_ASE-1)}; //Subdivide 1500-1600 nm in n_ASE-1 subintervals
     for (int i = 0; i < n_ASE; ++i)
@@ -38,7 +38,7 @@ Simulation::Init_params::Init_params() noexcept
     for (int i = 0; i < n_signals; ++i)
     {
         double const curr_wl {S_start + static_cast<double>(i) * nm_step};
-        double const pow {1.0e-6};                                        //1 microwatt or -30 dBm
+        double const pow {1.0e-6};                                      //1 microwatt or -30 dBm
         Ps0.emplace(curr_wl, pow);
     }
 
@@ -47,10 +47,4 @@ Simulation::Init_params::Init_params() noexcept
     Pp0_b.emplace(976000, 0.0);                                          //No backwards pump
     
     return;
-}
-
-std::vector<double> Simulation::Step_solution::data() const noexcept
-{
-    std::vector<double> output {n1, n2, n3, n4, n5, n6};
-    return output;
 }

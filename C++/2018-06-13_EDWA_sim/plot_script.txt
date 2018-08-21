@@ -1,0 +1,39 @@
+set terminal pngcairo size 1200, 600
+set datafile separator ","
+unset arrow
+set view map
+set tics front
+set autoscale y
+set xrange[0:1]
+filename = "output_file.txt"
+
+set output "plot_test_1.png"
+set xlabel "x"
+set ylabel "y"
+set title "Population densities"
+plot filename using 1:2 title 'n1' with lines,\
+filename using 1:3 title 'n2' with lines,\
+filename using 1:4 title 'n3' lt rgb "black" with lines,\
+filename using 1:5 title 'n4' with lines,\
+filename using 1:6 title 'n5' with lines,\
+filename using 1:7 title 'n6' with lines
+
+set output "plot_test_2.png"
+set title "Signal at 1533 nm"
+set xlabel "x"
+set ylabel "y"
+plot filename using 1:8 title 'Signal' with lines
+
+set output "plot_test_3.png"
+set title "Forward and backwards pump change at 976 nm"
+set xlabel "x"
+set ylabel "y"
+plot filename using 1:9 title 'Pp_f' with lines,\
+filename using 1:10 title 'Pp_b' with lines
+
+set output "plot_test_4.png"
+set title "Forward and backward ASE at 1533 nm"
+set xlabel "x"
+set ylabel "y"
+plot filename using 1:11 title 'PASE_f' with lines,\
+filename using 1:12 title 'PASE_b' with lines

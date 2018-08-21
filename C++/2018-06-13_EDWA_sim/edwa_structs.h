@@ -5,18 +5,6 @@
 
 namespace Simulation
 {
-    struct Step_solution
-    {
-        unsigned int z  {0};
-        double residual {0.0};
-        double n1       {0.0};
-        double n2       {0.0};
-        double n3       {0.0};
-        double n4       {0.0};
-        double n5       {0.0};
-        double n6       {0.0};
-        std::vector<double> data() const noexcept;
-    };
     
     struct Init_params
     {
@@ -59,6 +47,7 @@ namespace Simulation
         double lpEr     {0.0};  //Pump loss due to Erbium concentration
         double lpYb     {0.0};  //Pump loss due to Ytterbium concentration
         double residual {0.0};  //Residual of the solution
+        unsigned int curr_step {0}; //Current step
         wl_map Pp_f;        //Forward pump power by wavelength (map<double, double>, wl in nm NOT m)
         wl_map Pp_b;        //Backwards pump power by wavelength
         wl_map Ps;          //Signals power
