@@ -33,5 +33,5 @@ larger than 1000x1000, parallel processing will be used in the following functio
 	* Matrix linear equation system solvers using the aforementioned methods lu_solve, cholesky_solve and qr_solve
 
 ## 2018-06-13_EDWA_sim (in progress) <a name = "it3"></a>
-Four level Erbium, 2 level Ytterbium simulation which takes into account up-conversion, cross-relaxation between Ytterbium and Erbium. Currently in progress. Requires
+Four level Erbium, Two level Ytterbium simulation which takes into account up-conversion, cross-relaxation between Ytterbium and Erbium. Currently in progress. Requires
 matrix and aux_maths
