@@ -5,6 +5,7 @@
 #include <optional>
 #include <fstream>
 #include <string>
+#include <regex>
 #include "constants.h"
 #include "cross_section.h"
 #include "utility_functions.h"
@@ -52,7 +53,7 @@ namespace Simulation
         static double Eq_6(std::vector<double> const& vars, Data_p const& p) noexcept; //NYb - n5 - n6 = 0;
         
         //n finder (uses Newton's method to find the root of the equation system)
-        void find_all_n(u_int const z, double const h, double const tol, unsigned int n_it, int sign = 1) noexcept;
+        void find_all_n(u_int const z, double const h, double const tol, unsigned int n_it) noexcept;
         
         //Pump, signal and ASE change
         //Individual case (wavelength wl_ in nm)
@@ -78,17 +79,16 @@ namespace Simulation
         void regress_step (u_int const z, double const h, double const tol, u_int n_it) noexcept;
         
         Matrix<double> delta_it(Simulation::Step const& a, Simulation::Step const& b) noexcept;
-        void simulate (double const h, double const tol, u_int n_it) noexcept; //simulates
-                                                                                    //the system
-        //Simulates and provides warnings when negative populations are encountered
-        void simulate_debug (double const h, double const tol, u_int n_it) noexcept; 
-
+        //Propagates forward and backwards to obtain the results
+        void simulate() noexcept;
+        double find_critical_point() noexcept;
         
         //Auxiliary Functions
         double  calculate_W(std::size_t const z, int const var) const noexcept;
         void    initialize_ASE() noexcept;
         void    report_step(u_int z, bool show_ASE = false) noexcept;
-        void    plot_steps (std::string const filename_) noexcept;
+        void    save_data (std::string const filename_, bool dBm_units = false) noexcept;
+        void    plot_data (std::string const data_file, std::string const plot_script, bool dBm_units = false) noexcept;
     };
 }
 

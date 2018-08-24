@@ -5,7 +5,12 @@
 #include <array>
 #include <cmath>
 
-
+/*
+Data obtained from Germanium silicate glass from "Absorption and emission cross section of er3+
+doped silica fibers" by Barnes et al, data for Ytterbium cross section obtained from "Ytterbium
+doped amplifiers" by Paschotta et al.
+*/
+ 
 namespace Simulation
 {
 

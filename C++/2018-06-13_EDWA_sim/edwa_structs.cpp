@@ -2,23 +2,36 @@
 
 Simulation::Init_params::Init_params() noexcept
 {
-    A         = 1.3e-6 * 1.3e-6;   // 1.3 by 1.3 micron
+    A         = 2.0e-6 * 2.0e-6;   // 1.3 by 1.3 micron
     l         = 0.01;              // 1 cm
     NEr       = 4.45e26;           //Doping silica beyond... Chandrappan            
     NYb       = 4.45e26;           //Doping silica beyond... Chandrappan    
     A21       = 1.0 / (12.94e-3);  //Doping silica beyond... Chandrappan 
-    A32       = (1.0e9);      //Finite-element... Di Pasquale
-    A43       = (1.0e9);      //Finite-element... Di Pasquale
+    A32       = (1.0e9);           //Finite-element... Di Pasquale
+    A43       = (1.0e9);           //Finite-element... Di Pasquale
     A65       = 1.0 / (1.5e-3);    //Improved gain... Di Pasquale and Federighi
-    Ccr       = 5.0e-21;           //Effect of pair induced... Di Pasquale and Federighi
-    Cup       = 1.002e-22;         //Effect of pair induced... Di Pasquale and Federighi. linear int
     S_start   = 1533000;           
     S_end     = 1533000;       
     n_signals = 1;     
     n_ASE     = 101;         
-    steps     = 101;         
-
+    steps     = 301;         
     step_size = l / static_cast<double>(steps-1);
+    
+    //Effect of pair induced... Di Pasquale and Federighi. linear interpolation
+    Cup = 2.252632e-49 * NEr - 6.463158e-24;
+    
+    //Effect of pair induced...Assuming Dipole-Dipole interactions and neglecting Er-Er dipoles,
+    //We get the following critical interaction distance
+    double const var1_ {9.0 / (PI * PI * 16.0)};
+    double const var2_ {Cup * (1.0 / A21)};
+    double const R0_pow6 {var1_ * var2_ / NEr}; //Critical distance
+    //Cross relaxation calculation
+    double const RYb_Er {0.4e-9}; //Distance between erbium-ytterbium ions (0.4 nm) (Effect of pair...)
+    double const var3_ {4.0 * PI / 3.0};
+    double const var4_ {pow(RYb_Er, 3.0) * (1.0 / A65)};
+    Ccr = var3_ * R0_pow6 / var4_;
+    
+    
     //Fill the channel spacing map
     int const step_size_ {100000 / (n_ASE-1)}; //Subdivide 1500-1600 nm in n_ASE-1 subintervals
     for (int i = 0; i < n_ASE; ++i)

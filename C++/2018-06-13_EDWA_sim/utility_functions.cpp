@@ -26,25 +26,28 @@ int Utility::freq_to_wl(double const freq, double const n) noexcept
 }
 
 
-double Utility::return_cross_section(int const wl, int const var) noexcept
+double Utility::return_cross_section(int const wl, Cross_sec const var) noexcept
 {
     
     switch (var)
     {
         //Erbium
-        case 12:
-        case 13:
+        case Cross_sec::Er_abs:
         return Simulation::erbium_abs(wl);
-        case 21:
+        
+        case Cross_sec::Er_emi:
         return Simulation::erbium_emi(wl);
+        
         //Ytterbium
-        case 56:
+        case Cross_sec::Yb_abs:
         return Simulation::ytterbium_abs(wl);
-        case 65:
+        
+        case Cross_sec::Yb_emi:
         return Simulation::ytterbium_emi(wl);
+        
         default:
         {
-            std::cout<<"Error n get_cross_section: case "<<var<<" not found\n";
+            std::cout<<"Error n get_cross_section: invalid case\n";
             return -1.0;
         }
     }
@@ -52,7 +55,7 @@ double Utility::return_cross_section(int const wl, int const var) noexcept
 
 
 double Utility::return_photon_flux(int const wl, double const P, 
-                                      double const area, double const var) noexcept
+                                      double const area, Cross_sec const var) noexcept
 {
     double const sigma {Utility::return_cross_section(wl, var)};
     double const freq {Utility::wl_to_freq(wl)};
@@ -84,6 +87,20 @@ void Utility::update_wl_map_values(wl_map& m, std::vector<double> const& val) no
     }
     
     return;
+}
+
+
+//Converts two power values into gain
+double Utility::power_to_gain(double const start_pow, double const end_pow) noexcept
+{
+    return 10.0 * log10(end_pow/start_pow);
+}
+
+
+//Converts power in Watts to dBm
+double Utility::power_to_dBm(double const power) noexcept
+{
+    return 10.0 * log10(power*1000.0);
 }
 
 

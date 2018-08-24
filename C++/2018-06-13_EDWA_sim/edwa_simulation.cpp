@@ -65,6 +65,7 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
         //Forward Pump contribution
         auto st1 {data[z].Pp_f.cbegin()}; //Iterate over forward pump in case there are more than one
         auto end1 {data[z].Pp_f.cend()};
+        Cross_sec var_ {var == 56 ? Cross_sec::Yb_abs : Cross_sec::Yb_emi};
     
         for (st1; st1 != end1; ++st1)
         {
@@ -74,7 +75,7 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
                 wl1,
                 pump_pow1,
                 p.A,
-                var
+                var_
             )};
         
             result += flux;
@@ -92,7 +93,7 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
                 wl2,
                 pump_pow2,
                 p.A,
-                var
+                var_
             )};
         
             result += flux;
@@ -102,7 +103,8 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
         //Signal contribution
         auto st1 {data[z].Ps.cbegin()}; //Iterate over forward pump in case there are more than one
         auto end1 {data[z].Ps.cend()};
-    
+        Cross_sec var_ {(var == 12 || var == 13) ? Cross_sec::Er_abs : Cross_sec::Er_emi};
+        
         for (st1; st1 != end1; ++st1)
         {
             int const wl1        {(st1->first)};
@@ -111,7 +113,7 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
                 wl1,
                 sig_pow1,
                 p.A,
-                var
+                var_
             )};
         
             result += flux;
@@ -129,7 +131,7 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
                 wl2,
                 PASE_f_pow,
                 p.A,
-                var
+                var_
             )};
         
             result += flux;
@@ -147,13 +149,13 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
                 wl3,
                 PASE_b_pow,
                 p.A,
-                var
+                var_
             )};
         
             result += flux;
         }
         
-        if (var == 13 || var == 12)
+        if (var == 13)
         {
             //Forward Pump contribution
             auto st4 {data[z].Pp_f.cbegin()}; 
@@ -167,7 +169,7 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
                     wl4,
                     pump_pow1,
                     p.A,
-                    var
+                    Cross_sec::Yb_abs
                 )};
         
                 result += flux;
@@ -184,13 +186,13 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
                     wl5,
                     pump_pow1,
                     p.A,
-                    var
+                    Cross_sec::Yb_abs
                 )};
         
                 result += flux;
             }
         
-        } //End of if var == 13 or var == 12
+        } //End of if var == 13
     } //End of else
     
     return result;
@@ -209,10 +211,10 @@ double Simulation::Result::dPp_f_ind (u_int const z, int const wl_, double const
     
     int const wl {wl_};
     double const power {val};
-    double const sigEr_13 {Utility::return_cross_section(wl, 13)};
-    double const sigYb_13 {Utility::return_cross_section(wl, 56)};
+    double const sigEr_13 {Utility::return_cross_section(wl, Cross_sec::Er_abs)};
+    double const sigYb_56 {Utility::return_cross_section(wl, Cross_sec::Yb_abs)};
     double const overlap {p.overlap.at(wl_)};
-    output = -power * overlap * (sigEr_13 * n1 + sigYb_13 * n5) - (lpEr + lpYb) * power;
+    output = -power * overlap * (sigEr_13 * n1 + sigYb_56 * n5) - (lpEr + lpYb) * power;
     
     return output;
 }
@@ -228,10 +230,10 @@ double Simulation::Result::dPp_b_ind (u_int const z, int const wl_, double const
     
     int const wl {wl_};
     double const power {val};
-    double const sigEr_13 {Utility::return_cross_section(wl, 13)};
-    double const sigYb_13 {Utility::return_cross_section(wl, 56)};
+    double const sigEr_13 {Utility::return_cross_section(wl, Cross_sec::Er_abs)};
+    double const sigYb_56 {Utility::return_cross_section(wl, Cross_sec::Yb_abs)};
     double const overlap {p.overlap.at(wl_)};
-    output = power * overlap * (sigEr_13 * n1 + sigYb_13 * n5) + (lpEr + lpYb) * power;
+    output = power * overlap * (sigEr_13 * n1 + sigYb_56 * n5) + (lpEr + lpYb) * power;
     
     return output;                                          
 }
@@ -247,10 +249,10 @@ double Simulation::Result::dPs_ind (u_int const z, int const wl_, double const v
     
     int const wl {wl_};
     double const power {val};
-    double const sigEr_21 {Utility::return_cross_section(wl, 21)};
-    double const sigEr_12 {Utility::return_cross_section(wl, 12)};
+    double const sigEr_21 {Utility::return_cross_section(wl, Cross_sec::Er_emi)};
+    double const sigEr_12 {Utility::return_cross_section(wl, Cross_sec::Er_abs)};
     double const overlap {p.overlap.at(wl_)};
-    output = -power * overlap * (sigEr_21 * n2 - sigEr_12 * n1) - (lsEr + lsYb) * power;
+    output = power * overlap * (sigEr_21 * n2 - sigEr_12 * n1) - (lsEr + lsYb) * power;
     return output;                                          
 }
 
@@ -265,8 +267,8 @@ double Simulation::Result::dPASE_f_ind (u_int const z, int const wl_, double con
     
     int    const wl {wl_};
     double const power {val};
-    double const sigEr_21 {Utility::return_cross_section(wl, 21)};
-    double const sigEr_12 {Utility::return_cross_section(wl, 12)};
+    double const sigEr_21 {Utility::return_cross_section(wl, Cross_sec::Er_emi)};
+    double const sigEr_12 {Utility::return_cross_section(wl, Cross_sec::Er_abs)};
     double const v {Utility::wl_to_freq(wl, 1.0)};
     double const delta_v {p.channel_spacing.at(wl_)};
     double const overlap {p.overlap.at(wl_)};
@@ -289,8 +291,8 @@ double Simulation::Result::dPASE_b_ind (u_int const z, int const wl_, double con
     
     int    const wl {wl_};
     double const power {val};
-    double const sigEr_21 {Utility::return_cross_section(wl, 21)};
-    double const sigEr_12 {Utility::return_cross_section(wl, 12)};
+    double const sigEr_21 {Utility::return_cross_section(wl, Cross_sec::Er_emi)};
+    double const sigEr_12 {Utility::return_cross_section(wl, Cross_sec::Er_abs)};
     double const v {Utility::wl_to_freq(wl, 1.0)};
     double const delta_v {p.channel_spacing.at(wl_)};
     double const overlap {p.overlap.at(wl_)};
@@ -332,6 +334,7 @@ void Simulation::Result::report_step(u_int z, bool show_ASE) noexcept
 void Simulation::Result::advance_signal(u_int const z, double sign) noexcept
 {
     double const h {p.step_size};
+    //double const h {p.step_size/101};
     auto st_it {data[z].Ps.begin()}; //start iterator
     auto ed_it {data[z].Ps.end()};   //End iterator
     int sign_ {static_cast<int>(sign)};
@@ -340,12 +343,22 @@ void Simulation::Result::advance_signal(u_int const z, double sign) noexcept
     for (st_it; st_it != ed_it; ++st_it)
     {
         int const wl {st_it->first};
-        double const P0 {st_it->second};
+        double P0 {st_it->second};
+        //for (auto i = 0; i < 101; ++i)
+        //{
+        //std::cout<<"P0 = "<<P0<<", wl = "<<wl<<'\n';
         double const k1 {h * sign * dPs_ind(z, wl, P0)};
         double const k2 {h * sign * dPs_ind(z, wl, (P0 + k1/2.0))};
         double const k3 {h * sign * dPs_ind(z, wl, (P0 + k2/2.0))};
         double const k4 {h * sign * dPs_ind(z, wl, (P0 + k3))};
+        //P0 += (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
+        //std::cout<<"k1 = "<<k1<<", k2 = "<<k2<<", k3 = "<<k3<<", k4 = "<<k4<<'\n';
+        //}
+        
         data[z+sign_*1].Ps.at(wl) = P0 + (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
+        //data[z+sign_*1].Ps.at(wl) = P0;
+        
+        //std::cout<<"h = "<<h<<'\n';
     }
     
     return;
@@ -538,7 +551,7 @@ double Simulation::Result::Eq_6(std::vector<double> const& vars, Data_p const& p
 }
 
 
-void Simulation::Result::find_all_n(u_int const z, double const h, double const tol, u_int const n_it, int sign) noexcept
+void Simulation::Result::find_all_n(u_int const z, double const h, double const tol, u_int const n_it) noexcept
 {
     Data_p p_;
     p_.W12 = calculate_W(z, 12);
@@ -572,12 +585,12 @@ void Simulation::Result::find_all_n(u_int const z, double const h, double const 
         data[z].n6 == 0.0)
     {
         //Initial guess
-        x0[0] = 1.0e26;
-        x0[1] = 2.5e26;
-        x0[2] = 0.5e26;
-        x0[3] = 0.5e26;
-        x0[4] = 1.0e26;
-        x0[5] = 3.5e26;
+        x0[0] = 0.90*p.NEr;
+        x0[1] = 0.90*p.NEr;
+        x0[2] = 0.90*p.NEr;
+        x0[3] = 0.90*p.NEr;
+        x0[4] = 0.90*p.NYb;
+        x0[5] = 0.90*p.NYb;
     } else if (z == 0 &&
         data[z].n1 > 0.0 &&
         data[z].n2 > 0.0 &&
@@ -594,24 +607,16 @@ void Simulation::Result::find_all_n(u_int const z, double const h, double const 
         x0[4] = data[z].n5;
         x0[5] = data[z].n6;
         
-    } else if (z == data.size()-1)
+    } else if (z > 0)
     {
         //Use last values as starting values (should be different from zero if the simulation
         //forward iteration was run
-        x0[0] = data[z].n1;
-        x0[1] = data[z].n2;
-        x0[2] = data[z].n3;
-        x0[3] = data[z].n4;
-        x0[4] = data[z].n5;
-        x0[5] = data[z].n6;
-    } else {
-        //Use previous step values as initial guess
-        x0[0] = data[z-sign*1].n1;
-        x0[1] = data[z-sign*1].n2;
-        x0[2] = data[z-sign*1].n3;
-        x0[3] = data[z-sign*1].n4;
-        x0[4] = data[z-sign*1].n5;
-        x0[5] = data[z-sign*1].n6;
+        x0[0] = data[z-1].n1;
+        x0[1] = data[z-1].n2;
+        x0[2] = data[z-1].n3;
+        x0[3] = data[z-1].n4;
+        x0[4] = data[z-1].n5;
+        x0[5] = data[z-1].n6;
     }
     
     std::vector<double> output {Maths::jac_newton_method(f, x0, h, tol, n_it, p_)};
@@ -678,7 +683,7 @@ void Simulation::Result::advance_step (u_int const z, double const h, double con
 
 void Simulation::Result::regress_step (u_int const z, double const h, double const tol, u_int n_it) noexcept
 {
-    find_all_n(z, h, tol, n_it, -1);
+    find_all_n(z, h, tol, n_it);
     if (z > 0)
     {
         advance_signal (z, -1.0); //Advances 1 step the signal
@@ -729,101 +734,92 @@ Matrix<double> Simulation::Result::delta_it(Simulation::Step const& a, Simulatio
 } //End of delta_it
 
 
-void Simulation::Result::simulate (double const h, double const tol, u_int n_it) noexcept
+void Simulation::Result::simulate() noexcept
 {
-    for (u_int i = 0; i < data.size(); ++i)
-    {
-        advance_step(i, h, tol, n_it);
-    }
-}
-
-
-void Simulation::Result::simulate_debug (double const h, double const tol, u_int n_it) noexcept
-{
-    for (int n = 0; n < 5; ++n)
-    {
-    std::cout<<"===================cycle "<<n<<"===============\n";
-    //report_step(0, true);
-    for (int i = 0; i < data.size(); ++i)
-    {
-        if (i % 20 == 0) std::cout<<"step = "<<i<<'\n';
-        advance_step(i, h, tol, n_it);
-        if (i == 0)
-        {
-            start_step = data[i];
-        }
-        
-        if (i == data.size()-1)
-        {
-            end_step = data[i];
-        }
-        if (data[i].n1 < 0.0 ||
-            data[i].n2 < 0.0 ||
-            data[i].n3 < 0.0 ||
-            data[i].n4 < 0.0 ||
-            data[i].n5 < 0.0 ||
-            data[i].n6 < 0.0)
-        {
-            std::cout<<"Warning in simulate: negative value found at step "<<i<<'\n';
-            report_step(i, true);
-        }
-    } //End of fowards iteration
+    double const NAvg {(p.NYb+p.NEr) / 2.0};
+    double const h {1.0e-7 * NAvg};
+    double const tol {1.0e-6 * NAvg};
+    u_int n_it {1000};
     
-    //Reset PASE_b to 0 and Pp_b to Pp0_b
-    std::cout<<"before back regress step data\n";
-    //report_step(data.size()/2, true);
-    reset_end();
-    
-    for (int i = data.size()-1; i >= 0 ; --i)
+    for (int n = 0; n < 2; ++n)
     {
-        
-        if (i % 20 == 0) std::cout<<"regress step = "<<i<<'\n';
-        regress_step(i, h, tol, n_it);
-        if (i == 0)
+        std::cout<<"===================cycle "<<n<<"===============\n";
+        for (int i = 0; i < data.size(); ++i)
         {
-            start_step = data[i];
-        }
+            if (i % 20 == 0) std::cout<<"step = "<<i<<'\n';
+            advance_step(i, h, tol, n_it);
         
-        if (i == data.size()-1)
-        {
-            end_step = data[i];
-        }
-        if (data[i].n1 < 0.0 ||
-            data[i].n2 < 0.0 ||
-            data[i].n3 < 0.0 ||
-            data[i].n4 < 0.0 ||
-            data[i].n5 < 0.0 ||
-            data[i].n6 < 0.0)
-        {
-            std::cout<<"Warning in simulate: negative value found at step "<<i<<'\n';
-            report_step(i, true);
-        }
+            if (i == 0)
+            {
+                start_step = data[i];
+            }
         
-    } //End of backwards iteration
+            if (i == data.size()-1)
+            {
+                end_step = data[i];
+            }
+        
+            if (data[i].n1 < 0.0 ||
+                data[i].n2 < 0.0 ||
+                data[i].n3 < 0.0 ||
+                data[i].n4 < 0.0 ||
+                data[i].n5 < 0.0 ||
+                data[i].n6 < 0.0)
+            {
+                std::cout<<"Warning in simulate: negative value found at step "<<i<<'\n';
+                report_step(i, true);
+            }
+        } //End of fowards iteration
+    
+        //Reset PASE_b to 0 and Pp_b to Pp0_b
+        reset_end();
+    
+        for (int i = data.size()-1; i >= 0 ; --i)
+        {
+        
+            if (i % 20 == 0) std::cout<<"regress step = "<<i<<'\n';
+            regress_step(i, h, tol, n_it);
+        
+            if (i == 0)
+            {
+                start_step = data[i];
+            }
+        
+            if (i == data.size()-1)
+            {
+                end_step = data[i];
+            }
+        
+            if (data[i].n1 < 0.0 ||
+                data[i].n2 < 0.0 ||
+                data[i].n3 < 0.0 ||
+                data[i].n4 < 0.0 ||
+                data[i].n5 < 0.0 ||
+                data[i].n6 < 0.0)
+            {
+                std::cout<<"Warning in simulate: negative value found at step "<<i<<'\n';
+                report_step(i, true);
+            }
+        
+        } //End of backwards iteration
 
-    std::cout<<"Variation of params Ps, Pp_f, Pp_b, PASE_f, PASE_b\n";
-    std::cout<<delta_it(start_step, data[0])<<'\n';
-
-    //Resets Ps to Ps0, PASE_f to 0, Pp_f to Pp0_f
-    reset_start();
-    std::cout<<"end step data\n";
-    //report_step(data.size()/2, true);
-    //report_step(data.size()-1, true);
-    std::cout<<"==================///////////////============\n";
+        //Resets Ps to Ps0, PASE_f to 0, Pp_f to Pp0_f
+        reset_start();
     }//End of cycle
 }
 
 
-void Simulation::Result::plot_steps(std::string const filename) noexcept
+void Simulation::Result::save_data(std::string const filename, bool dBm_units) noexcept
 {
     std::cout<<"Writing file: "<<filename<<'\n';
     std::ofstream file_handle {filename};
     
-    file_handle<<"distance,n1,n2,n3,n4,n5,n6,Ps,Pp_f,Pp_b,PASE_f,PASE_b\n";
+    file_handle<<"Length,n1,n2,n3,n4,n5,n6,Ps,Gain, Pp_f,Pp_b,PASE_f,PASE_b\n";
     
     for (auto i = 0; i < data.size(); ++i)
     {
         double const i_d {static_cast<double>(i)};
+        
         file_handle<<(p.step_size*i_d*100.0)
                    <<','
                    <<data[i].n1
@@ -838,15 +834,17 @@ void Simulation::Result::plot_steps(std::string const filename) noexcept
                    <<','
                    <<data[i].n6
                    <<','
-                   <<data[i].Ps.at(1533000)
+                   <<(dBm_units ? Utility::power_to_dBm(data[i].Ps.at(1533000)) : data[i].Ps.at(1533000) * 100.0)
                    <<','
-                   <<data[i].Pp_f.at(976000)
+                   <<Utility::power_to_gain(data[0].Ps.at(1533000), data[i].Ps.at(1533000) * 100.0)
                    <<','
-                   <<data[i].Pp_b.at(976000)
+                   <<data[i].Pp_f.at(976000) * 100.0
                    <<','
-                   <<data[i].PASE_f.at(1533000)
+                   <<data[i].Pp_b.at(976000) * 100.0
                    <<','
-                   <<data[i].PASE_b.at(1533000)
+                   <<(dBm_units ? Utility::power_to_dBm(data[i].PASE_f.at(1533000)) : data[i].PASE_f.at(1533000) * 100.0)
+                   <<','
+                   <<(dBm_units ? Utility::power_to_dBm(data[i].PASE_b.at(1533000)) : data[i].PASE_b.at(1533000) * 100.0)
                    <<'\n';
     }
     
@@ -855,4 +853,85 @@ void Simulation::Result::plot_steps(std::string const filename) noexcept
     system("gnuplot plot_script.txt");
     
     return;
+}
+
+
+void Simulation::Result::plot_data (std::string const data_file, std::string const plot_script, bool dBm_units) noexcept
+{
+    std::ofstream script_out {plot_script};
+    std::regex rx (R"(([a-zA-z0-9_]+)(.txt))"); //We have to add* which means 0 or more
+    std::smatch matches {};
+    std::regex_match(data_file, matches, rx);
+    std:cout<<"Plotting data...\n";
+    std::string name {matches[1]};
+    std::string textfile {
+    "set terminal pngcairo size 1200, 600\n"
+    "set datafile separator \",\"\n"
+    "unset arrow\n"
+    "set view map\n"
+    "set tics front\n"
+    "set autoscale y\n"
+    "set autoscale x\n"
+    "filename = \""+data_file+"\"\n"
+    "\n"
+    "set output \""+name+"_plot_1.png\"\n"
+    "set xlabel \"Length (cm)\"\n"
+    "set ylabel \"Pop. density (ions/m^3)\"\n"
+    "set title \"Population densities\"\n"
+    "plot filename using 1:2 title \'n1 ^4I_{15/2}\' with lines,\\\n"
+    "filename using 1:3 title \'n2 ^4I_{15/2}\' with lines,\\\n"
+    "filename using 1:4 title \'n3 ^4I_{13/2}\' lt rgb \"black\" with lines,\\\n"
+    "filename using 1:5 title \'n4 ^4I_{9/2}\' with lines,\\\n"
+    "filename using 1:6 title \'n5 ^2F_{7/2}\' with lines,\\\n"
+    "filename using 1:7 title \'n6 ^2F_{5/2}\' with lines\n"
+    "\n"
+    "set yrange[0:1e23]\n"
+    "set output \""+name+"_plot_2.png\"\n"
+    "set xlabel \"Length (cm)\"\n"
+    "set ylabel \"Pop. density (ions/m^3)\"\n"
+    "set title \"Population densities\"\n"
+    "plot filename using 1:2 title \'n1 ^4I_{15/2}\' with lines,\\\n"
+    "filename using 1:3 title \'n2 ^4I_{15/2}\' with lines,\\\n"
+    "filename using 1:4 title \'n3 ^4I_{13/2}\' lt rgb \"black\" with lines,\\\n"
+    "filename using 1:5 title \'n4 ^4I_{9/2}\' with lines,\\\n"
+    "filename using 1:6 title \'n5 ^2F_{7/2}\' with lines,\\\n"
+    "filename using 1:7 title \'n6 ^2F_{5/2}\' with lines\n"
+    "\n"
+    "set autoscale y\n"
+    "set output \""+name+"_plot_3.png\"\n"
+    "set title \"Signal at 1533 nm\"\n"
+    "set xlabel \"Length (cm)\"\n"
+    "set ylabel \""+(dBm_units ? "Power (dBm)" : "Power (mW)")+"\"\n"
+    "plot filename using 1:8 title \'Signal\' with lines\n"
+    "\n"
+    "set output \""+name+"_plot_4.png\"\n"
+    "set title \"Signal gain at 1533 nm\"\n"
+    "set xlabel \"Length (cm)\"\n"
+    "set ylabel \"Gain (dB)\"\n"
+    "plot filename using 1:9 title \'Signal\' with lines\n"
+    "\n"
+    "set output \""+name+"_plot_5.png\"\n"
+    "set title \"Forward and backwards pump change at 976 nm\"\n"
+    "set xlabel \"Length (cm)\"\n"
+    "set ylabel \"Pump power (mW)\"\n"
+    "plot filename using 1:10 title \'Pp_f\' with lines,\\\n"
+    "filename using 1:11 title \'Pp_b\' with lines\n"
+    "\n"
+    "set output \""+name+"_plot_6.png\"\n"
+    "set title \"Forward and backward ASE at 1533 nm\"\n"
+    "set xlabel \"Length (cm)\"\n"
+    "set ylabel \""+(dBm_units ? "Power (dBm)" : "Power (mW)")+"\"\n"
+    "plot filename using 1:12 title \'PASE_f\' with lines,\\\n"
+    "filename using 1:13 title \'PASE_b\' with lines\n"};
+
+    script_out<<textfile;
+    script_out.close();
+    std::string const command {"gnuplot " + plot_script};
+    system(command.data());
+}
+
+
+double Simulation::Result::find_critical_point() noexcept
+{
+    
 }

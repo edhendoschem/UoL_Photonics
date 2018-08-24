@@ -50,7 +50,8 @@ Conventions:
  of map indexes which will be picometres for convenience (wl_map and overlap)
  * All Erbium and Yttebium concentration related scattering losses are assumed to be the same for
  different wavelengths (i.e signal scattering loss  due to Er at 1520 nm is the same as 1600 nm)
- * 
+ * Dipole dipole interactions where assumed when calculating interaction distance R0 but Er-Er
+ dipoles were neglected
 
 =Issues/Notes
  * Incorporate cross relaxation (Ccr) and Upconversion (Cup) functions to calculate those values
