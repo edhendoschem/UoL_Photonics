@@ -187,10 +187,17 @@ public:
     }
 
 
-    //Return the underlying vector
+    //Returns the underlying vector
     std::vector<T>& get_data() const noexcept
     {
         return data;
+    }
+    
+    //Makes a copy of the underlying vector
+    std::vector<T> copy_vector() const noexcept
+    {
+        std::vector<T> out{data};
+        return out;
     }
 
 
@@ -449,7 +456,7 @@ std::ostream& operator << (std::ostream& os, Matrix<T> const& matrix) noexcept
     for (auto i = 0; i < matrix.max_rows(); ++i) {
         for (auto j = 0; j < matrix.max_cols(); ++j) {
             if (j != matrix.max_cols()-1) {
-                os<<matrix(i,j)<<' '<<' ';
+                os<<matrix(i,j)<<' ';
             } else {
                 os<<matrix(i,j)<<'\n';
             }
@@ -465,26 +472,10 @@ template<typename T>
 std::ostream& operator << (std::ostream& os, Matrix_pair<T> const& matrix) noexcept
 {
     std::cout<<"First matrix\n";
-    for (auto i = 0; i < matrix.first.max_rows(); ++i) {
-        for (auto j = 0; j < matrix.first.max_cols(); ++j) {
-            if (j != matrix.first.max_cols()-1) {
-                os<<matrix.first(i,j)<<' '<<' ';
-            } else {
-                os<<matrix.first(i,j)<<'\n';
-            }
-        }
-    }
+    os<<matrix.first<<'\n';
 
     std::cout<<"Second matrix\n";
-    for (auto i = 0; i < matrix.second.max_rows(); ++i) {
-        for (auto j = 0; j < matrix.second.max_cols(); ++j) {
-            if (j != matrix.second.max_cols()-1) {
-                os<<matrix.second(i,j)<<' '<<' ';
-            } else {
-                os<<matrix.second(i,j)<<'\n';
-            }
-        }
-    }
+    os<<matrix.second<<'\n';
 
     return os;
 }
@@ -495,37 +486,14 @@ template<typename T>
 std::ostream& operator << (std::ostream& os, Matrix_system<T> const& matrix) noexcept
 {
     std::cout<<"First matrix\n";
-    for (auto i = 0; i < matrix.first.max_rows(); ++i) {
-        for (auto j = 0; j < matrix.first.max_cols(); ++j) {
-            if (j != matrix.first.max_cols()-1) {
-                os<<matrix.first(i,j)<<' '<<' ';
-            } else {
-                os<<matrix.first(i,j)<<'\n';
-            }
-        }
-    }
+    os<<matrix.first<<'\n';
 
     std::cout<<"Second matrix\n";
-    for (auto i = 0; i < matrix.second.max_rows(); ++i) {
-        for (auto j = 0; j < matrix.second.max_cols(); ++j) {
-            if (j != matrix.second.max_cols()-1) {
-                os<<matrix.second(i,j)<<' '<<' ';
-            } else {
-                os<<matrix.second(i,j)<<'\n';
-            }
-        }
-    }
+    os<<matrix.second<<'\n';
 
     std::cout<<"Third matrix\n";
-    for (auto i = 0; i < matrix.third.max_rows(); ++i) {
-        for (auto j = 0; j < matrix.third.max_cols(); ++j) {
-            if (j != matrix.third.max_cols()-1) {
-                os<<matrix.third(i,j)<<' '<<' ';
-            } else {
-                os<<matrix.third(i,j)<<'\n';
-            }
-        }
-    }
+    os<<matrix.third<<'\n';
+
     return os;
 }
 
@@ -775,7 +743,7 @@ template<typename T>
 void operator / (Matrix<T>& matrix_a, T const c) noexcept
 {
     if (!(c*c > 0)) {
-        std::cout<<"Error in operator /: Division by zero encountered.\n";
+        //std::cout<<"Error in operator /: Division by zero encountered. No changes made\n";
         return;
     }
 
@@ -817,7 +785,7 @@ void launch_task (f_ptr F, sz_t starts, sz_t ends,
 
 //Switches the rows with the columns of the matrix
 template<typename T>
-void transpose(Matrix<T>& matrix_a_, sz_t limit = 1000000) noexcept
+void transpose(Matrix<T>& matrix_a_, sz_t limit = 250000) noexcept
 {
 
     auto transpose_ = [] (sz_t starts, sz_t ends, Matrix<T>& matrix_a)
@@ -903,7 +871,7 @@ void transpose(Matrix<T>& matrix_a_, sz_t limit = 1000000) noexcept
 //optimizable
 //Creates a matrix with 0 in all the elements except those in the diagonal wich are equal to 1
 template<typename T>
-void make_identity(Matrix<T>& matrix_a, sz_t limit = 10000) noexcept
+void make_identity(Matrix<T>& matrix_a, sz_t limit = 250000) noexcept
 {
     auto make_id_ = [] (sz_t starts, sz_t ends, Matrix<T>& matrix_a_)
     {
@@ -1180,6 +1148,7 @@ Matrix<T> invert(Matrix<T> const& A_) noexcept
     for (auto i = 0; i < A.max_rows(); ++i) {
         //create a pivot
         T const mult = A(i,i);
+
         Matrix<T> slice_A {std::move(A.slice(i, 'r'))};
         Matrix<T> slice_output {std::move(output.slice(i, 'r'))};
         slice_A / mult;

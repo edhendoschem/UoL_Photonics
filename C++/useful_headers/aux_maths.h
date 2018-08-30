@@ -208,11 +208,13 @@ namespace Maths
         Matrix<T> f_m {f.size(), 1, std::move(f)};
         std::vector<double> output {x0.copy_vector()};
         double norm {0.0};
+
         
         for (auto i = 0; i < n_it; ++i)
         {
             Matrix<double> jac {Maths::jacobian(f_m.make_copy(), x0, h, args...)};
             Matrix<double> inv_jac {invert(jac)};
+            
             for (auto j = 0; j < y.size(); ++j)
             {
                 y(j, 0) = f_m[j](x0.copy_vector(), args...);
@@ -303,8 +305,6 @@ namespace Maths
         return output;
     } //End of jac_newton_method with matrices
     
-    
-
 
 } //namespace Maths
 

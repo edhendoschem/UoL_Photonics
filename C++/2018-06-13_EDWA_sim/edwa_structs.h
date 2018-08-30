@@ -22,7 +22,6 @@ namespace Simulation
         int    S_start   {0};           //Starting wavelength of the signals in pm
         int    S_end     {0};           //End wavelength of the signals pm
         int    n_signals {0};           //Total number of signals
-        int    n_ASE     {0};           //Total number of ASE signals
         int    steps     {0};           //Number of steps/subdivision for the waveguide
         wl_map channel_spacing;         //Channel spacing per wavelength of ASE signal
         wl_map Ps0;                      //Signal power by wavelength
@@ -31,6 +30,9 @@ namespace Simulation
         wl_map overlap;                 //Overlap between traverse modes and ions
         
         Init_params() noexcept; //Constructor, initializes the struct with default test data
+        Init_params(Init_params const& p) = default;
+        
+        void recalculate_constants() noexcept; //Recalculates dependent constants such as Cup and Ccr
     };
     
     //Contains the state of the amplifier at each step
@@ -53,6 +55,8 @@ namespace Simulation
         wl_map Ps;          //Signals power
         wl_map PASE_f;      //Forward ASE power
         wl_map PASE_b;      //Backwards ASE power
+        wl_map Pp_ASE_f;      //Forward Pump ASE power
+        wl_map Pp_ASE_b;      //Backwards Pump ASE power
     };
 
 } //End of namespace simulation
@@ -72,6 +76,8 @@ namespace Utility
         start_it.emplace_back(s.Pp_b.begin());
         start_it.emplace_back(s.PASE_f.begin());
         start_it.emplace_back(s.PASE_b.begin());
+        start_it.emplace_back(s.Pp_ASE_f.begin());
+        start_it.emplace_back(s.Pp_ASE_b.begin());
         
         //end iterators
         std::vector<T> end_it;
@@ -80,6 +86,8 @@ namespace Utility
         end_it.emplace_back(s.Pp_b.end());
         end_it.emplace_back(s.PASE_f.end());
         end_it.emplace_back(s.PASE_b.end());
+        end_it.emplace_back(s.Pp_ASE_f.end());
+        end_it.emplace_back(s.Pp_ASE_b.end());
         
         std::array<std::vector<T>, 2> output {start_it, end_it};
         return output;

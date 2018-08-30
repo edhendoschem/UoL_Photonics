@@ -6,7 +6,7 @@
 //Cholesky factorization
 //Auxiliary function to determine symmetry
 template<typename T>
-bool is_symmetric(Matrix<T> const& m_sys_, sz_t limit = 1000000) noexcept
+bool is_symmetric(Matrix<T> const& m_sys_, sz_t limit = 250000) noexcept
 {
     auto is_sym = [] (sz_t starts, sz_t ends, Matrix<T> const& m_sys)
     {
@@ -58,9 +58,8 @@ bool is_symmetric(Matrix<T> const& m_sys_, sz_t limit = 1000000) noexcept
 
 //Cholesky factorization, output matrix pair containing a lower triangular matrix and an upper triangular
 template<typename T>
-Matrix_pair<T> cholesky_factorize_opt(Matrix<T> const& A_, sz_t limit = 1000000) noexcept
+Matrix_pair<T> cholesky_factorize_opt(Matrix<T> const& A_, sz_t limit = 250000) noexcept
 {
-    static std::atomic<std::size_t> curr_num {4};
     if (is_symmetric(A_) == false) {
         Matrix_pair<T> result {};
         std::cout<<"Error in cholesky_factorize(): Matrix not symmetric. Returning default Matrix_pair\n";
@@ -179,7 +178,7 @@ void row_slice_op2(Matrix_pair<T>& m_sys, Matrix_pair<T>& row_slice, sz_t row, s
 
 //LU factorize, outputs a matrix pair containing a lower triangular and a upper triangular matrix
 template<typename T>
-Matrix_pair<T> lu_factorize(Matrix<T> const& A, sz_t limit = 1000000) noexcept
+Matrix_pair<T> lu_factorize(Matrix<T> const& A, sz_t limit = 250000) noexcept
 {
 
     Matrix<T> L(A.max_rows(), A.max_cols());
@@ -263,7 +262,7 @@ T find_col_modulus(Matrix<T> const& M, size_t const k) {
 
 
 template<typename T>
-Matrix_pair<T> qr_factorize(Matrix<T> const& A, sz_t limit = 1000000) noexcept
+Matrix_pair<T> qr_factorize(Matrix<T> const& A, sz_t limit = 250000) noexcept
 {
     //Auxiliary vector of column matrices required for the Gram-Schmidt orthonormalization process
     Matrix<T> u {A.max_rows(), A.max_cols()};
@@ -319,7 +318,7 @@ Matrix_pair<T> qr_factorize(Matrix<T> const& A, sz_t limit = 1000000) noexcept
 //Solvers
 //Use LU factorization with. The output is a Matrix containing a single column with the solutions
 template<typename T>
-Matrix<T> lu_solve(Matrix<T> const& M, Matrix<T> const& C, sz_t limit = 1000000) noexcept
+Matrix<T> lu_solve(Matrix<T> const& M, Matrix<T> const& C, sz_t limit = 250000) noexcept
 {
     if (M.max_rows() != C.max_rows()) {
         std::cout<<"Error in lu_solve: constants matrix' number of rows differs from coefficient matrix' number of rows.";
@@ -354,7 +353,7 @@ Matrix<T> lu_solve(Matrix<T> const& M, Matrix<T> const& C, sz_t limit = 1000000)
 
 //Use Cholesky to solve an equation system. The output is a Matrix containing a single column with the solutions
 template<typename T>
-Matrix<T> cholesky_solve(Matrix<T> const& M, Matrix<T> const& C, sz_t limit = 1000000) noexcept
+Matrix<T> cholesky_solve(Matrix<T> const& M, Matrix<T> const& C, sz_t limit = 250000) noexcept
 {
     if (M.max_rows() != C.max_rows()) {
         std::cout<<"Error in cholesky_solve: constants matrix' number of rows differs from coefficient matrix' number";
@@ -394,7 +393,7 @@ Matrix<T> cholesky_solve(Matrix<T> const& M, Matrix<T> const& C, sz_t limit = 10
 
 
 template<typename T>
-Matrix<T> qr_solve(Matrix<T> const& M, Matrix<T> const& C, sz_t limit = 1000000) noexcept
+Matrix<T> qr_solve(Matrix<T> const& M, Matrix<T> const& C, sz_t limit = 250000) noexcept
 {
     if (M.max_rows() != C.max_rows()) {
         std::cout<<"Error in qr_solve: constants matrix' number of rows differs from coefficient matrix' number of rows.";
@@ -430,4 +429,28 @@ Matrix<T> qr_solve(Matrix<T> const& M, Matrix<T> const& C, sz_t limit = 1000000)
 
     return solution;
 }
+
+
+template<typename T>
+Matrix<T> find_eigenvalues(Matrix<T> const& M, sz_t iterations) noexcept
+{
+
+    Matrix_pair<T> output {std::move(lu_factorize(M))};
+    for (auto i = 0; i < iterations; ++i) {
+        output.second * output.first;
+        output = std::move(qr_factorize(output.second));
+    }
+
+    std::cout<<"output\n"<<output<<'\n';
+
+    Matrix<double> solution {output.first.max_rows(), 1};
+    for (auto i = 0; i < solution.max_rows(); ++i) {
+        solution[i] = output.second(i,i) * output.first(i,i);
+        //solution[i] = output.second(i,i);
+    }
+
+
+    return solution;
+}
+
 #endif // MATRIX_FACT_OPT_H_INCLUDED
