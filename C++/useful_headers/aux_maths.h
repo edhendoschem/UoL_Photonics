@@ -225,6 +225,12 @@ namespace Maths
             x0 - inv_jac;
             norm = sqrt(norm);
             
+            if (std::isnan(norm)) 
+            {
+                std::cout<<"jac_newton_method Error: norm is NaN\n";
+                break;
+            }
+            
             if (norm < tol) 
             {
                 output = x0.copy_vector();
@@ -275,6 +281,12 @@ namespace Maths
             inv_jac * y;
             x0 - inv_jac;
             norm = sqrt(norm);
+            
+            if (std::isnan(norm)) 
+            {
+                std::cout<<"jac_newton_method Error: norm is NaN\n";
+                break;
+            }
             
             if (norm < tol) 
             {
