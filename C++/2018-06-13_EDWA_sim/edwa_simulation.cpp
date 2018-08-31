@@ -545,6 +545,7 @@ void Simulation::Result::advance_signal(u_int const z, int sign) noexcept
         double const k3 {h * sign_d * dPs_ind(z, wl, (P0 + k2/2.0))};
         double const k4 {h * sign_d * dPs_ind(z, wl, (P0 + k3))};
         data[z+sign*1].Ps.at(wl) = P0 + (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
+        if (data[z+sign*1].Ps.at(wl) < 0.0) data[z+sign*1].Ps.at(wl) = 0.0;
     }
     
     return;
@@ -571,6 +572,7 @@ void Simulation::Result::advance_pump_f(u_int const z, int sign) noexcept
             double const k3 {h * sign_d * dPp_f_ind(z, wl, (P0 + k2/2.0))};
             double const k4 {h * sign_d * dPp_f_ind(z, wl, (P0 + k3))};
             data[z+sign*1].Pp_f.at(wl) = P0 + (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
+            if (data[z+sign*1].Pp_f.at(wl) < 0.0) data[z+sign*1].Pp_f.at(wl) = 0.0;
         } else {
             double const P0 {st_it->second};
             double const k1 {h * sign_d * dPs_ind(z, wl, P0)};
@@ -578,6 +580,7 @@ void Simulation::Result::advance_pump_f(u_int const z, int sign) noexcept
             double const k3 {h * sign_d * dPs_ind(z, wl, (P0 + k2/2.0))};
             double const k4 {h * sign_d * dPs_ind(z, wl, (P0 + k3))};
             data[z+sign*1].Pp_f.at(wl) = P0 + (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
+            if (data[z+sign*1].Pp_f.at(wl) < 0.0) data[z+sign*1].Pp_f.at(wl) = 0.0;
         }
     }
     
@@ -605,6 +608,7 @@ void Simulation::Result::advance_pump_b(u_int const z, int sign) noexcept
             double const k3 {h * sign_d * dPp_b_ind(z, wl, (P0 + k2/2.0))};
             double const k4 {h * sign_d * dPp_b_ind(z, wl, (P0 + k3))};
             data[z+sign*1].Pp_b.at(wl) = P0 + (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
+            if (data[z+sign*1].Pp_b.at(wl) < 0.0) data[z+sign*1].Pp_b.at(wl) = 0.0;
         } else {
             double const P0 {st_it->second};
             double const k1 {h * sign_d * -1.0 * dPs_ind(z, wl, P0)};
@@ -612,6 +616,7 @@ void Simulation::Result::advance_pump_b(u_int const z, int sign) noexcept
             double const k3 {h * sign_d * -1.0 * dPs_ind(z, wl, (P0 + k2/2.0))};
             double const k4 {h * sign_d * -1.0 * dPs_ind(z, wl, (P0 + k3))};
             data[z+sign*1].Pp_b.at(wl) = P0 + (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
+            if (data[z+sign*1].Pp_b.at(wl) < 0.0) data[z+sign*1].Pp_b.at(wl) = 0.0;
         }
     }
     
@@ -638,6 +643,7 @@ void Simulation::Result::advance_ASE_f(u_int const z, int sign) noexcept
         double const k3 {h * sign_d * dPASE_f_ind(z, wl, (P0 + k2/2.0))};
         double const k4 {h * sign_d * dPASE_f_ind(z, wl, (P0 + k3))};
         data[z+sign*1].PASE_f.at(wl) = P0 + (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
+        if (data[z+sign*1].PASE_f.at(wl) < 0.0) data[z+sign*1].PASE_f.at(wl) = 0.0;
     }
     
     return;
@@ -663,6 +669,7 @@ void Simulation::Result::advance_ASE_b(u_int const z, int sign) noexcept
         double const k4 {h * sign_d * dPASE_b_ind(z, wl, (P0 + k3))};
         
         data[z+sign*1].PASE_b.at(wl) = P0 + (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
+        if (data[z+sign*1].PASE_b.at(wl) < 0.0) data[z+sign*1].PASE_b.at(wl) = 0.0;
     }
     
     return;
@@ -687,6 +694,7 @@ void Simulation::Result::advance_p_ASE_f(u_int const z, int sign) noexcept
         double const k3 {h * sign_d * dPp_ASE_f_ind(z, wl, (P0 + k2/2.0))};
         double const k4 {h * sign_d * dPp_ASE_f_ind(z, wl, (P0 + k3))};
         data[z+sign*1].Pp_ASE_f.at(wl) = P0 + (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
+        if (data[z+sign*1].Pp_ASE_f.at(wl) < 0.0) data[z+sign*1].Pp_ASE_f.at(wl) = 0.0;
     }
     
     return;
@@ -711,6 +719,7 @@ void Simulation::Result::advance_p_ASE_b(u_int const z, int sign) noexcept
         double const k3 {h * sign_d * dPp_ASE_b_ind(z, wl, (P0 + k2/2.0))};
         double const k4 {h * sign_d * dPp_ASE_b_ind(z, wl, (P0 + k3))};
         data[z+sign*1].Pp_ASE_b.at(wl) = P0 + (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
+        if (data[z+sign*1].Pp_ASE_b.at(wl) < 0.0) data[z+sign*1].Pp_ASE_b.at(wl) = 0.0;
     }
     
     return;
@@ -867,7 +876,7 @@ void Simulation::Result::find_all_n(u_int const z, double const h, double const 
         x0[3] = data[z-1].n4 >= 0.0 ? data[z-1].n4 : 0.90*p.NEr;
         x0[4] = data[z-1].n5 >= 0.0 ? data[z-1].n5 : 0.90*p.NYb;
         x0[5] = data[z-1].n6 >= 0.0 ? data[z-1].n6 : 0.90*p.NYb;
-    }
+     }
     
     std::vector<double> output {Maths::jac_newton_method(f, x0, h, tol, n_it, p_)};
     data[z].n1 = output[0];
@@ -1035,10 +1044,12 @@ void Simulation::Result::simulate(bool warn) noexcept
     double const h {1.0e-7 * NAvg};
     double const tol {5.0e-6 * NAvg};
     u_int n_it {1000};
+
     
     for (int n = 0; n < 4; ++n)
     {
         std::cout<<"===================cycle "<<n<<"===============\n";
+
         for (int i = 0; i < data.size(); ++i)
         {
             if (i % 20 == 0) std::cout<<"step = "<<i<<'\n';
@@ -1053,6 +1064,7 @@ void Simulation::Result::simulate(bool warn) noexcept
             {
                 end_step = data[i];
             }
+            
         
             if (warn             && (
                 data[i].n1 < 0.0 ||
@@ -1063,7 +1075,7 @@ void Simulation::Result::simulate(bool warn) noexcept
                 data[i].n6 < 0.0))
             {
                 std::cout<<"Warning in simulate: negative value found at step "<<i<<'\n';
-                report_step(i, true);
+                report_step(i, false);
             }
         } //End of fowards iteration
     
@@ -1102,7 +1114,7 @@ void Simulation::Result::simulate(bool warn) noexcept
 
         //Resets Ps to Ps0, PASE_f to 0, Pp_f to Pp0_f
         reset_start();
-    }//End of cycle
+    } //End of Cycle
 }
 
 
