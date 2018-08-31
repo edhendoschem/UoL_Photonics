@@ -64,8 +64,8 @@ Simulation::Init_params::Init_params() noexcept
     }
 
     //Fill the pump map
-    Pp0_f.emplace(976000, 0.3);                                          //Forward pump of 300 mW
-    Pp0_b.emplace(976000, 0.0);                                          //No backwards pump
+    Pp0_f.emplace(1480000, 0.0);                                          //Forward pump of 300 mW
+    Pp0_b.emplace(1480000, 0.3);                                          //No backwards pump
     
     return;
 }

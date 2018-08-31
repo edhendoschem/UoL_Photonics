@@ -11,7 +11,7 @@ int main(int argc, char **argv)
 {
     Simulation::Init_params a{};
     
-    a.l = 0.05;
+    a.l = 0.02;
     /*
     a.NEr /= 2.0;
     a.NYb /= 2.0;
@@ -23,8 +23,8 @@ int main(int argc, char **argv)
     a.recalculate_constants();
     Simulation::Result r{a};
     r.simulate(false);
-    r.save_data("output.txt", true);
-    r.plot_data("output.txt","plot_script.txt");
+    r.save_data("output.txt", true); //true = signal, ase powers in dBm, else mW
+    r.plot_data("output.txt","plot_script.txt"); //
     
     //std::vector<std::array<double, 4>> results = find_ratio(a);
     

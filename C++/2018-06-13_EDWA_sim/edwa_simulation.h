@@ -89,7 +89,7 @@ namespace Simulation
         void    initialize_ASE() noexcept;
         void    report_step(u_int z, bool show_ASE = false) noexcept;
         void    save_data (std::string const filename_, bool dBm_units = false) noexcept;
-        void    plot_data (std::string const data_file, std::string const plot_script, bool dBm_units = false) noexcept;
+        void    plot_data (std::string const data_file, std::string const plot_script) noexcept;
     };
     
     
