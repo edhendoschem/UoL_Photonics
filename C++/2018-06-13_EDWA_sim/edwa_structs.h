@@ -7,7 +7,7 @@ namespace Simulation
 {
     
     struct Init_params
-    {
+    {  
         double A   {0.0};               //Area of the cross section in m^2
         double l   {0.0};               //Length of the waveguide
         double step_size {0.0};         //length/steps
@@ -19,6 +19,10 @@ namespace Simulation
         double A65 {0.0};               //Spontaneous transition rate from Erbium l6 to l5 in 1/s
         double Ccr {0.0};               //Cross relaxation coefficient from Yb to Er in m^3/s
         double Cup {0.0};               //Spontaneous transition rate from Erbium l2 to l1 in 1/s
+        double lpEr {0.0};              //Pump scattering loss due to erbium concentration
+        double lsEr {0.0};              //Signal scatterng loss due to erbium concentration
+        double lpYb {0.0};              //Pump scattering loss due to ytterbium concentration
+        double lsYb {0.0};              //Signal scattering loss due to ytterbium concentration
         int    S_start   {0};           //Starting wavelength of the signals in pm
         int    S_end     {0};           //End wavelength of the signals pm
         int    n_signals {0};           //Total number of signals
@@ -32,7 +36,12 @@ namespace Simulation
         Init_params() noexcept; //Constructor, initializes the struct with default test data
         Init_params(Init_params const& p) = default;
         
-        void recalculate_constants() noexcept; //Recalculates dependent constants such as Cup and Ccr
+        //Returns loss as db/m based on the concentration using linear interpolation of data
+        //provided in Improved gain characteristics... Di Pasquale and M. Federighi
+        void calculate_loss() noexcept; 
+        
+        //Recalculates dependent constants such as Cup and Ccr and loss
+        void recalculate_constants() noexcept; 
     };
     
     //Contains the state of the amplifier at each step
@@ -44,10 +53,10 @@ namespace Simulation
         double n4       {0.0};  //Erbium population in the Up-conversion level
         double n5       {0.0};  //Ytterbium population in the ground state
         double n6       {0.0};  //Erbium Population in the excited state
-        double lsEr     {0.0};  //Signal loss due to Erbium concentration
-        double lsYb     {0.0};  //Signal loss due to Ytterbium concentration
-        double lpEr     {0.0};  //Pump loss due to Erbium concentration
-        double lpYb     {0.0};  //Pump loss due to Ytterbium concentration
+        double lsEr     {0.0};  //Signal loss due to Erbium concentration (dB/m)
+        double lsYb     {0.0};  //Signal loss due to Ytterbium concentration (dB/m)
+        double lpEr     {0.0};  //Pump loss due to Erbium concentration (dB/m)
+        double lpYb     {0.0};  //Pump loss due to Ytterbium concentration (dB/m)
         double residual {0.0};  //Residual of the solution
         unsigned int curr_step {0}; //Current step
         wl_map Pp_f;        //Forward pump power by wavelength (map<double, double>, wl in nm NOT m)

@@ -52,6 +52,44 @@ namespace Simulation
         static double Eq_5(std::vector<double> const& vars, Data_p const& p) noexcept; //NEr-n1-n2-n3-n4 = 0
         static double Eq_6(std::vector<double> const& vars, Data_p const& p) noexcept; //NYb - n5 - n6 = 0;
         
+        //Derivatives
+        static double dEq_1_dn1(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_1_dn2(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_1_dn3(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_1_dn4(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_1_dn5(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_1_dn6(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_2_dn1(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_2_dn2(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_2_dn3(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_2_dn4(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_2_dn5(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_2_dn6(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_3_dn1(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_3_dn2(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_3_dn3(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_3_dn4(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_3_dn5(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_3_dn6(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_4_dn1(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_4_dn2(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_4_dn3(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_4_dn4(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_4_dn5(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_4_dn6(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_5_dn1(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_5_dn2(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_5_dn3(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_5_dn4(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_5_dn5(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_5_dn6(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_6_dn1(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_6_dn2(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_6_dn3(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_6_dn4(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_6_dn5(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        static double dEq_6_dn6(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
+        
         //n finder (uses Newton's method to find the root of the equation system)
         void find_all_n(u_int const z, double const h, double const tol, unsigned int n_it) noexcept;
         
@@ -66,8 +104,8 @@ namespace Simulation
         double dPp_ASE_b_ind (u_int const z, int const wl_, double const val) noexcept;
         
         //Simulation march
-        void reset_start     ()                              noexcept; //Resets the starting parameters
-        void reset_end       ()                              noexcept; //Resets the ending parameters
+        void reset_start     ()                            noexcept; //Resets the starting parameters
+        void reset_end       ()                            noexcept; //Resets the ending parameters
         void advance_signal  (u_int const z, int sign = 1) noexcept; //Advances 1 step the signal
         void advance_pump_f  (u_int const z, int sign = 1) noexcept; //Advances 1 step back pump
         void advance_pump_b  (u_int const z, int sign = 1) noexcept; //Advances 1 step forward pump
@@ -90,12 +128,9 @@ namespace Simulation
         void    report_step(u_int z, bool show_ASE = false) noexcept;
         void    save_data (std::string const filename_, bool dBm_units = false) noexcept;
         void    plot_data (std::string const data_file, std::string const plot_script) noexcept;
+        void    save_spectral_data(std::string const filename, u_int const step, bool dBm_units = false) noexcept;
     };
     
-    
-    double df_dNEr(std::vector<double> const vars, Simulation::Init_params const p) noexcept;
-    double df_dNYb(std::vector<double> const vars, Simulation::Init_params const p) noexcept; 
-    std::vector<double> find_critical_point(Simulation::Init_params const p) noexcept;
     //Will attempt to find the optimal ratio and return an array with Ner, NYb,length and max gain
     std::vector<std::array<double, 4>> find_ratio(Simulation::Init_params const p) noexcept;
 }

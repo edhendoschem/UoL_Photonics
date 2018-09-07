@@ -32,8 +32,8 @@ namespace Utility
                                  double const area, Cross_sec const var) noexcept;
     
     //Converts a concentration related loss parameter from db/m to a number from 0 to 1. 
-    //loss in units of db/m, length in m
-    double return_conc_loss(double const loss, double const length, double const steps) noexcept;
+    //loss in units of db/m, length in m. Note loss in dB/m is negative
+    double return_conc_loss(double const loss) noexcept;
     
     //Changes all the values in a wl_map to the specified values
     void update_wl_map_values(wl_map& m, std::vector<double> const& val) noexcept;

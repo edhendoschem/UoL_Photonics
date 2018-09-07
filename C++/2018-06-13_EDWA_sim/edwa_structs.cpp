@@ -30,6 +30,11 @@ Simulation::Init_params::Init_params() noexcept
     double const var4_ {pow(RYb_Er, 3.0) * (1.0 / A65)};
     Ccr = var3_ * R0_pow6 / var4_;
     
+    //Loss calculation;
+    lsEr = (9.210526e-26 * NEr + 10.878947);
+    lpEr = (1.173684e-25 * NEr + 13.826316);
+    lsYb = (1.263158e-26 * NYb + 22.736842);
+    lpYb = (1.605263e-26 * NYb + 28.894737);
     
     //Fill the channel spacing map
     int const step_size_ {150000 / (150)}; //Subdivide 1450-1600 nm in 150 subintervals
@@ -40,6 +45,7 @@ Simulation::Init_params::Init_params() noexcept
         double const spacing {Utility::wl_to_freq(prev_wl) - Utility::wl_to_freq(curr_wl)};
         channel_spacing.emplace(curr_wl, spacing);
         overlap.emplace(curr_wl, 0.4); //Becker et al chapter 6
+        //overlap.emplace(curr_wl, 0.8); //Becker et al chapter 6
     }
     
     //Fill the pump channel spacing map
@@ -59,20 +65,29 @@ Simulation::Init_params::Init_params() noexcept
     for (int i = 0; i < n_signals; ++i)
     {
         double const curr_wl {S_start + static_cast<double>(i) * nm_step};
-        double const pow {1.0e-6};                                      //1 microwatt or -30 dBm
+        double const pow {1e-6};                                      //1 microwatt or -30 dBm
         Ps0.emplace(curr_wl, pow);
     }
 
     //Fill the pump map
-    Pp0_f.emplace(976000, 0.3);                                    //Forward 976 pump of 300 mW
+    Pp0_f.emplace(976000, 0.5);                                    //Forward 976 pump of 300 mW
     Pp0_f.emplace(1480000, 0.0);                                   //No forward 1480 pump
-    Pp0_b.emplace(976000, 0.3);                                    //No backwards pump
+    Pp0_b.emplace(976000, 0.5);                                    //No backwards pump
     Pp0_b.emplace(1480000, 0.0);                                   //No backwards pump
     
     
     return;
 }
 
+
+void Simulation::Init_params::calculate_loss() noexcept
+{
+    lsEr = (9.210526e-26 * NEr + 10.878947);
+    lpEr = (1.173684e-25 * NEr + 13.826316);
+    lsYb = (1.263158e-26 * NYb + 22.736842);
+    lpYb = (1.605263e-26 * NYb + 28.894737);
+    return;
+}
 
 void Simulation::Init_params::recalculate_constants() noexcept
 {
@@ -92,4 +107,7 @@ void Simulation::Init_params::recalculate_constants() noexcept
     double const var3_ {4.0 * PI / 3.0};
     double const var4_ {pow(RYb_Er, 3.0) * (1.0 / A65)};
     Ccr = var3_ * R0_pow6 / var4_;
+    
+    //Updates loss values
+    calculate_loss();
 }

@@ -31,6 +31,10 @@ Simulation::Result::Result(Simulation::Init_params const& initial_state) noexcep
         data[i].Pp_b = p.Pp0_b;     //Initial backwards pump
         data[i].Ps   = p.Ps0;       //Initial signal
         data[i].curr_step = i;      //Step number
+        data[i].lsEr = p.lsEr;
+        data[i].lpEr = p.lpEr;
+        data[i].lsYb = p.lsYb;
+        data[i].lpYb = p.lpYb;
     }
     
     initialize_ASE();           //Fills the ASE maps for every step with 0.0
@@ -50,6 +54,10 @@ Simulation::Result::Result() noexcept
         data[i].Pp_b = p.Pp0_b;     //Initial backwards pump
         data[i].Ps   = p.Ps0;       //Initial signal
         data[i].curr_step = i;      //Step number
+        data[i].lsEr = p.lsEr;
+        data[i].lpEr = p.lpEr;
+        data[i].lsYb = p.lsYb;
+        data[i].lpYb = p.lpYb;
     }
     
     initialize_ASE();           //Fills the ASE maps for every step with 0.0
@@ -150,6 +158,7 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
         
         for (st1; st1 != end1; ++st1)
         {
+            if (var == 13) break;
             int const wl1        {(st1->first)};
             double const sig_pow1   {st1->second};
             double const flux       {Utility::return_photon_flux(
@@ -168,6 +177,7 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
     
         for (st2; st2 != end2; ++st2)
         {
+            if (var == 13) break;
             int const wl2        {(st2->first)};
             double const PASE_f_pow {st2->second};
             double const flux       {Utility::return_photon_flux(
@@ -186,6 +196,7 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
     
         for (st3; st3 != end3; ++st3)
         {
+            if (var == 13) break;
             int const wl3        {(st3->first)};
             double const PASE_b_pow {st3->second};
             double const flux       {Utility::return_photon_flux(
@@ -204,6 +215,7 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
     
         for (st4; st4 != end4; ++st4)
         {
+            if (var == 13) break;
             int const wl4        {(st4->first)};
             if (wl4 != 1480000) continue; //Ignore wavelengths different from 1480 nm
             double const pump_pow4  {st4->second};
@@ -224,6 +236,7 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
     
         for (st5; st5 != end5; ++st5)
         {
+            if (var == 13) break;
             int const wl5        {(st5->first)};
             if (wl5 != 1480000) continue; //Ignore wavelengths different from 1480 nm
             double const pump_pow5  {st5->second};
@@ -336,6 +349,7 @@ double Simulation::Result::dPp_f_ind (u_int const z, int const wl_, double const
     double const n6   {data[z].n6};
     double const lpEr {data[z].lpEr};
     double const lpYb {data[z].lpYb};
+    double const tot_loss {Utility::return_conc_loss(lpEr + lpYb)};
     double output     {0.0};
     
     int const wl {wl_};
@@ -344,8 +358,8 @@ double Simulation::Result::dPp_f_ind (u_int const z, int const wl_, double const
     double const sigYb_56 {Utility::return_cross_section(wl, Cross_sec::Yb_abs)};
     double const sigYb_65 {Utility::return_cross_section(wl, Cross_sec::Yb_emi)};
     double const overlap {p.overlap.at(wl_)};
-    output = power * overlap * (sigYb_65 * n6 - (sigEr_13 * n1 + sigYb_56 * n5)) - (lpEr + lpYb) * power;
-    
+    output = power * overlap * (sigYb_65 * n6 - (sigEr_13 * n1 + sigYb_56 * n5)) - (tot_loss) * power;
+
     return output;
 }
 
@@ -357,6 +371,7 @@ double Simulation::Result::dPp_b_ind (u_int const z, int const wl_, double const
     double const n6   {data[z].n6};
     double const lpEr {data[z].lpEr};
     double const lpYb {data[z].lpYb};
+    double const tot_loss {Utility::return_conc_loss(lpEr + lpYb)};
     double output     {0.0};
     
     int const wl {wl_};
@@ -365,8 +380,8 @@ double Simulation::Result::dPp_b_ind (u_int const z, int const wl_, double const
     double const sigYb_56 {Utility::return_cross_section(wl, Cross_sec::Yb_abs)};
     double const sigYb_65 {Utility::return_cross_section(wl, Cross_sec::Yb_emi)};
     double const overlap {p.overlap.at(wl_)};
-    output = -power * overlap * (sigYb_65 * n6 - (sigEr_13 * n1 + sigYb_56 * n5)) + (lpEr + lpYb) * power;
-    
+    output = -power * overlap * (sigYb_65 * n6 - (sigEr_13 * n1 + sigYb_56 * n5)) + (tot_loss) * power;
+
     return output;
 }
 
@@ -376,6 +391,7 @@ double Simulation::Result::dPs_ind (u_int const z, int const wl_, double const v
     double const n2   {data[z].n2};
     double const lsEr {data[z].lsEr};
     double const lsYb {data[z].lsYb};
+    double const tot_loss {Utility::return_conc_loss(lsEr + lsYb)};
     double output     {0.0};
     
     int const wl {wl_};
@@ -383,9 +399,10 @@ double Simulation::Result::dPs_ind (u_int const z, int const wl_, double const v
     double const sigEr_21 {Utility::return_cross_section(wl, Cross_sec::Er_emi)};
     double const sigEr_12 {Utility::return_cross_section(wl, Cross_sec::Er_abs)};
     double const overlap {p.overlap.at(wl_)};
-    output = power * overlap * (sigEr_21 * n2 - sigEr_12 * n1) - (lsEr + lsYb) * power;
+    
+    output = power * overlap * (sigEr_21 * n2 - sigEr_12 * n1) - (tot_loss) * power;
     return output;                                          
-}
+} //End of dPs_ind
 
 
 double Simulation::Result::dPASE_f_ind (u_int const z, int const wl_, double const val) noexcept
@@ -394,6 +411,7 @@ double Simulation::Result::dPASE_f_ind (u_int const z, int const wl_, double con
     double const n2 {data[z].n2};
     double const lsEr {data[z].lsEr};
     double const lsYb {data[z].lsYb};
+    double const tot_loss {Utility::return_conc_loss(lsEr + lsYb)};
     double output {0.0};
     
     int    const wl {wl_};
@@ -405,11 +423,11 @@ double Simulation::Result::dPASE_f_ind (u_int const z, int const wl_, double con
     double const overlap {p.overlap.at(wl_)};
     double const a {power * overlap * (sigEr_21 * n2 - sigEr_12 * n1)};
     double const b {2.0 * H * v * delta_v * overlap * sigEr_21 * n2};
-    double const c {(lsEr + lsYb) * power};
+    double const c {(tot_loss) * power};
     output = a + b - c;
     
     return output;
-}
+} //End dPASE_f_ind
 
 
 double Simulation::Result::dPASE_b_ind (u_int const z, int const wl_, double const val) noexcept
@@ -418,6 +436,7 @@ double Simulation::Result::dPASE_b_ind (u_int const z, int const wl_, double con
     double const n2 {data[z].n2};
     double const lsEr {data[z].lsEr};
     double const lsYb {data[z].lsYb};
+    double const tot_loss {Utility::return_conc_loss(lsEr + lsYb)};
     double output {0.0};
     
     int    const wl {wl_};
@@ -429,13 +448,11 @@ double Simulation::Result::dPASE_b_ind (u_int const z, int const wl_, double con
     double const overlap {p.overlap.at(wl_)};
     double const a {power * overlap * (sigEr_21 * n2 - sigEr_12 * n1)};
     double const b {2.0 * H * v * delta_v * overlap * sigEr_21 * n2};
-    double const c {(lsEr + lsYb) * power};
+    double const c {(tot_loss) * power};
     output = -a - b + c;
 
     return output;
-}
-
-
+} //End of dPASE_b_ind
 
 
 double Simulation::Result::dPp_ASE_f_ind (u_int const z, int const wl_, double const val) noexcept
@@ -446,6 +463,7 @@ double Simulation::Result::dPp_ASE_f_ind (u_int const z, int const wl_, double c
     double const n6 {data[z].n6};
     double const lpEr {data[z].lpEr};
     double const lpYb {data[z].lpYb};
+    double const tot_loss {Utility::return_conc_loss(lpEr + lpYb)};
     double output {0.0};
     
     int    const wl {wl_};
@@ -463,11 +481,11 @@ double Simulation::Result::dPp_ASE_f_ind (u_int const z, int const wl_, double c
     double const overlap {p.overlap.at(wl_)};
     double const a {power * overlap * (sigYb_65 * n6 - (sigEr_13 * n1 + sigYb_56 * n5))};
     double const b {2.0 * H * v * delta_v * overlap * sigYb_65 * n6};
-    double const c {(lpEr + lpYb) * power};
+    double const c {(tot_loss) * power};
     output = a + b - c;
     
     return output;
-}
+} //end of dPp_ASE_f_ind
 
 
 double Simulation::Result::dPp_ASE_b_ind (u_int const z, int const wl_, double const val) noexcept
@@ -477,6 +495,7 @@ double Simulation::Result::dPp_ASE_b_ind (u_int const z, int const wl_, double c
     double const n6 {data[z].n6};
     double const lpEr {data[z].lpEr};
     double const lpYb {data[z].lpYb};
+    double const tot_loss {Utility::return_conc_loss(lpEr + lpYb)};
     double output {0.0};
     
     int    const wl {wl_};
@@ -494,11 +513,11 @@ double Simulation::Result::dPp_ASE_b_ind (u_int const z, int const wl_, double c
     double const overlap {p.overlap.at(wl_)};
     double const a {power * overlap * (sigYb_65 * n6 - (sigEr_13 * n1 + sigYb_56 * n5))};
     double const b {2.0 * H * v * delta_v * overlap * sigYb_65 * n6};
-    double const c {(lpEr + lpYb) * power};
+    double const c {(tot_loss) * power};
     output = -a - b + c;
     
     return output;
-}
+} //end of dPp_ASE_b_ind
 
 
 //Prints information about this step
@@ -667,7 +686,6 @@ void Simulation::Result::advance_ASE_b(u_int const z, int sign) noexcept
         double const k2 {h * sign_d * dPASE_b_ind(z, wl, (P0 + k1/2.0))};
         double const k3 {h * sign_d * dPASE_b_ind(z, wl, (P0 + k2/2.0))};
         double const k4 {h * sign_d * dPASE_b_ind(z, wl, (P0 + k3))};
-        
         data[z+sign*1].PASE_b.at(wl) = P0 + (k1 + 2.0 * k2 + 2.0 * k3 + k4) / 6.0;
         if (data[z+sign*1].PASE_b.at(wl) < 0.0) data[z+sign*1].PASE_b.at(wl) = 0.0;
     }
@@ -811,8 +829,202 @@ double Simulation::Result::Eq_6(std::vector<double> const& vars, Data_p const& p
 {
     double const n5 {vars[4]};
     double const n6 {vars[5]};
-    
     return p.NYb - n5 - n6;
+}
+
+
+double Simulation::Result::dEq_1_dn1(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    double const n4 {vars[3]};
+    double const n6 {vars[5]};
+    return -(p.W12 + p.W13) - p.Ccr * (n4 + n6);
+}
+
+double Simulation::Result::dEq_1_dn2(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    double const n2 {vars[1]};
+    return p.A21 + p.W21 + 2.0 * p.Cup * n2;
+}
+
+double Simulation::Result::dEq_1_dn3(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    double const n3 {vars[2]};
+    return 2.0 * p.Cup * n3;
+}
+
+double Simulation::Result::dEq_1_dn4(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    double const n1 {vars[0]};
+    return -p.Ccr * n1;
+}
+
+double Simulation::Result::dEq_1_dn5(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return 0.0;
+}
+
+double Simulation::Result::dEq_1_dn6(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    double const n1 {vars[0]};
+    return -p.Ccr * n1;
+}
+
+double Simulation::Result::dEq_2_dn1(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    double const n4 {vars[3]};
+    return p.W12 + 2.0 * p.Ccr * n4;
+}
+
+double Simulation::Result::dEq_2_dn2(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    double const n2 {vars[1]};    
+    return -(p.A21 + p.W21) - 4.0 * p.Cup * n2;
+}
+
+double Simulation::Result::dEq_2_dn3(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return p.A32;
+}
+
+double Simulation::Result::dEq_2_dn4(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    double const n1 {vars[0]};
+    return 2.0 * p.Ccr * n1;
+}
+
+double Simulation::Result::dEq_2_dn5(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return 0.0;
+}
+
+double Simulation::Result::dEq_2_dn6(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return 0.0;
+}
+
+double Simulation::Result::dEq_3_dn1(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    double const n6 {vars[5]};
+    return p.W13 + p.Ccr * n6;
+}
+
+double Simulation::Result::dEq_3_dn2(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return 0.0;
+}
+
+double Simulation::Result::dEq_3_dn3(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    double const n3 {vars[2]};
+    return -p.A32 - 4.0 * p.Cup * n3;
+}
+
+double Simulation::Result::dEq_3_dn4(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return p.A43;
+}
+
+double Simulation::Result::dEq_3_dn5(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return 0.0;
+}
+
+double Simulation::Result::dEq_3_dn6(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    double const n1 {vars[0]};
+    return p.Ccr * n1;
+}
+
+double Simulation::Result::dEq_4_dn1(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    double const n6 {vars[5]};
+    return p.Ccr * n6;
+}
+
+double Simulation::Result::dEq_4_dn2(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return 0.0;
+}
+
+double Simulation::Result::dEq_4_dn3(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return 0.0;
+}
+
+double Simulation::Result::dEq_4_dn4(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return 0.0;
+}
+
+double Simulation::Result::dEq_4_dn5(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return -p.W56;
+}
+
+double Simulation::Result::dEq_4_dn6(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    double const n1 {vars[0]};
+    return p.A65 + p.W65 + p.Ccr * n1;
+}
+
+double Simulation::Result::dEq_5_dn1(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return -1.0;
+}
+
+double Simulation::Result::dEq_5_dn2(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return -1.0;
+}
+
+double Simulation::Result::dEq_5_dn3(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return -1.0;
+}
+
+double Simulation::Result::dEq_5_dn4(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return -1.0;
+}
+
+double Simulation::Result::dEq_5_dn5(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return 0.0;
+}
+
+double Simulation::Result::dEq_5_dn6(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return 0.0;
+}
+
+double Simulation::Result::dEq_6_dn1(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return 0.0;
+}
+
+double Simulation::Result::dEq_6_dn2(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return 0.0;
+}
+
+double Simulation::Result::dEq_6_dn3(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return 0.0;
+}
+
+double Simulation::Result::dEq_6_dn4(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return 0.0;
+}
+
+double Simulation::Result::dEq_6_dn5(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return -1.0;
+}
+
+double Simulation::Result::dEq_6_dn6(std::vector<double> const& vars, Data_p const& p) noexcept
+{
+    return -1.0;
 }
 
 
@@ -840,6 +1052,43 @@ void Simulation::Result::find_all_n(u_int const z, double const h, double const 
                           Simulation::Result::Eq_4,
                           Simulation::Result::Eq_5,
                           Simulation::Result::Eq_6};
+    std::vector<f_ptr> df {Simulation::Result::dEq_1_dn1, 
+                           Simulation::Result::dEq_2_dn1,
+                           Simulation::Result::dEq_3_dn1,
+                           Simulation::Result::dEq_4_dn1,
+                           Simulation::Result::dEq_5_dn1,
+                           Simulation::Result::dEq_6_dn1,
+                           Simulation::Result::dEq_1_dn2,
+                           Simulation::Result::dEq_2_dn2,
+                           Simulation::Result::dEq_3_dn2,
+                           Simulation::Result::dEq_4_dn2,
+                           Simulation::Result::dEq_5_dn2,
+                           Simulation::Result::dEq_6_dn2,
+                           Simulation::Result::dEq_1_dn3,
+                           Simulation::Result::dEq_2_dn3,
+                           Simulation::Result::dEq_3_dn3,
+                           Simulation::Result::dEq_4_dn3,
+                           Simulation::Result::dEq_5_dn3,
+                           Simulation::Result::dEq_6_dn3,
+                           Simulation::Result::dEq_1_dn4,
+                           Simulation::Result::dEq_2_dn4,
+                           Simulation::Result::dEq_3_dn4,
+                           Simulation::Result::dEq_4_dn4,
+                           Simulation::Result::dEq_5_dn4,
+                           Simulation::Result::dEq_6_dn4,
+                           Simulation::Result::dEq_1_dn5,
+                           Simulation::Result::dEq_2_dn5,
+                           Simulation::Result::dEq_3_dn5,
+                           Simulation::Result::dEq_4_dn5,
+                           Simulation::Result::dEq_5_dn5,
+                           Simulation::Result::dEq_6_dn5,
+                           Simulation::Result::dEq_1_dn6,
+                           Simulation::Result::dEq_2_dn6,
+                           Simulation::Result::dEq_3_dn6,
+                           Simulation::Result::dEq_4_dn6,
+                           Simulation::Result::dEq_5_dn6,
+                           Simulation::Result::dEq_6_dn6};
+                          
     std::vector<double> x0(6, 0.0);
     if (z == 0 && 
         data[z].n1 == 0.0 &&
@@ -859,26 +1108,41 @@ void Simulation::Result::find_all_n(u_int const z, double const h, double const 
     } else if (z == 0)
     {
         //If the simulation has been run previously then use curr vals as initial guess
-        x0[0] = data[z].n1 >= 0.0 ? data[z].n1 : 0.90*p.NEr;
-        x0[1] = data[z].n2 >= 0.0 ? data[z].n2 : 0.90*p.NEr;
-        x0[2] = data[z].n3 >= 0.0 ? data[z].n3 : 0.90*p.NEr;
-        x0[3] = data[z].n4 >= 0.0 ? data[z].n4 : 0.90*p.NEr;
-        x0[4] = data[z].n5 >= 0.0 ? data[z].n5 : 0.90*p.NYb;
-        x0[5] = data[z].n6 >= 0.0 ? data[z].n6 : 0.90*p.NYb;
+        x0[0] = data[z].n1 > -0.1 ? data[z].n1 : 0.90*p.NEr;
+        x0[1] = data[z].n2 > -0.1 ? data[z].n2 : 0.90*p.NEr;
+        x0[2] = data[z].n3 > -0.1 ? data[z].n3 : 0.90*p.NEr;
+        x0[3] = data[z].n4 > -0.1 ? data[z].n4 : 0.90*p.NEr;
+        x0[4] = data[z].n5 > -0.1 ? data[z].n5 : 0.90*p.NYb;
+        x0[5] = data[z].n6 > -0.1 ? data[z].n6 : 0.90*p.NYb;
         
     } else if (z > 0)
     {
         //Use last values as starting values (should be different from zero if the simulation
         //forward iteration was run
-        x0[0] = data[z-1].n1 >= 0.0 ? data[z-1].n1 : 0.90*p.NEr;
-        x0[1] = data[z-1].n2 >= 0.0 ? data[z-1].n2 : 0.90*p.NEr;
-        x0[2] = data[z-1].n3 >= 0.0 ? data[z-1].n3 : 0.90*p.NEr;
-        x0[3] = data[z-1].n4 >= 0.0 ? data[z-1].n4 : 0.90*p.NEr;
-        x0[4] = data[z-1].n5 >= 0.0 ? data[z-1].n5 : 0.90*p.NYb;
-        x0[5] = data[z-1].n6 >= 0.0 ? data[z-1].n6 : 0.90*p.NYb;
+        x0[0] = data[z-1].n1 > -0.1 ? data[z-1].n1 : 0.90*p.NEr;
+        x0[1] = data[z-1].n2 > -0.1 ? data[z-1].n2 : 0.90*p.NEr;
+        x0[2] = data[z-1].n3 > -0.1 ? data[z-1].n3 : 0.90*p.NEr;
+        x0[3] = data[z-1].n4 > -0.1 ? data[z-1].n4 : 0.90*p.NEr;
+        x0[4] = data[z-1].n5 > -0.1 ? data[z-1].n5 : 0.90*p.NYb;
+        x0[5] = data[z-1].n6 > -0.1 ? data[z-1].n6 : 0.90*p.NYb;
      }
     
-    std::vector<double> output {Maths::jac_newton_method(f, x0, h, tol, n_it, p_)};
+    //std::vector<double> output {Maths::jac_newton_method(f, x0, h, tol, n_it, p_)}; //old
+    std::vector<double> output {Maths::jac_newton_method(f, x0, df, tol, n_it, p_)}; //new
+    for (auto i =0; i < output.size(); ++i)
+    {
+        if (output[i] > (i <= 4 ? p.NEr:p.NYb)) 
+        {
+            output[i] = i <= 4 ? p.NEr:p.NYb;
+            continue;
+        }
+        
+        if (output[i] < -0.1)
+        {
+            output[i] = 0.0;
+        }
+    }
+        
     data[z].n1 = output[0];
     data[z].n2 = output[1];
     data[z].n3 = output[2];
@@ -940,7 +1204,8 @@ void Simulation::Result::reset_start() noexcept
         if (std::isnan(backward_pump_st->second) || backward_pump_st->second < 0.0) 
             backward_pump_st->second = 0.0;
     }
-}
+    
+} //End of reset start
 
 
 void Simulation::Result::reset_end() noexcept
@@ -998,7 +1263,7 @@ void Simulation::Result::reset_end() noexcept
             forward_pump_st->second = 0.0;
     }
     
-}
+} //End of reset end
 
 void Simulation::Result::advance_step (u_int const z, double const h, double const tol, u_int n_it) noexcept
 {
@@ -1011,7 +1276,7 @@ void Simulation::Result::advance_step (u_int const z, double const h, double con
         advance_pump_b  (z); //Advances 1 step forward pump
         advance_ASE_f   (z); //Advances 1 step forward ASE
         advance_ASE_b   (z); //Advances 1 step backward ASE
-        advance_p_ASE_f (z); //Advances 1 step forward ASE
+        //advance_p_ASE_f (z); //Advances 1 step forward ASE
         advance_p_ASE_b (z); //Advances 1 step backward ASE
     }
 
@@ -1046,25 +1311,14 @@ void Simulation::Result::simulate(bool warn) noexcept
     u_int n_it {1000};
 
     
-    for (int n = 0; n < 4; ++n)
+    for (int n = 0; n < 3; ++n)
     {
         std::cout<<"===================cycle "<<n<<"===============\n";
 
         for (int i = 0; i < data.size(); ++i)
         {
             if (i % 20 == 0) std::cout<<"step = "<<i<<'\n';
-            advance_step(i, h, tol, n_it);
-        
-            if (i == 0)
-            {
-                start_step = data[i];
-            }
-        
-            if (i == data.size()-1)
-            {
-                end_step = data[i];
-            }
-            
+            advance_step(i, h, tol, n_it);  
         
             if (warn             && (
                 data[i].n1 < 0.0 ||
@@ -1088,16 +1342,6 @@ void Simulation::Result::simulate(bool warn) noexcept
             if (i % 20 == 0) std::cout<<"regress step = "<<i<<'\n';
             regress_step(i, h, tol, n_it);
         
-            if (i == 0)
-            {
-                start_step = data[i];
-            }
-        
-            if (i == data.size()-1)
-            {
-                end_step = data[i];
-            }
-        
             if (warn             && (
                 data[i].n1 < 0.0 ||
                 data[i].n2 < 0.0 ||
@@ -1114,6 +1358,7 @@ void Simulation::Result::simulate(bool warn) noexcept
 
         //Resets Ps to Ps0, PASE_f to 0, Pp_f to Pp0_f
         reset_start();
+        
     } //End of Cycle
 }
 
@@ -1182,12 +1427,10 @@ void Simulation::Result::plot_data (std::string const data_file, std::string con
     std::smatch matches {};
     std::smatch dBm_match{};
     std::regex_match(data_file, matches, rx);
-    std::fstream file {data_file};
-    //std::istream_iterator iss {file};
+    std::ifstream file {data_file};
     std::string val_to_search;
-    //getline(ss,val_to_search, file);
-    //bool dBm_units {std::regex_match(val_to_search, dBm_match, dBm)};
-    bool dBm_units {true};
+    getline(file,val_to_search);
+    bool dBm_units {std::regex_match(val_to_search, dBm_match, dBm)};
     file.close();
     std::cout<<"Plotting data...\n";
     std::string name {matches[1]};
@@ -1254,8 +1497,8 @@ void Simulation::Result::plot_data (std::string const data_file, std::string con
     "set title \"Forward and backward pump ASE at 980 nm\"\n"
     "set xlabel \"Length (cm)\"\n"
     "set ylabel \""+(dBm_units ? "Power (dBm)" : "Power (mW)")+"\"\n"
-    "plot filename using 1:16 title \'Pp_ASE_f\' with lines,\\\n"
-    "filename using 1:17 title \'Pp_ASE_b\' with lines\n"};
+    "plot filename using 1:16 title \'PpASE_f\' with lines,\\\n"
+    "filename using 1:17 title \'PpASE_b\' with lines\n"};
     script_out<<textfile;
     script_out.close();
     std::string const command {"gnuplot " + plot_script};
@@ -1308,7 +1551,7 @@ std::vector<std::array<double, 4>> Simulation::find_ratio(Simulation::Init_param
         output[i][3] = Utility::power_to_gain(r.data[0].Ps.at(1533000), highest_val);
     }
     //Save in a file steeam
-    std::ofstream file_handle {"Ratios.txt"};
+    std::ofstream file_handle {"Ratios.csv"};
     file_handle<<"NEr,"<<"NYb,"<<"Ratio Er/Yb,"<<"z pos (cm)"<<"Max Gain,"<<","<<"Gain/cm\n";
     for (auto i : output)
     {
@@ -1316,4 +1559,63 @@ std::vector<std::array<double, 4>> Simulation::find_ratio(Simulation::Init_param
     }
     
     return output;
+}
+
+
+void Simulation::Result::save_spectral_data(std::string const filename, u_int const step, bool dBm_units) noexcept
+{
+    std::string name
+    {filename[filename.size()-4] == '.' ? filename.substr(0, filename.size()-4) : filename.substr(0, filename.size())};
+    std::string extension
+    {filename[filename.size()-4] == '.' ? filename.substr(filename.size()-4, 4) : std::string{}};
+    
+    
+    std::string new_name {name + "_step_" + std::to_string(step) + extension};
+    std::cout<<"Saving spectral information: "<<new_name<<'\n';
+    std::ofstream file_handle {new_name};
+    std::string dBm {dBm_units ? "dBm" : "mW"};
+    
+    file_handle<<"Type, Wavelength (nm),Power ("<<dBm<<")\n";
+    auto classify = [] (int k)
+    {
+        switch (k)
+        {
+            case 0:
+            return "Ps";
+            
+            case 1:
+            return "Pp_f";
+            
+            case 2:
+            return "Pp_b";
+            
+            case 3:
+            return "ASE_f";
+            
+            case 4:
+            return "ASE_b";
+            
+            case 5:
+            return "Pp_ASE_f";
+            
+            case 6:
+            return "Pp_ASE_b";
+        }
+    };
+    
+    //0. Ps, 1. Pp_f, 2. Pp_b, 3. PASE_f, 4. PASE_b, 5. Pp_ASE_f, 6. Pp_ASE_b
+    using it_type = decltype(std::cbegin(data[step].Ps));
+    std::array<std::vector<it_type>, 2> iterators {Utility::return_iterators<it_type>(data[step])};
+    
+    for (auto i = 0; i < iterators[0].size(); ++i)
+    {
+        for (auto st_it = iterators[0][i]; st_it != iterators[1][i]; ++st_it)
+        {
+            file_handle<<classify(i)<<','<<st_it->first<<','
+            <<(dBm_units ? Utility::power_to_dBm(st_it->second):st_it->second * 1000.0)<<'\n';
+        }
+    }
+    
+    file_handle.close();
+    return;
 }

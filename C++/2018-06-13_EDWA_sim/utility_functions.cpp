@@ -64,12 +64,11 @@ double Utility::return_photon_flux(int const wl, double const P,
 }
 
 
-double Utility::return_conc_loss(double const loss, double const length, double const steps) noexcept
+double Utility::return_conc_loss(double const loss) noexcept
 {
-    double const stepsize {length / steps};
-    double const out_pc {pow(10.0, (loss/10.0))};
-    double const loss_pc {(1.0-out_pc) * stepsize};
-    return loss_pc;
+    double const out_frac {pow(10.0, (-loss/10.0))};
+    double const loss_frac {(1.0-out_frac)};
+    return loss_frac;
 }
 
 

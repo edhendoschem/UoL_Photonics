@@ -253,6 +253,72 @@ namespace Maths
         return output;
     } //End of vector jac_newton_method
     
+    //Newton method with provided function pointers to the derivatives. The pointer must be
+    //in the following order: {df1/dx1, df2/dx1..., dfn/dx1, df1/dx2, df2/dx2..., dfn/dx2, ...}
+    template <typename T, typename... ARGS>
+    std::vector<double> jac_newton_method(std::vector<T> const& f, 
+                                          std::vector<double> const& x, 
+                                          std::vector<T> const& df,
+                                          double const tol,
+                                          unsigned int n_it,
+                                          ARGS... args) noexcept
+    {
+        Matrix<double> x0 {x.size(), 1, std::move(x)};
+        Matrix<double> y {f.size(), 1};
+        Matrix<T> f_m {f.size(), 1, std::move(f)};
+        std::vector<double> output {x0.copy_vector()};
+        double norm {0.0};
+
+        
+        for (auto i = 0; i < n_it; ++i)
+        {
+            Matrix<double> jac {f.size(), x.size()};
+            for (auto z = 0; z < jac.size(); ++z)
+            {
+                jac[z] = df[z](x0.copy_vector(), args...);
+            }
+            
+            Matrix<double> inv_jac {invert(jac)};
+            
+            for (auto j = 0; j < y.size(); ++j)
+            {
+                y(j, 0) = f_m[j](x0.copy_vector(), args...);
+                norm += y(j,0) * y(j,0);
+            }
+            
+            inv_jac * y;
+            x0 - inv_jac;
+            norm = sqrt(norm);
+            
+            if (std::isnan(norm)) 
+            {
+                std::cout<<"jac_newton_method Error: norm is NaN\n";
+                break;
+            }
+            
+            if (norm < tol) 
+            {
+                output = x0.copy_vector();
+                output.push_back(norm);
+                break;
+            }
+            
+            if (i == n_it-1) 
+            {
+                std::cout<<"jac_newton_method warning: Max iterations reached\n";
+                std::cout<<"Residual = "<<norm<<'\n';
+                output = x0.copy_vector();
+                output.push_back(norm);
+            }
+            norm = 0.0;
+        }
+        
+        
+        
+        return output;
+    } //End of vector jac_newton_method with provided derivatives
+    
+    
     //Matrix jac_newton_method
     template <typename T, typename... ARGS>
     Matrix<double> jac_newton_method(Matrix<T> const& f, 

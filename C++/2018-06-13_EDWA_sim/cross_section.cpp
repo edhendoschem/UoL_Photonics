@@ -170,7 +170,7 @@ double Simulation::ytterbium_abs(int const x_) noexcept
         return (coef[0] * x + coef[1]) * 1.0e-27;
     }
 
-    if (x >= 973.99 && x < 983.17) {
+    if (x >= 973.99 && x < 982.0) {
         constexpr std::array<double, 2> coef {
                                     -2.998477366260E+02,
                                     2.946640769960E+05
@@ -179,7 +179,7 @@ double Simulation::ytterbium_abs(int const x_) noexcept
         return (coef[0] * x + coef[1]) * 1.0e-27;
     }
 
-    if (x >= 983.17 && x < 1045.05) {
+    if (x >= 982.0 && x < 1045.05) {
         constexpr std::array<double, 5> coef {
                                     9.568284931450E-05,
                                     -3.915462900430E-01,
@@ -204,12 +204,12 @@ double Simulation::ytterbium_emi(int const x_) noexcept
 {
     double const x {static_cast<double>(x_) * 1.0e-3};
     
-    if (x >= 850.0 && x < 886.46) {
+    if (x >= 850.0 && x < 896) {
 
         return 0.0;
     }
 
-    if (x >= 886.46 && x < 967.33) {
+    if (x >= 896 && x < 967.33) {
         constexpr std::array<double, 5> coef {
                                     6.554178215310E-05,
                                     -2.408830756610E-01,
@@ -251,7 +251,7 @@ double Simulation::ytterbium_emi(int const x_) noexcept
         return (coef[0] * pow(x, 4) + coef[1] * pow(x, 3) + coef[2] * pow(x,2) + coef[3] * x + coef[4]) * 1.0e-27;
     }
 
-    if (x >= 1053.56 && x <= 1150.5) {
+    if (x >= 1053.56 && x < 1148.0) {
         constexpr std::array<double, 2> coef {
                                     -3.559654146570E+00,
                                     4.088236107100E+03
@@ -259,6 +259,8 @@ double Simulation::ytterbium_emi(int const x_) noexcept
 
         return (coef[0] * x + coef[1]) * 1.0e-27;
     }
+    
+    if (x >= 1148.0 & x <= 1150.0) return 0.0;
 
     std::cout<<"Error invalid wavelength range in ytterbium_emi(): x = "<<x<<", returning -1.0\n";
     return -1.0;
