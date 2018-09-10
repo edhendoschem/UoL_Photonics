@@ -3,6 +3,7 @@
 ## 1. [new_simulation](#it1)
 ## 2. [useful_headers](#it2)
 ## 3. [EDWA_sim] (#it3)
+## 4. [spot_size_calculator] (#it4)
 
 ## new_simulation <a name = "it1"></a>
 This is a finite difference time domain method solver for Maxwell's Equations, featuring second order absorbing boundary
@@ -35,3 +36,8 @@ larger than 1000x1000, parallel processing will be used in the following functio
 ## 2018-06-13_EDWA_sim (in progress) <a name = "it3"></a>
 Four level Erbium, Two level Ytterbium simulation which takes into account up-conversion, cross-relaxation between Ytterbium and Erbium. Currently in progress. Requires
 matrix and aux_maths
+
+## 2018-09-10_spot_size_calculator <a name = "it4"></a>
+This program takes the length per pixel as input and bulk processes all laser spot image files, adding up the number of pixels with an intensity value >= ~5% of max
+and then multiplying that value by the area of each pixel (assuming square pixels) to obtain the spot size. The units will depend on the units given when inputting
+the length per pixel
