@@ -48,9 +48,14 @@ std::string get_name(std::string const& paths, char const token = '/')
 int main(int argc, char **argv)
 {
     double pixel_length;
-    std::cout<<"Please insert pixel length (distance/pixel):\n";
+    double threshold_mult {1.0 / exp(2.0)}; //Include pixels with I > I0*1/e^2
+    
+    std::cout<<"Please insert pixels per unit length (pixel/length):\n";
     std::cin>>pixel_length;
     std::cout<<'\n';
+
+    pixel_length = 1.0 / pixel_length;
+    
     
     path p {current_path()};
     std::vector<std::string> images;
@@ -114,6 +119,7 @@ int main(int argc, char **argv)
     
         double max_val {0.0};
         double pixel_count {0.0};
+        double pixel_count_tot {0.0};
     
         for(auto it = image.begin<uchar>(), end = image.end<uchar>(); it != end; ++it)
         {
@@ -121,18 +127,19 @@ int main(int argc, char **argv)
             max_val = max_val < val ? val : max_val;
         }
     
-        //Give margin safety for pixels which may be more intense than background, but not part of 
-        //the beam. Use minimum threshold ~5% of max value. max_val must be at least 32
-        double threshold {round(max_val * 1.0 / exp(3.0))}; 
-    
+        //Include pixels with intensity greter or equal to (1/e^2)I0. max_val must be at least 12
+        double threshold {round(max_val * threshold_mult)};
+        
         for(auto it = image.begin<uchar>(), end = image.end<uchar>(); it != end; ++it)
         {
             double val {static_cast<double>(*it)};
+            
             if (val >= threshold)
             {
                 ++pixel_count;
                 *it = static_cast<unsigned char> (max_val);
             }
+            
         }
     
         std::vector<std::string> name_ext {split_name_ext(i)};
@@ -146,7 +153,7 @@ int main(int argc, char **argv)
         file_handle<<"Maximum pixel intensity = "<<max_val<<'\n';
         file_handle<<"Pixel intensity threshold = "<<threshold<<'\n';
         file_handle<<"Pixel count = "<<pixel_count<<'\n';
-        file_handle<<"Area = "<<pixel_count * pixel_area<<'\n';
+        file_handle<<"Area (1/e^2) = "<<pixel_count * pixel_area<<'\n';
         file_handle<<"___________________________________\n";
         
         bool success {cv::imwrite(name, image)};

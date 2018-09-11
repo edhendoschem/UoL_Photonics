@@ -38,6 +38,8 @@ Four level Erbium, Two level Ytterbium simulation which takes into account up-co
 matrix and aux_maths
 
 ## 2018-09-10_spot_size_calculator <a name = "it4"></a>
-This program takes the length per pixel as input and bulk processes all laser spot image files, adding up the number of pixels with an intensity value >= ~5% of max
-and then multiplying that value by the area of each pixel (assuming square pixels) to obtain the spot size. The units will depend on the units given when inputting
-the length per pixel
+This program takes the pixels/length and an image of the laser spot with a dark background (ideally in a dark room) as input and bulk processes all laser spot image 
+files provided, adding up the number of pixels with an intensity value >= ~13.5% of max and then multiplying that value by the area of each pixel (assuming square pixels) 
+to obtain the spot size. The units will depend on the units given when entering the pixels/length value (e.g. if pixels/mm given then area will be mm^2)
+
+
