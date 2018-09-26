@@ -35,7 +35,8 @@ larger than 1000x1000, parallel processing will be used in the following functio
 
 ## 2018-06-13_EDWA_sim (in progress) <a name = "it3"></a>
 Four level Erbium, Two level Ytterbium simulation which takes into account up-conversion, cross-relaxation between Ytterbium and Erbium. Currently in progress. Requires
-matrix and aux_maths. GUI made using [dear imgui](https://github.com/ocornut/imgui)
+matrix and aux_maths. GUI made using [dear imgui](https://github.com/ocornut/imgui) with [SFML bindings](https://github.com/eliasdaler/imgui-sfml)
+
 
 ## 2018-09-10_spot_size_calculator <a name = "it4"></a>
 This program takes the pixels/length and an image of the laser spot with a dark background (ideally in a dark room) as input and bulk processes all laser spot image 
