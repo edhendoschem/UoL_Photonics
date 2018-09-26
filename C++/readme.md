@@ -2,8 +2,8 @@
 
 ## 1. [new_simulation](#it1)
 ## 2. [useful_headers](#it2)
-## 3. [EDWA_sim] (#it3)
-## 4. [spot_size_calculator] (#it4)
+## 3. [EDWA_sim](#it3)
+## 4. [spot_size_calculator](#it4)
 
 ## new_simulation <a name = "it1"></a>
 This is a finite difference time domain method solver for Maxwell's Equations, featuring second order absorbing boundary
