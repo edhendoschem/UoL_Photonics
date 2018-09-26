@@ -1265,7 +1265,11 @@ void Simulation::Result::reset_end() noexcept
     
 } //End of reset end
 
-void Simulation::Result::advance_step (u_int const z, double const h, double const tol, u_int n_it) noexcept
+void Simulation::Result::advance_step (u_int const z, 
+                                       double const h, 
+                                       double const tol, 
+                                       u_int n_it, bool enable_ASE, 
+                                       bool enable_p_ASE) noexcept
 {
     find_all_n(z, h, tol, n_it);
     
@@ -1274,17 +1278,28 @@ void Simulation::Result::advance_step (u_int const z, double const h, double con
         advance_signal  (z); //Advances 1 step the signal
         advance_pump_f  (z); //Advances 1 step back pump
         advance_pump_b  (z); //Advances 1 step forward pump
-        advance_ASE_f   (z); //Advances 1 step forward ASE
-        advance_ASE_b   (z); //Advances 1 step backward ASE
-        //advance_p_ASE_f (z); //Advances 1 step forward ASE
-        advance_p_ASE_b (z); //Advances 1 step backward ASE
+        if (enable_ASE)
+        {
+            advance_ASE_f   (z); //Advances 1 step forward ASE
+            advance_ASE_b   (z); //Advances 1 step backward ASE
+        }
+        
+        if (enable_p_ASE)
+        {
+            advance_p_ASE_f (z); //Advances 1 step forward ASE
+            advance_p_ASE_b (z); //Advances 1 step backward ASE
+        }
     }
 
     return;
 }
 
 
-void Simulation::Result::regress_step (u_int const z, double const h, double const tol, u_int n_it) noexcept
+void Simulation::Result::regress_step (u_int const z, 
+                                       double const h, 
+                                       double const tol, 
+                                       u_int n_it, bool enable_ASE, 
+                                       bool enable_p_ASE) noexcept
 {
     find_all_n(z, h, tol, n_it);
     
@@ -1293,17 +1308,24 @@ void Simulation::Result::regress_step (u_int const z, double const h, double con
         advance_signal  (z, -1); //Advances 1 step the signal
         advance_pump_f  (z, -1); //Advances 1 step back pump
         advance_pump_b  (z, -1); //Advances 1 step forward pump
-        advance_ASE_f   (z, -1); //Advances 1 step forward ASE
-        advance_ASE_b   (z, -1); //Advances 1 step back ASE
-        advance_p_ASE_f (z, -1); //Advances 1 step forward ASE
-        advance_p_ASE_b (z, -1); //Advances 1 step back ASE
+        if (enable_ASE)
+        {
+            advance_ASE_f   (z, -1); //Advances 1 step forward ASE
+            advance_ASE_b   (z, -1); //Advances 1 step backward ASE
+        }
+        
+        if (enable_p_ASE)
+        {
+            advance_p_ASE_f (z, -1); //Advances 1 step forward ASE
+            advance_p_ASE_b (z, -1); //Advances 1 step backward ASE
+        }
     }
 
     return;
 }
 
 
-void Simulation::Result::simulate(bool warn) noexcept
+void Simulation::Result::simulate(bool warn, bool enable_ASE, bool enable_p_ASE) noexcept
 {
     double const NAvg {(p.NYb+p.NEr) / 2.0};
     double const h {1.0e-7 * NAvg};
@@ -1313,13 +1335,11 @@ void Simulation::Result::simulate(bool warn) noexcept
     
     for (int n = 0; n < 3; ++n)
     {
-        std::cout<<"===================cycle "<<n<<"===============\n";
-
         for (int i = 0; i < data.size(); ++i)
         {
-            if (i % 20 == 0) std::cout<<"step = "<<i<<'\n';
-            advance_step(i, h, tol, n_it);  
-        
+            p.curr_step = i;
+            advance_step(i, h, tol, n_it, enable_ASE, enable_p_ASE);  
+            
             if (warn             && (
                 data[i].n1 < 0.0 ||
                 data[i].n2 < 0.0 ||
@@ -1333,14 +1353,14 @@ void Simulation::Result::simulate(bool warn) noexcept
             }
         } //End of fowards iteration
     
+        p.curr_step = 0;
         //Reset PASE_b to 0 and Pp_b to Pp0_b
         reset_end();
     
         for (int i = data.size()-1; i >= 0 ; --i)
         {
-        
-            if (i % 20 == 0) std::cout<<"regress step = "<<i<<'\n';
-            regress_step(i, h, tol, n_it);
+            p.curr_step = i;
+            regress_step(i, h, tol, n_it, enable_ASE, enable_p_ASE);
         
             if (warn             && (
                 data[i].n1 < 0.0 ||
@@ -1413,24 +1433,26 @@ void Simulation::Result::save_data(std::string const filename, bool dBm_units) n
     
     file_handle.close();
     std::cout<<"Finished writing file\n";
-    system("gnuplot plot_script.txt");
-    
     return;
 }
 
 
-void Simulation::Result::plot_data (std::string const data_file, std::string const plot_script) noexcept
+void Simulation::Result::plot_data (std::string const data_file) noexcept
 {
+    std::string plot_script {data_file + std::string("_script")};
     std::ofstream script_out {plot_script};
-    std::regex rx (R"(([a-zA-z0-9_]+)(.txt))"); //We have to add* which means 0 or more
-    std::regex dBm(R"(dBm)");
+    std::regex rx (R"(([a-zA-Z0-9_]+)*(\w{1-3})*)"); //We have to add* which means 0 or more
+    std::regex dBm(R"((dBm)*)");
     std::smatch matches {};
     std::smatch dBm_match{};
     std::regex_match(data_file, matches, rx);
     std::ifstream file {data_file};
     std::string val_to_search;
     getline(file,val_to_search);
-    bool dBm_units {std::regex_match(val_to_search, dBm_match, dBm)};
+    //Fix this
+    bool dBm_units {std::regex_search(val_to_search, dBm_match, dBm)};
+    std::cout<<"dbm_units = "<<dBm_units<<'\n';
+    std::cout<<"dbm_match = "<<dBm_match[0]<<", "<<dBm_match[1]<<'\n'; 
     file.close();
     std::cout<<"Plotting data...\n";
     std::string name {matches[1]};
@@ -1552,7 +1574,7 @@ std::vector<std::array<double, 4>> Simulation::find_ratio(Simulation::Init_param
     }
     //Save in a file steeam
     std::ofstream file_handle {"Ratios.csv"};
-    file_handle<<"NEr,"<<"NYb,"<<"Ratio Er/Yb,"<<"z pos (cm)"<<"Max Gain,"<<","<<"Gain/cm\n";
+    file_handle<<"NEr,"<<"NYb,"<<"z pos (cm),"<<"Ratio Er/Yb,"<<"Max Gain,"<<","<<"Gain/cm\n";
     for (auto i : output)
     {
         file_handle<<i[0]<<","<<i[1]<<","<<i[2]<<","<<(i[0]/i[1])<<","<<i[3]<<","<<i[3]/i[2]<<'\n';
@@ -1611,7 +1633,7 @@ void Simulation::Result::save_spectral_data(std::string const filename, u_int co
     {
         for (auto st_it = iterators[0][i]; st_it != iterators[1][i]; ++st_it)
         {
-            file_handle<<classify(i)<<','<<st_it->first<<','
+            file_handle<<classify(i)<<','<<st_it->first/1000<<','
             <<(dBm_units ? Utility::power_to_dBm(st_it->second):st_it->second * 1000.0)<<'\n';
         }
     }

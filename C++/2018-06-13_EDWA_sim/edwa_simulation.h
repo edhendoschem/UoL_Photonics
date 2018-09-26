@@ -116,11 +116,19 @@ namespace Simulation
         
         
         //calculates all n in z and marches signal, pump and ASE to z+1
-        void advance_step (u_int const z, double const h, double const tol, u_int n_it) noexcept; 
-        void regress_step (u_int const z, double const h, double const tol, u_int n_it) noexcept;
+        void advance_step (u_int const z, 
+                                       double const h, 
+                                       double const tol, 
+                                       u_int n_it, bool enable_ASE, 
+                                       bool enable_p_ASE) noexcept; 
+        void regress_step (u_int const z, 
+                                       double const h, 
+                                       double const tol, 
+                                       u_int n_it, bool enable_ASE, 
+                                       bool enable_p_ASE) noexcept;
         
         //Propagates forward and backwards to obtain the results
-        void simulate(bool warn = false) noexcept;
+        void simulate(bool warn = false, bool enable_ASE = true, bool enable_p_ASE = false) noexcept;
         
         //Auxiliary Functions
         double  calculate_W(std::size_t const z, int const var) const noexcept;

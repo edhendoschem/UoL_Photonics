@@ -7,7 +7,9 @@ namespace Simulation
 {
     
     struct Init_params
-    {  
+    {
+        double width;                   //Width of the cross section in m
+        double height;                  //Height of the cross section in m
         double A   {0.0};               //Area of the cross section in m^2
         double l   {0.0};               //Length of the waveguide
         double step_size {0.0};         //length/steps
@@ -18,7 +20,7 @@ namespace Simulation
         double A43 {0.0};               //Spontaneous transition rate from Erbium l4 to l3 in 1/s
         double A65 {0.0};               //Spontaneous transition rate from Erbium l6 to l5 in 1/s
         double Ccr {0.0};               //Cross relaxation coefficient from Yb to Er in m^3/s
-        double Cup {0.0};               //Spontaneous transition rate from Erbium l2 to l1 in 1/s
+        double Cup {0.0};               //Up conversion coefficient m^3/s
         double lpEr {0.0};              //Pump scattering loss due to erbium concentration
         double lsEr {0.0};              //Signal scatterng loss due to erbium concentration
         double lpYb {0.0};              //Pump scattering loss due to ytterbium concentration
@@ -27,6 +29,7 @@ namespace Simulation
         int    S_end     {0};           //End wavelength of the signals pm
         int    n_signals {0};           //Total number of signals
         int    steps     {0};           //Number of steps/subdivision for the waveguide
+        int    curr_step {0};
         wl_map channel_spacing;         //Channel spacing per wavelength of ASE signal
         wl_map Ps0;                      //Signal power by wavelength
         wl_map Pp0_f;                   //Initial Forward pump power by wavelength

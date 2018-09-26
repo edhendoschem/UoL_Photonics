@@ -6,7 +6,12 @@
 
 //Project files
 #include "edwa_simulation.h"
-
+//GUI files
+#include "./src/gui/imgui.h"
+#include "./src/gui/imgui-SFML.h"
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/System/Clock.hpp>
+#include <SFML/Window/Event.hpp>
 
 
 
@@ -38,7 +43,7 @@ Conventions:
  * Steady state assumed
  * Erbium ions absorb 976 but not emit it
  * Ytterbium ions absorb and emit 976 but not 1500-1600
- * No ASE signals in the 900-1000 nm region
+ * No ASE signals in the 900-1000 nm region**********
  * 1 Forward and 1 Backward pump will be assumed
  * Single amplifier configuration
  * Signal enters from the Forward position
@@ -50,7 +55,7 @@ Conventions:
  of map indexes which will be picometres for convenience (wl_map and overlap)
  * All Erbium and Yttebium concentration related scattering losses are assumed to be the same for
  different wavelengths (i.e signal scattering loss  due to Er at 1520 nm is the same as 1600 nm)
- * Dipole dipole interactions where assumed when calculating interaction distance R0 but Er-Er
+ * Dipole dipole interactions were assumed when calculating interaction distance R0 but Er-Er
  dipoles were neglected
 
 =Issues/Notes
