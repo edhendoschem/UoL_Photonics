@@ -6,6 +6,7 @@
 #include <fstream>
 #include <string>
 #include <regex>
+#include <boost/filesystem.hpp>
 #include "constants.h"
 #include "cross_section.h"
 #include "utility_functions.h"
@@ -128,19 +129,19 @@ namespace Simulation
                                        bool enable_p_ASE) noexcept;
         
         //Propagates forward and backwards to obtain the results
-        void simulate(bool warn = false, bool enable_ASE = true, bool enable_p_ASE = false) noexcept;
+        void simulate(float& report, bool warn = false, bool enable_ASE = true, bool enable_p_ASE = false) noexcept;
         
         //Auxiliary Functions
         double  calculate_W(std::size_t const z, int const var) const noexcept;
         void    initialize_ASE() noexcept;
         void    report_step(u_int z, bool show_ASE = false) noexcept;
         void    save_data (std::string const filename_, bool dBm_units = false) noexcept;
-        void    plot_data (std::string const data_file, std::string const plot_script) noexcept;
+        void    plot_data (std::string const data_file) noexcept;
         void    save_spectral_data(std::string const filename, u_int const step, bool dBm_units = false) noexcept;
     };
     
     //Will attempt to find the optimal ratio and return an array with Ner, NYb,length and max gain
-    std::vector<std::array<double, 4>> find_ratio(Simulation::Init_params const p) noexcept;
+    std::vector<std::array<double, 4>> find_ratio(Simulation::Init_params const p, float& progress) noexcept;
 }
 
 #endif  /* EDWA_SIMULATION_H_INCLUDED */

@@ -1325,19 +1325,22 @@ void Simulation::Result::regress_step (u_int const z,
 }
 
 
-void Simulation::Result::simulate(bool warn, bool enable_ASE, bool enable_p_ASE) noexcept
+void Simulation::Result::simulate(float& report, bool warn, bool enable_ASE, bool enable_p_ASE) noexcept
 {
     double const NAvg {(p.NYb+p.NEr) / 2.0};
     double const h {1.0e-7 * NAvg};
     double const tol {5.0e-6 * NAvg};
     u_int n_it {1000};
-
+    int n_loops {3};
+    float curr_tot {0.0};
+    float total {static_cast<float>(n_loops) * static_cast<float>(data.size()) * 2.0f};
     
-    for (int n = 0; n < 3; ++n)
+    for (int n = 0; n < n_loops; ++n)
     {
         for (int i = 0; i < data.size(); ++i)
         {
-            p.curr_step = i;
+            curr_tot += 1.0;
+            report = curr_tot / total;
             advance_step(i, h, tol, n_it, enable_ASE, enable_p_ASE);  
             
             if (warn             && (
@@ -1359,7 +1362,8 @@ void Simulation::Result::simulate(bool warn, bool enable_ASE, bool enable_p_ASE)
     
         for (int i = data.size()-1; i >= 0 ; --i)
         {
-            p.curr_step = i;
+            curr_tot += 1.0;
+            report = curr_tot / total;
             regress_step(i, h, tol, n_it, enable_ASE, enable_p_ASE);
         
             if (warn             && (
@@ -1383,10 +1387,26 @@ void Simulation::Result::simulate(bool warn, bool enable_ASE, bool enable_p_ASE)
 }
 
 
+
+
+
 void Simulation::Result::save_data(std::string const filename, bool dBm_units) noexcept
 {
-    std::cout<<"Writing file: "<<filename<<'\n';
-    std::ofstream file_handle {filename};
+    boost::filesystem::path curr_path{boost::filesystem::current_path()};
+    boost::filesystem::path folder {"output"};
+    curr_path /= folder;
+    if (!boost::filesystem::exists(curr_path)) boost::filesystem::create_directories(curr_path);
+    std::regex rx ("([a-zA-Z0-9_]+)(.*)(\w*)");
+    std::smatch s;
+    std::regex_match(filename, s, rx);
+    std::string file_name {s[1]};
+    curr_path /= boost::filesystem::path(file_name);
+    if (!boost::filesystem::exists(curr_path)) boost::filesystem::create_directories(curr_path);
+    file_name = file_name + std::string(".csv");
+    curr_path /= boost::filesystem::path(file_name);
+    std::cout<<"Writing file: "<<file_name<<'\n';
+    std::ofstream file_handle {curr_path.string()};
+    
     std::string dBm {dBm_units ? "dBm" : "mW"};
     file_handle<<"Length,n1,n2,n3,n4,n5,n6,Ps ("+dBm+"),"
     "Gain,Pp_f (976),Pp_f (1480),Pp_b (976),Pp_b (1480),PASE_f,PASE_b,Pp_ASE_f,Pp_ASE_b\n";
@@ -1437,25 +1457,41 @@ void Simulation::Result::save_data(std::string const filename, bool dBm_units) n
 }
 
 
-void Simulation::Result::plot_data (std::string const data_file) noexcept
+void Simulation::Result::plot_data (std::string const data_file_) noexcept
 {
-    std::string plot_script {data_file + std::string("_script")};
-    std::ofstream script_out {plot_script};
-    std::regex rx (R"(([a-zA-Z0-9_]+)*(\w{1-3})*)"); //We have to add* which means 0 or more
-    std::regex dBm(R"((dBm)*)");
+    boost::filesystem::path curr_path{boost::filesystem::current_path()};
+    boost::filesystem::path folder {"output"};
+    curr_path /= folder;
+    if (!boost::filesystem::exists(curr_path)) boost::filesystem::create_directories(curr_path);
+    std::regex rx (R"(([a-zA-Z0-9_]+)?(\.\w+)?)");
+    std::regex dBm(R"((dBm))");
     std::smatch matches {};
     std::smatch dBm_match{};
-    std::regex_match(data_file, matches, rx);
+    std::regex_match(data_file_, matches, rx);
+    std::string data_file {matches[1]};
+    curr_path /= boost::filesystem::path(data_file);
+    boost::filesystem::path curr_path_copy {curr_path};
+    data_file = data_file + std::string(".csv");
+    curr_path_copy /= boost::filesystem::path(data_file);
+    data_file = curr_path_copy.string();
+    std::string filename {matches[1]};
+    if (!boost::filesystem::exists(curr_path)) boost::filesystem::create_directories(curr_path);
+    curr_path /= boost::filesystem::path(filename);
+    std::cout<<"curr_path = "<<curr_path<<'\n';
+    std::string plot_script {curr_path.string() + std::string("_script") + std::string(".txt")};
+    std::cout<<"plot_script = "<<plot_script<<'\n';
+    std::ofstream script_out {plot_script};
     std::ifstream file {data_file};
     std::string val_to_search;
-    getline(file,val_to_search);
-    //Fix this
+    getline(file, val_to_search);
     bool dBm_units {std::regex_search(val_to_search, dBm_match, dBm)};
     std::cout<<"dbm_units = "<<dBm_units<<'\n';
     std::cout<<"dbm_match = "<<dBm_match[0]<<", "<<dBm_match[1]<<'\n'; 
     file.close();
     std::cout<<"Plotting data...\n";
     std::string name {matches[1]};
+    curr_path_copy = curr_path_copy.parent_path() / boost::filesystem::path(name);
+    name = curr_path_copy.string();
     
     std::string textfile {
     "set terminal pngcairo size 1200, 600\n"
@@ -1528,7 +1564,7 @@ void Simulation::Result::plot_data (std::string const data_file) noexcept
 }
 
 
-std::vector<std::array<double, 4>> Simulation::find_ratio(Simulation::Init_params const p) noexcept
+std::vector<std::array<double, 4>> Simulation::find_ratio(Simulation::Init_params const p, float& progress) noexcept
 {
     double const N_total {p.NYb + p.NEr};
     std::vector<std::array<double, 4>> output;
@@ -1558,7 +1594,7 @@ std::vector<std::array<double, 4>> Simulation::find_ratio(Simulation::Init_param
         p_.recalculate_constants();
         
         Simulation::Result r{p_};
-        r.simulate();
+        r.simulate(progress);
         double highest_val {-1.0};
         
         for (auto j = 0; j < r.data.size(); ++j)

@@ -2,6 +2,7 @@
 #include "utility_functions.h"
 //Pending recent
 //Pending long term
+//Add overlap columns to the GUI
 //Add function to calculate overlap scattering
 //Investigate power in dbm for signal
 
@@ -32,6 +33,11 @@ struct Merge_helper
         }
         
         temp_bools[0] = true;
+        temp_bools[1] = true;
+        for (auto i = 2; i < temp_bools.size(); ++i)
+        {
+            temp_bools[i] = false;
+        }
         
         return;
     }
@@ -88,12 +94,27 @@ void log_map(wl_map& m, std::string s)
 }
 
 
+void multi_progress_bar(std::array<float, 3>& f)
+{
+    std::size_t threads(std::thread::hardware_concurrency());
+    for (auto i = 0; i < threads; ++i)
+    {
+        ImGui::ProgressBar(f[i], ImVec2(0.0f,0.0f));
+    }
+    
+    return;
+}
+
 int main(int argc, char **argv)
 {
+    std::size_t n_threads {std::thread::hardware_concurrency()};
+    std::atomic<std::size_t> available_threads {n_threads};
+    
     Simulation::Init_params p{};
     
     Merge_helper m;
     m.init_temp(p);
+    std::array<float,3> progress {0.0, 0.0, 0.0};
     
     sf::RenderWindow window(sf::VideoMode(800, 800), "");
     window.setVerticalSyncEnabled(true);
@@ -296,21 +317,42 @@ int main(int argc, char **argv)
             ImGui::Checkbox("Enable signal ASE", &m.temp_bools[1]);
             ImGui::Checkbox("Enable pump ASE", &m.temp_bools[2]);
             ImGui::Checkbox("Save in dBm units", &m.temp_bools[3]);
-            static char buf1[64] = ""; ImGui::InputText("Data name", buf1, 64);
-            static char buf2[64] = ""; ImGui::InputText("Plot script name", buf2, 64);
+            static char buf1[32] = ""; ImGui::InputText("Data name", buf1, 32);
 
             ImGui::NewLine();
             ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f);
 
             if (ImGui::Button("Run", button_size))
             {
-                Simulation::Result r{p};
-                r.simulate(false, m.temp_bools[1], m.temp_bools[2]);
-                ImGui::ProgressBar(r.p.curr_step, ImVec2(0.0f,0.0f));
-                r.save_data(std::string(buf1), m.temp_bools[3]);
-                r.plot_data(std::string(buf1), std::string(buf2));
+                
+                
+                
+                Simulation::Init_params p_{p};
+                std::string name(buf1);
+                auto launch = [p_, m, name, &progress, n_threads] (std::atomic<std::size_t>& av_threads)
+                {
+                    --av_threads;
+                    std::size_t curr_t {n_threads - av_threads-1};
+                    Simulation::Result r{p_};
+                    r.simulate(progress[curr_t], false, m.temp_bools[1], m.temp_bools[2]);
+                    r.save_data(name, m.temp_bools[3]);
+                    r.plot_data(name);
+                    ++av_threads;
+                    return;
+                };
+                
+                std::thread t(launch, std::ref(available_threads));
+                t.detach();
             }
-        
+            
+            for (auto i = 0; i < n_threads; ++i)
+            {
+                if (progress[i] > 0.0f) continue;
+                else progress[i] = 0.0f;
+            }
+            
+            multi_progress_bar(progress);
+            
         }//End of simulation
         
         ImGui::End(); // end window
