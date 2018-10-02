@@ -6,6 +6,59 @@
 //Add function to calculate overlap scattering
 //Investigate power in dbm for signal
 
+struct Trio
+{
+    float first {0.0f};
+    bool second {false};
+    std::string third {std::string()};
+};
+
+struct Parallel_idx
+{
+    std::mutex m;
+    std::vector<Trio> idx;
+                                   
+    Parallel_idx()
+    {
+        std::size_t ts {std::thread::hardware_concurrency()};
+        for (auto i = 0; i < ts; ++i)
+        idx.emplace_back(Trio());
+    }
+    
+    Parallel_idx(Parallel_idx const&) = delete;
+    Parallel_idx& operator = (Parallel_idx const&) = delete;
+    
+    std::optional<std::size_t> assign_idx(std::string_view s)
+    {
+        std::lock_guard<std::mutex> lk(m);
+        std::optional<std::size_t> output;
+        
+        for (std::size_t i = 0;  i < idx.size(); ++i)
+        {
+            if (idx[i].second == false)
+            {
+                idx[i].first  = 0.0f;
+                idx[i].second = true;
+                idx[i].third  = s;
+                *output = i;
+                break;
+            }
+            
+        }
+        
+        return output;
+    }
+
+
+    void release_idx(std::size_t i)
+    {
+        std::lock_guard<std::mutex> lk(m);
+        idx[i].second = false;
+        return;
+    }
+};
+
+
 struct Merge_helper
 {
     std::array<double, 30> temp_doubles;
@@ -26,8 +79,10 @@ struct Merge_helper
         temp_doubles[6] = (1.0/p.A32) * 1.0e3;
         temp_doubles[7] = (1.0/p.A43) * 1.0e3;
         temp_doubles[8] = (1.0/p.A65) * 1.0e3;
+        temp_doubles[9] = p.Cup;
+        temp_doubles[10] = p.Ccr;
         
-        for (auto i = 9; i < temp_doubles.size(); ++i)
+        for (auto i = 11; i < temp_doubles.size(); ++i)
         {
             temp_doubles[i] = 0.0;
         }
@@ -43,7 +98,7 @@ struct Merge_helper
     }
     
     
-    void merge_with_sim(Simulation::Init_params& p)
+    void merge_with_sim(Simulation::Init_params& p) const
     {
         p.width = temp_doubles[0] * 1.0e-6;
         p.height = temp_doubles[1] * 1.0e-6;
@@ -58,10 +113,28 @@ struct Merge_helper
         p.Ps0 = temp_signals;
         p.Pp0_f = temp_f_pump;
         p.Pp0_b = temp_b_pump;
+        p.Cup = temp_doubles[9];
+        p.Ccr = temp_doubles[10];
+        
     
         return;
     }
 }; //End of Merge_helper struct
+
+
+std::vector<Merge_helper> create_helpers(Simulation::Init_params& p)
+{
+    std::vector<Merge_helper> output;
+    
+    for (auto i = 0; i < 12; ++i)
+    {
+        Merge_helper m;
+        m.init_temp(p);
+        output.emplace_back(m);
+    }
+    
+    return output;
+}
 
 
 static void ShowHelpMarker(const char* desc)
@@ -94,12 +167,82 @@ void log_map(wl_map& m, std::string s)
 }
 
 
-void multi_progress_bar(std::array<float, 3>& f)
+void multi_progress_bar(Parallel_idx& f, int curr_idx_)
 {
-    std::size_t threads(std::thread::hardware_concurrency());
+    std::size_t threads(f.idx.size());
+    ImGui::PushItemWidth(ImGui::GetWindowContentRegionWidth());
     for (auto i = 0; i < threads; ++i)
     {
-        ImGui::ProgressBar(f[i], ImVec2(0.0f,0.0f));
+        char inner_buf[32];
+        sprintf(inner_buf, "Running %s %.2f/%.0f%s", f.idx[i].third.c_str(), f.idx[i].first*100.0f, 100.0f, "%");
+        ImGui::ProgressBar(f.idx[i].first, ImVec2(0.0f,0.0f), inner_buf);
+    }
+    
+    ImGui::PopItemWidth();
+    
+    return;
+}
+
+
+struct Launch_sim
+{
+    Simulation::Init_params p_; 
+    Merge_helper m; 
+    std::string name; 
+    std::size_t n_threads;
+    
+    Launch_sim(Simulation::Init_params const&p, Merge_helper const& m, 
+               std::string const& name, std::size_t const n_threads):
+               p_{p}, m{m}, name{name}, n_threads{n_threads} {}
+    
+    void operator() (std::atomic<std::size_t>& av_threads, Parallel_idx& progress)
+    {
+        --av_threads;
+        std::size_t curr_t;
+        std::optional<std::size_t> opt_t {progress.assign_idx(name)};
+        curr_t = *opt_t;
+        Simulation::Result r{p_};
+        progress.idx[curr_t].first = 0.0f;
+        r.simulate(progress.idx[curr_t].first, false, m.temp_bools[1], m.temp_bools[2]);
+        r.save_data(name, m.temp_bools[3]);
+        r.plot_data(name);
+        progress.release_idx(curr_t);
+        ++av_threads;
+        return;
+    }
+    
+    Launch_sim& operator = (Launch_sim const&) = default;
+    Launch_sim(Launch_sim const&) = default;
+};
+
+enum class S_type{Signal, F_pump, B_pump};
+
+void combine_wl_map(std::vector<Merge_helper>& m_vec, int& vec_idx, int& curr_idx, S_type t)
+{
+    if (t == S_type::B_pump)
+    {
+        int temp_wl {static_cast<int>(m_vec[curr_idx].temp_doubles[15] * 1000.0)};
+        if (!(m_vec[curr_idx].temp_doubles[15] < 850.0 || m_vec[curr_idx].temp_doubles[15] > 1150.0))
+        {
+            double temp_pow {m_vec[curr_idx].temp_doubles[16] / 1000.0};
+            m_vec[vec_idx].temp_b_pump.emplace(std::pair(temp_wl, temp_pow));
+        }
+    } else if (t == S_type::Signal)
+    {
+        int temp_wl {static_cast<int>(m_vec[curr_idx].temp_doubles[11] * 1000.0)};
+        if (!(m_vec[curr_idx].temp_doubles[11] < 1450.0 || m_vec[curr_idx].temp_doubles[11] > 1600.0))
+        {
+            double temp_pow {m_vec[curr_idx].temp_doubles[12] / 1000.0};
+            m_vec[vec_idx].temp_signals.emplace(std::pair(temp_wl, temp_pow));
+        }
+    } else 
+    {
+        int temp_wl {static_cast<int>(m_vec[curr_idx].temp_doubles[13] * 1000.0)};
+        if (!(m_vec[curr_idx].temp_doubles[13] < 850.0 || m_vec[curr_idx].temp_doubles[13] > 1150.0))
+        {
+            double temp_pow {m_vec[curr_idx].temp_doubles[14] / 1000.0};
+            m_vec[vec_idx].temp_f_pump.emplace(std::pair(temp_wl, temp_pow));
+        }
     }
     
     return;
@@ -110,12 +253,22 @@ int main(int argc, char **argv)
     std::size_t n_threads {std::thread::hardware_concurrency()};
     std::atomic<std::size_t> available_threads {n_threads};
     
+    char const * buf[] {"profile_0", "profile_1", "profile_2", "profile_3", "profile_4",
+                              "profile_5", "profile_6", "profile_7", "profile_8", "profile_9",
+                              "profile_10", "profile_11"};
+    
     Simulation::Init_params p{};
+    bool run_all {true};
+    bool copy_all {true};
+    bool monitor_launched {false};
+    bool ready {false};
     
-    Merge_helper m;
-    m.init_temp(p);
-    std::array<float,3> progress {0.0, 0.0, 0.0};
-    
+    std::vector<Merge_helper> m_vec {create_helpers(p)};
+    int curr_idx {0};
+    int it_idx{0};
+    Merge_helper m = m_vec[0];
+    Parallel_idx progress {Parallel_idx()};
+
     sf::RenderWindow window(sf::VideoMode(800, 800), "");
     window.setVerticalSyncEnabled(true);
     ImGui::SFML::Init(window);
@@ -141,16 +294,20 @@ int main(int argc, char **argv)
         ImGui::SFML::Update(window, deltaClock.restart());
         
         ImGui::Begin("EDWA Model"); // begin window
-        
+    
         if (ImGui::CollapsingHeader("Starting parameters"))
         {
+ 
+            ImGui::Combo("Selected parameters", &curr_idx, buf, m_vec.size());
+
+            
             if (ImGui::TreeNode("Waveguide Dimensions"))
             {
                 ImGui::SameLine(); ShowHelpMarker("test help");
                 ImGui::PushItemWidth(50);
-                ImGui::InputDouble("Width (um)", &m.temp_doubles[0], 0.0f, 0.0f, "%.2f");
-                ImGui::InputDouble("Height (um)", &m.temp_doubles[1], 0.0f, 0.0f, "%.2f");
-                ImGui::InputDouble("Length (cm)", &m.temp_doubles[2], 0.0f, 0.0f, "%.2f"); //3 decimals
+                ImGui::InputDouble("Width (um)", &m_vec[curr_idx].temp_doubles[0], 0.0f, 0.0f, "%.2f");
+                ImGui::InputDouble("Height (um)", &m_vec[curr_idx].temp_doubles[1], 0.0f, 0.0f, "%.2f");
+                ImGui::InputDouble("Length (cm)", &m_vec[curr_idx].temp_doubles[2], 0.0f, 0.0f, "%.2f"); //3 decimals
                 ImGui::PopItemWidth();
                 ImGui::TreePop();
                 ImGui::Separator();
@@ -160,8 +317,8 @@ int main(int argc, char **argv)
             {
                 ImGui::SameLine(); ShowHelpMarker("test help");
                 ImGui::PushItemWidth(100);
-                ImGui::InputDouble("Erbium (ions/m^3)", &m.temp_doubles[3], 0.0f, 0.0f, "%e");
-                ImGui::InputDouble("Ytterbium (ions/m^3)", &m.temp_doubles[4], 0.0f, 0.0f, "%e");
+                ImGui::InputDouble("Erbium (ions/m^3)", &m_vec[curr_idx].temp_doubles[3], 0.0f, 0.0f, "%e");
+                ImGui::InputDouble("Ytterbium (ions/m^3)", &m_vec[curr_idx].temp_doubles[4], 0.0f, 0.0f, "%e");
                 ImGui::PopItemWidth();
                 ImGui::TreePop();
                 ImGui::Separator();
@@ -171,10 +328,10 @@ int main(int argc, char **argv)
             {
                 ImGui::SameLine(); ShowHelpMarker("test help");
                 ImGui::PushItemWidth(100);
-                ImGui::InputDouble("t21 (ms)", &m.temp_doubles[5], 0.0f, 0.0f, "%e");
-                ImGui::InputDouble("t32 (ms)", &m.temp_doubles[6], 0.0f, 0.0f, "%e");
-                ImGui::InputDouble("t43 (ms)", &m.temp_doubles[7], 0.0f, 0.0f, "%e");
-                ImGui::InputDouble("t65 (ms)", &m.temp_doubles[8], 0.0f, 0.0f, "%e");
+                ImGui::InputDouble("t21 (ms)", &m_vec[curr_idx].temp_doubles[5], 0.0f, 0.0f, "%e");
+                ImGui::InputDouble("t32 (ms)", &m_vec[curr_idx].temp_doubles[6], 0.0f, 0.0f, "%e");
+                ImGui::InputDouble("t43 (ms)", &m_vec[curr_idx].temp_doubles[7], 0.0f, 0.0f, "%e");
+                ImGui::InputDouble("t65 (ms)", &m_vec[curr_idx].temp_doubles[8], 0.0f, 0.0f, "%e");
                 ImGui::PopItemWidth();
                 ImGui::TreePop();
                 ImGui::Separator();
@@ -185,8 +342,8 @@ int main(int argc, char **argv)
                 ImGui::SameLine(); ShowHelpMarker("test help");
                 ImGui::PushItemWidth(100);
                 ImGui::InputInt("Steps", &p.steps);
-                ImGui::InputDouble("Cup (m^3/s)", &p.Cup, 0.0f, 0.0f, "%e");
-                ImGui::InputDouble("Ccr (m^3/s)", &p.Ccr, 0.0f, 0.0f, "%e");
+                ImGui::InputDouble("Cup (m^3/s)", &m_vec[curr_idx].temp_doubles[9], 0.0f, 0.0f, "%e");
+                ImGui::InputDouble("Ccr (m^3/s)", &m_vec[curr_idx].temp_doubles[10], 0.0f, 0.0f, "%e");
                 ImGui::PopItemWidth();
                 ImGui::TreePop();
                 ImGui::Separator();
@@ -196,44 +353,58 @@ int main(int argc, char **argv)
             {
                 ImGui::Text("Wavelength (nm)"); ImGui::SameLine(150); ImGui::Text("Power (mW)");
                 ImGui::PushItemWidth(100);
-                ImGui::InputDouble("##w1", &m.temp_doubles[9], 0.0f, 0.0f, "%.2f");
+                ImGui::InputDouble("##w1", &m_vec[curr_idx].temp_doubles[11], 0.0f, 0.0f, "%.2f");
                 ImGui::PopItemWidth();
                 ImGui::SameLine(150);
                 ImGui::PushItemWidth(100);
-                ImGui::InputDouble("##w2", &m.temp_doubles[10], 0.0f, 0.0f, "%e");
+                ImGui::InputDouble("##w2", &m_vec[curr_idx].temp_doubles[12], 0.0f, 0.0f, "%e");
                 ImGui::PopItemWidth();
                 ImGui::SameLine();
                 if (ImGui::Button("Add signal"))
                 {
-                    int temp_wl {static_cast<int>(m.temp_doubles[9] * 1000.0)};
-                    if (!(m.temp_doubles[9] < 1450.0 || m.temp_doubles[9] > 1600.0))
+                    if (copy_all)
                     {
-                        double temp_pow {m.temp_doubles[10] / 1000.0};
-                        m.temp_signals.emplace(std::pair(temp_wl, temp_pow));
+                        for (auto i = 0; i < m_vec.size(); ++i)
+                        {
+                            combine_wl_map(m_vec, i, curr_idx, S_type::Signal);
+                        }
+                    } else {
+                        combine_wl_map(m_vec, curr_idx, curr_idx, S_type::Signal);
                     }
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Clear all##1"))
                 {
-                    m.temp_signals.clear();
+                    if (copy_all)
+                    {
+                        for (auto i = 0; i < m_vec.size(); ++i)
+                        {
+                            m_vec[i].temp_signals.clear();
+                        }
+                    } else {
+                        m_vec[curr_idx].temp_signals.clear();
+                    }
                 }
                 
                 ImGui::PushItemWidth(100);
-                ImGui::InputDouble("##w3", &m.temp_doubles[11], 0.0f, 0.0f, "%.2f");
+                ImGui::InputDouble("##w3", &m_vec[curr_idx].temp_doubles[13], 0.0f, 0.0f, "%.2f");
                 ImGui::PopItemWidth();
                 ImGui::SameLine(150);
                 ImGui::PushItemWidth(100);
-                ImGui::InputDouble("##w4", &m.temp_doubles[12], 0.0f, 0.0f, "%e");
+                ImGui::InputDouble("##w4", &m_vec[curr_idx].temp_doubles[14], 0.0f, 0.0f, "%e");
                 ImGui::PopItemWidth();
                 ImGui::SameLine();
                 
                 if (ImGui::Button("Add Forward pump"))
                 {
-                    int temp_wl {static_cast<int>(m.temp_doubles[11] * 1000.0)};
-                    if (!(m.temp_doubles[11] < 850.0 || m.temp_doubles[11] > 1150.0))
+                    if (copy_all)
                     {
-                        double temp_pow {m.temp_doubles[12] / 1000.0};
-                        m.temp_f_pump.emplace(std::pair(temp_wl, temp_pow));
+                        for (auto i = 0; i < m_vec.size(); ++i)
+                        {
+                            combine_wl_map(m_vec, i, curr_idx, S_type::F_pump);
+                        }
+                    } else {
+                        combine_wl_map(m_vec, curr_idx, curr_idx, S_type::F_pump);
                     }
                 }
                 
@@ -241,25 +412,36 @@ int main(int argc, char **argv)
                 
                 if (ImGui::Button("Clear all##2"))
                 {
-                    m.temp_f_pump.clear();
+                    if (copy_all)
+                    {
+                        for (auto i = 0; i < m_vec.size(); ++i)
+                        {
+                            m_vec[i].temp_f_pump.clear();
+                        }
+                    } else {
+                        m_vec[curr_idx].temp_f_pump.clear();
+                    }
                 }
                 
                 ImGui::PushItemWidth(100);
-                ImGui::InputDouble("##w5", &m.temp_doubles[13], 0.0f, 0.0f, "%.2f");
+                ImGui::InputDouble("##w5", &m_vec[curr_idx].temp_doubles[15], 0.0f, 0.0f, "%.2f");
                 ImGui::PopItemWidth();
                 ImGui::SameLine(150);
                 ImGui::PushItemWidth(100);
-                ImGui::InputDouble("##w6", &m.temp_doubles[14], 0.0f, 0.0f, "%e");
+                ImGui::InputDouble("##w6", &m_vec[curr_idx].temp_doubles[16], 0.0f, 0.0f, "%e");
                 ImGui::PopItemWidth();
                 ImGui::SameLine();
                 
                 if (ImGui::Button("Add backward pump"))
                 {
-                    int temp_wl {static_cast<int>(m.temp_doubles[13] * 1000.0)};
-                    if (!(m.temp_doubles[13] < 850.0 || m.temp_doubles[13] > 1150.0))
+                    if (copy_all)
                     {
-                        double temp_pow {m.temp_doubles[14] / 1000.0};
-                        m.temp_b_pump.emplace(std::pair(temp_wl, temp_pow));
+                        for (auto i = 0; i < m_vec.size(); ++i)
+                        {
+                            combine_wl_map(m_vec, i, curr_idx, S_type::B_pump);
+                        }
+                    } else {
+                        combine_wl_map(m_vec, curr_idx, curr_idx, S_type::B_pump);
                     }
                 }
                 
@@ -267,30 +449,39 @@ int main(int argc, char **argv)
                 
                 if (ImGui::Button("Clear all##3"))
                 {
-                    m.temp_b_pump.clear();
+                    if (copy_all)
+                    {
+                        for (auto i = 0; i < m_vec.size(); ++i)
+                        {
+                            m_vec[i].temp_b_pump.clear();
+                        }
+                    } else {
+                        m_vec[curr_idx].temp_b_pump.clear();
+                    }
+                    
                 }
                 
+                ImGui::Checkbox("Apply to all profiles", &copy_all);
                 ImGui::Separator();
-                ImGui::Columns(3, "test columns");
+                ImGui::Columns(3, "##test columns");
                 ImGui::Text("Wavelength (nm)"); ImGui::NextColumn();
                 ImGui::Text("Power (mW)"); ImGui::NextColumn();
                 ImGui::Text("Type"); ImGui::NextColumn();
                 ImGui::Separator();
                 
-                
-                if (m.temp_signals.size() != 0)
+                if (m_vec[curr_idx].temp_signals.size() != 0)
                 {
-                    log_map(m.temp_signals, "Signal");
+                    log_map(m_vec[curr_idx].temp_signals, "Signal");
                 }
                 
-                if (m.temp_f_pump.size() != 0)
+                if (m_vec[curr_idx].temp_f_pump.size() != 0)
                 {
-                    log_map(m.temp_f_pump, "Forward pump");
+                    log_map(m_vec[curr_idx].temp_f_pump, "Forward pump");
                 }
                 
-                if (m.temp_b_pump.size() != 0)
+                if (m_vec[curr_idx].temp_b_pump.size() != 0)
                 {
-                    log_map(m.temp_b_pump, "Backward pump");
+                    log_map(m_vec[curr_idx].temp_b_pump, "Backward pump");
                 }
                 
                 ImGui::Columns(1);
@@ -299,65 +490,83 @@ int main(int argc, char **argv)
                 ImGui::Separator();
             }
             
-            ImGui::Checkbox("Recalculate Cup and Ccr", &m.temp_bools[0]);
+            ImGui::NewLine();
+            ImGui::Checkbox("Recalculate Cup and Ccr", &m_vec[curr_idx].temp_bools[0]);
             ImGui::SameLine(); ShowHelpMarker("Will use the default equations to calculate the values. I.E. will overwrite user provided values\n");
             ImGui::NewLine();
-            ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f);
-            if (ImGui::Button("Update", button_size))
-            {
-                m.merge_with_sim(p);
-                if (m.temp_bools[0]) p.recalculate_constants();
-            }
-            
         } //End of starting parameters
         
         
         if (ImGui::CollapsingHeader("Simulation"))
         {
-            ImGui::Checkbox("Enable signal ASE", &m.temp_bools[1]);
-            ImGui::Checkbox("Enable pump ASE", &m.temp_bools[2]);
-            ImGui::Checkbox("Save in dBm units", &m.temp_bools[3]);
-            static char buf1[32] = ""; ImGui::InputText("Data name", buf1, 32);
-
+            ImGui::Checkbox("Enable signal ASE", &m_vec[curr_idx].temp_bools[1]);
+            ImGui::Checkbox("Enable pump ASE", &m_vec[curr_idx].temp_bools[2]);
+            ImGui::Checkbox("Save in dBm units", &m_vec[curr_idx].temp_bools[3]);
+            ImGui::Checkbox("Run all profiles", &run_all);
             ImGui::NewLine();
             ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f);
+            
 
+            
             if (ImGui::Button("Run", button_size))
             {
-                
-                
-                
-                Simulation::Init_params p_{p};
-                std::string name(buf1);
-                auto launch = [p_, m, name, &progress, n_threads] (std::atomic<std::size_t>& av_threads)
-                {
-                    --av_threads;
-                    std::size_t curr_t {n_threads - av_threads-1};
-                    Simulation::Result r{p_};
-                    r.simulate(progress[curr_t], false, m.temp_bools[1], m.temp_bools[2]);
-                    r.save_data(name, m.temp_bools[3]);
-                    r.plot_data(name);
-                    ++av_threads;
-                    return;
-                };
-                
-                std::thread t(launch, std::ref(available_threads));
-                t.detach();
+                if (run_all)
+                {//aquiaqui
+                    auto launch_monitor = [&it_idx, &monitor_launched, &buf, m_vec, n_threads]
+                    (std::atomic<std::size_t>& available_threads, Parallel_idx& progress)
+                    {
+                        for (it_idx; it_idx < m_vec.size();)
+                        {
+                            if (available_threads > 1)
+                            {
+                                Simulation::Init_params p_{};
+                                m_vec[it_idx].merge_with_sim(p_);
+                                if (m_vec[it_idx].temp_bools[0]) p_.recalculate_constants();
+                                std::string name(buf[it_idx]);
+                                Launch_sim launcher {p_, m_vec[it_idx], name, n_threads};
+                                std::thread t(launcher, std::ref(available_threads), std::ref(progress));
+                                t.detach();
+                                
+                                if (it_idx == m_vec.size() - 1)
+                                {
+                                    it_idx = 0;
+                                    monitor_launched = false;
+                                    break;
+                                }
+                                
+                                ++it_idx;
+                            } else {
+                                std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                            }
+                        }
+                    }; //end of launch_monitor
+                    if (!monitor_launched)
+                    {
+                        monitor_launched = true;
+                        std::thread tm(launch_monitor, std::ref(available_threads), std::ref(progress));
+                        tm.detach();
+                    }
+                } else {
+                    if (available_threads > 0)
+                    {
+                        Simulation::Init_params p_{};
+                        m_vec[curr_idx].merge_with_sim(p_);
+                        if (m_vec[curr_idx].temp_bools[0]) p_.recalculate_constants();
+                        std::string name(buf[curr_idx]);
+                        Launch_sim launcher {p_, m_vec[curr_idx], name, n_threads};
+                        std::thread t(launcher, std::ref(available_threads), std::ref(progress));
+                        t.detach();
+                    }
+                }
             }
             
-            for (auto i = 0; i < n_threads; ++i)
-            {
-                if (progress[i] > 0.0f) continue;
-                else progress[i] = 0.0f;
-            }
-            
-            multi_progress_bar(progress);
+            multi_progress_bar(progress, curr_idx);
             
         }//End of simulation
         
         ImGui::End(); // end window
         
-        ImGui::ShowDemoWindow();         // Background color edit
+        //ImGui::ShowDemoWindow();         //demo windows for reference
         window.clear(bgColor); // fill background with default color
         ImGui::SFML::Render(window);
         window.display();

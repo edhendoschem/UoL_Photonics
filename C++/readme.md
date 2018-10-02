@@ -36,7 +36,7 @@ larger than 1000x1000, parallel processing will be used in the following functio
 ## 2018-06-13_EDWA_sim (in progress) <a name = "it3"></a>
 Four level Erbium, Two level Ytterbium simulation which takes into account up-conversion, cross-relaxation between Ytterbium and Erbium. Currently in progress. Requires
 matrix and aux_maths. GUI made using [dear imgui](https://github.com/ocornut/imgui) with [SFML bindings](https://github.com/eliasdaler/imgui-sfml). Added support for
-concurrent execution of multiple simulations with progress bar for each thread of execution. 
+concurrent execution of multiple simulations with progress bar for each thread of execution. Requires [gnuplot](http://www.gnuplot.info/) installed
 Library dependencies: pthread, OpenGL, sfml-graphics, sfml-window, sfml-system, boost_system, boost_filesystem
 
 

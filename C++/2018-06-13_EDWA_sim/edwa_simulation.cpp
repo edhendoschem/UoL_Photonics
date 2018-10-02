@@ -1384,6 +1384,7 @@ void Simulation::Result::simulate(float& report, bool warn, bool enable_ASE, boo
         reset_start();
         
     } //End of Cycle
+    
 }
 
 
@@ -1404,7 +1405,7 @@ void Simulation::Result::save_data(std::string const filename, bool dBm_units) n
     if (!boost::filesystem::exists(curr_path)) boost::filesystem::create_directories(curr_path);
     file_name = file_name + std::string(".csv");
     curr_path /= boost::filesystem::path(file_name);
-    std::cout<<"Writing file: "<<file_name<<'\n';
+    
     std::ofstream file_handle {curr_path.string()};
     
     std::string dBm {dBm_units ? "dBm" : "mW"};
@@ -1452,7 +1453,6 @@ void Simulation::Result::save_data(std::string const filename, bool dBm_units) n
     }
     
     file_handle.close();
-    std::cout<<"Finished writing file\n";
     return;
 }
 
@@ -1477,18 +1477,13 @@ void Simulation::Result::plot_data (std::string const data_file_) noexcept
     std::string filename {matches[1]};
     if (!boost::filesystem::exists(curr_path)) boost::filesystem::create_directories(curr_path);
     curr_path /= boost::filesystem::path(filename);
-    std::cout<<"curr_path = "<<curr_path<<'\n';
     std::string plot_script {curr_path.string() + std::string("_script") + std::string(".txt")};
-    std::cout<<"plot_script = "<<plot_script<<'\n';
     std::ofstream script_out {plot_script};
     std::ifstream file {data_file};
     std::string val_to_search;
     getline(file, val_to_search);
     bool dBm_units {std::regex_search(val_to_search, dBm_match, dBm)};
-    std::cout<<"dbm_units = "<<dBm_units<<'\n';
-    std::cout<<"dbm_match = "<<dBm_match[0]<<", "<<dBm_match[1]<<'\n'; 
     file.close();
-    std::cout<<"Plotting data...\n";
     std::string name {matches[1]};
     curr_path_copy = curr_path_copy.parent_path() / boost::filesystem::path(name);
     name = curr_path_copy.string();

@@ -3,7 +3,6 @@
 
 //Libraries
 #include <iostream>
-
 //Project files
 #include "edwa_simulation.h"
 //GUI files
