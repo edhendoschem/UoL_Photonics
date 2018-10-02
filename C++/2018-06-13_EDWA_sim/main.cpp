@@ -6,6 +6,7 @@
 //Add function to calculate overlap scattering
 //Investigate power in dbm for signal
 
+//Helper struct for Parallel_idx
 struct Trio
 {
     float first {0.0f};
@@ -13,11 +14,13 @@ struct Trio
     std::string third {std::string()};
 };
 
+//Enables to check which index is available to represent in the ImGui::ProgressBar
 struct Parallel_idx
 {
     std::mutex m;
     std::vector<Trio> idx;
-                                   
+    
+    //Initializes by checking the number of threads and creating a vector of that size
     Parallel_idx()
     {
         std::size_t ts {std::thread::hardware_concurrency()};
@@ -25,11 +28,14 @@ struct Parallel_idx
         idx.emplace_back(Trio());
     }
     
+    //Deleted copy constructors to ensure only references are used
     Parallel_idx(Parallel_idx const&) = delete;
     Parallel_idx& operator = (Parallel_idx const&) = delete;
     
+    //Returns an optional containing size_t in case there are no available indexes to assign
     std::optional<std::size_t> assign_idx(std::string_view s)
     {
+        //Locks the vector to prevent other threads from accessing it
         std::lock_guard<std::mutex> lk(m);
         std::optional<std::size_t> output;
         
@@ -37,6 +43,7 @@ struct Parallel_idx
         {
             if (idx[i].second == false)
             {
+                //If the index is assigned, reset the value, set to true and save the profile name
                 idx[i].first  = 0.0f;
                 idx[i].second = true;
                 idx[i].third  = s;
@@ -49,7 +56,7 @@ struct Parallel_idx
         return output;
     }
 
-
+    //Set to false the corresponding variable to signal the index is no longer in use
     void release_idx(std::size_t i)
     {
         std::lock_guard<std::mutex> lk(m);
@@ -59,6 +66,7 @@ struct Parallel_idx
 };
 
 
+//This structure helps convert the input from the gui to Init_params required by the simulation
 struct Merge_helper
 {
     std::array<double, 30> temp_doubles;
@@ -67,6 +75,7 @@ struct Merge_helper
     wl_map temp_f_pump;
     wl_map temp_b_pump;
     
+    //Initializes Merge_helper with the default values of Init_params
     void init_temp(Simulation::Init_params& p)
     {
         
@@ -97,7 +106,7 @@ struct Merge_helper
         return;
     }
     
-    
+    //Coonverts and merges the values into the Init_params format
     void merge_with_sim(Simulation::Init_params& p) const
     {
         p.width = temp_doubles[0] * 1.0e-6;
@@ -116,17 +125,17 @@ struct Merge_helper
         p.Cup = temp_doubles[9];
         p.Ccr = temp_doubles[10];
         
-    
         return;
     }
 }; //End of Merge_helper struct
 
 
-std::vector<Merge_helper> create_helpers(Simulation::Init_params& p)
+//Creates a vector of Merge_helpers with the desired number of elements
+std::vector<Merge_helper> create_helpers(Simulation::Init_params& p, std::size_t const n)
 {
     std::vector<Merge_helper> output;
     
-    for (auto i = 0; i < 12; ++i)
+    for (auto i = 0; i < n; ++i)
     {
         Merge_helper m;
         m.init_temp(p);
@@ -136,7 +145,7 @@ std::vector<Merge_helper> create_helpers(Simulation::Init_params& p)
     return output;
 }
 
-
+//Function from ImGuiDemo.cpp to show help markers
 static void ShowHelpMarker(const char* desc)
 {
     ImGui::TextDisabled("(?)");
@@ -151,6 +160,8 @@ static void ShowHelpMarker(const char* desc)
 }
 
 
+//This function will fill the columns in the gui with wavelength, power and type, reading from a
+//wl_map
 void log_map(wl_map& m, std::string s)
 {
     for (auto& i : m)
@@ -167,6 +178,7 @@ void log_map(wl_map& m, std::string s)
 }
 
 
+//Will place as mane progress bars as threads available for concurrency
 void multi_progress_bar(Parallel_idx& f, int curr_idx_)
 {
     std::size_t threads(f.idx.size());
@@ -184,6 +196,7 @@ void multi_progress_bar(Parallel_idx& f, int curr_idx_)
 }
 
 
+//Struct with overloaded () operator, used to help launch threads with the simulation parameters
 struct Launch_sim
 {
     Simulation::Init_params p_; 
@@ -211,12 +224,15 @@ struct Launch_sim
         return;
     }
     
+    //Default copy constructor and copy assignment to ensure copies of the variables are distributed
+    //to the threads
     Launch_sim& operator = (Launch_sim const&) = default;
     Launch_sim(Launch_sim const&) = default;
 };
 
+//Helper enum for the combine_wl_map
 enum class S_type{Signal, F_pump, B_pump};
-
+//Adds a signal or pump value to the current profile
 void combine_wl_map(std::vector<Merge_helper>& m_vec, int& vec_idx, int& curr_idx, S_type t)
 {
     if (t == S_type::B_pump)
@@ -250,32 +266,33 @@ void combine_wl_map(std::vector<Merge_helper>& m_vec, int& vec_idx, int& curr_id
 
 int main(int argc, char **argv)
 {
-    std::size_t n_threads {std::thread::hardware_concurrency()};
-    std::atomic<std::size_t> available_threads {n_threads};
-    
+    std::size_t n_threads {std::thread::hardware_concurrency()}; //Number of threads
+    std::atomic<std::size_t> available_threads {n_threads}; //Threads not in use
+    //Support 12 different profiles
     char const * buf[] {"profile_0", "profile_1", "profile_2", "profile_3", "profile_4",
                               "profile_5", "profile_6", "profile_7", "profile_8", "profile_9",
                               "profile_10", "profile_11"};
-    
     Simulation::Init_params p{};
     bool run_all {true};
     bool copy_all {true};
     bool monitor_launched {false};
     bool ready {false};
     
-    std::vector<Merge_helper> m_vec {create_helpers(p)};
+    //Create size 12 Merge_helper (same size as buf)
+    std::vector<Merge_helper> m_vec {create_helpers(p, 12)};
     int curr_idx {0};
     int it_idx{0};
     Merge_helper m = m_vec[0];
     Parallel_idx progress {Parallel_idx()};
 
+    //Creates an 800 x 800 window in which the gui window is going to be displayed
     sf::RenderWindow window(sf::VideoMode(800, 800), "");
     window.setVerticalSyncEnabled(true);
     ImGui::SFML::Init(window);
  
-    sf::Color bgColor;
+    sf::Color bgColor; //Default colour scheme
     char windowTitle[255] = "Test window";
-    ImVec2 button_size(100, 50);
+    ImVec2 button_size(100, 50); //Size for some of the ImGui::Button used
 
     window.setTitle(windowTitle);
     window.resetGLStates(); // call it if you only draw ImGui. Otherwise not needed.
@@ -307,8 +324,22 @@ int main(int argc, char **argv)
                 ImGui::PushItemWidth(50);
                 ImGui::InputDouble("Width (um)", &m_vec[curr_idx].temp_doubles[0], 0.0f, 0.0f, "%.2f");
                 ImGui::InputDouble("Height (um)", &m_vec[curr_idx].temp_doubles[1], 0.0f, 0.0f, "%.2f");
-                ImGui::InputDouble("Length (cm)", &m_vec[curr_idx].temp_doubles[2], 0.0f, 0.0f, "%.2f"); //3 decimals
+                ImGui::InputDouble("Length (cm)", &m_vec[curr_idx].temp_doubles[2], 0.0f, 0.0f, "%.2f");
                 ImGui::PopItemWidth();
+                
+                if (ImGui::Button("Apply to all profiles##0"))
+                {
+                    for (auto i = 0; i < m_vec.size(); ++i)
+                    {
+                        if (i != curr_idx)
+                        {
+                            m_vec[i].temp_doubles[0] = m_vec[curr_idx].temp_doubles[0];
+                            m_vec[i].temp_doubles[1] = m_vec[curr_idx].temp_doubles[1];
+                            m_vec[i].temp_doubles[2] = m_vec[curr_idx].temp_doubles[2];
+                        }
+                    }
+                }
+                
                 ImGui::TreePop();
                 ImGui::Separator();
             }
@@ -320,6 +351,19 @@ int main(int argc, char **argv)
                 ImGui::InputDouble("Erbium (ions/m^3)", &m_vec[curr_idx].temp_doubles[3], 0.0f, 0.0f, "%e");
                 ImGui::InputDouble("Ytterbium (ions/m^3)", &m_vec[curr_idx].temp_doubles[4], 0.0f, 0.0f, "%e");
                 ImGui::PopItemWidth();
+                
+                if (ImGui::Button("Apply to all profiles##1"))
+                {
+                    for (auto i = 0; i < m_vec.size(); ++i)
+                    {
+                        if (i != curr_idx)
+                        {
+                            m_vec[i].temp_doubles[3] = m_vec[curr_idx].temp_doubles[3];
+                            m_vec[i].temp_doubles[4] = m_vec[curr_idx].temp_doubles[4];
+                        }
+                    }
+                }
+                
                 ImGui::TreePop();
                 ImGui::Separator();
             }
@@ -333,6 +377,21 @@ int main(int argc, char **argv)
                 ImGui::InputDouble("t43 (ms)", &m_vec[curr_idx].temp_doubles[7], 0.0f, 0.0f, "%e");
                 ImGui::InputDouble("t65 (ms)", &m_vec[curr_idx].temp_doubles[8], 0.0f, 0.0f, "%e");
                 ImGui::PopItemWidth();
+                
+                if (ImGui::Button("Apply to all profiles##2"))
+                {
+                    for (auto i = 0; i < m_vec.size(); ++i)
+                    {
+                        if (i != curr_idx)
+                        {
+                            m_vec[i].temp_doubles[5] = m_vec[curr_idx].temp_doubles[5];
+                            m_vec[i].temp_doubles[6] = m_vec[curr_idx].temp_doubles[6];
+                            m_vec[i].temp_doubles[7] = m_vec[curr_idx].temp_doubles[7];
+                            m_vec[i].temp_doubles[8] = m_vec[curr_idx].temp_doubles[8];
+                        }
+                    }
+                }
+                
                 ImGui::TreePop();
                 ImGui::Separator();
             }
@@ -345,6 +404,19 @@ int main(int argc, char **argv)
                 ImGui::InputDouble("Cup (m^3/s)", &m_vec[curr_idx].temp_doubles[9], 0.0f, 0.0f, "%e");
                 ImGui::InputDouble("Ccr (m^3/s)", &m_vec[curr_idx].temp_doubles[10], 0.0f, 0.0f, "%e");
                 ImGui::PopItemWidth();
+                
+                if (ImGui::Button("Apply to all profiles##3"))
+                {
+                    for (auto i = 0; i < m_vec.size(); ++i)
+                    {
+                        if (i != curr_idx)
+                        {
+                            m_vec[i].temp_doubles[9] = m_vec[curr_idx].temp_doubles[9];
+                            m_vec[i].temp_doubles[10] = m_vec[curr_idx].temp_doubles[10];
+                        }
+                    }
+                }
+
                 ImGui::TreePop();
                 ImGui::Separator();
             }
@@ -461,7 +533,7 @@ int main(int argc, char **argv)
                     
                 }
                 
-                ImGui::Checkbox("Apply to all profiles", &copy_all);
+                ImGui::Checkbox("Apply to all profiles##4", &copy_all);
                 ImGui::Separator();
                 ImGui::Columns(3, "##test columns");
                 ImGui::Text("Wavelength (nm)"); ImGui::NextColumn();
@@ -566,7 +638,7 @@ int main(int argc, char **argv)
         
         ImGui::End(); // end window
         
-        //ImGui::ShowDemoWindow();         //demo windows for reference
+        ImGui::ShowDemoWindow();         //demo windows for reference
         window.clear(bgColor); // fill background with default color
         ImGui::SFML::Render(window);
         window.display();
