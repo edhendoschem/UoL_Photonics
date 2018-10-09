@@ -638,7 +638,7 @@ int main(int argc, char **argv)
         
         ImGui::End(); // end window
         
-        ImGui::ShowDemoWindow();         //demo windows for reference
+        //ImGui::ShowDemoWindow();         //demo windows for reference
         window.clear(bgColor); // fill background with default color
         ImGui::SFML::Render(window);
         window.display();

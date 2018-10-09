@@ -60,18 +60,6 @@ Simulation::Init_params::Init_params() noexcept
         overlap.emplace(curr_wl, 0.64); //Becker et al chapter 6
     }
     
-    /*
-    //Fill the signal map
-    double const nm_step {(S_end - S_start)/static_cast<double>(n_signals)};
-    
-    for (int i = 0; i < n_signals; ++i)
-    {
-        double const curr_wl {S_start + static_cast<double>(i) * nm_step};
-        double const pow {1e-6};                                      //1 microwatt or -30 dBm
-        Ps0.emplace(curr_wl, pow);
-    }
-    */
-    
     
     return;
 }

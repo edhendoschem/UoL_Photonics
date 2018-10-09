@@ -11,7 +11,8 @@
 #include "cross_section.h"
 #include "utility_functions.h"
 #include "edwa_structs.h"
-
+#include "aux_maths.h"
+#include "matrix_fact_opt.h"
 
 namespace Simulation
 {
