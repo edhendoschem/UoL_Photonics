@@ -4,7 +4,7 @@ Simulation::Init_params::Init_params() noexcept
 {
     width     = 1.3e-6;
     height    = 1.3e-6; 
-    A         = width * height;   // 1.3 by 1.3 micron
+    A         = width * height;    // 1.3 by 1.3 micron
     l         = 0.01;              // 1 cm
     NEr       = 4.45e26;           //Doping silica beyond... Chandrappan            
     NYb       = 4.45e26;           //Doping silica beyond... Chandrappan    

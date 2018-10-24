@@ -521,7 +521,7 @@ double Simulation::Result::dPp_ASE_b_ind (u_int const z, int const wl_, double c
 
 
 //Prints information about this step
-void Simulation::Result::report_step(u_int z, bool show_ASE) noexcept
+void Simulation::Result::report_step(u_int z, bool const show_ASE) noexcept
 {
     std::cout<<"Step "<<z<<" data:\n";
     std::cout<<"Residual = "<<data[z].residual<<'\n';
@@ -546,7 +546,7 @@ void Simulation::Result::report_step(u_int z, bool show_ASE) noexcept
 
 
 //Advances signal one step forwards or backwards
-void Simulation::Result::advance_signal(u_int const z, int sign) noexcept
+void Simulation::Result::advance_signal(u_int const z, int const sign) noexcept
 {
     double const h {p.step_size};
     //double const h {p.step_size/101};
@@ -572,7 +572,7 @@ void Simulation::Result::advance_signal(u_int const z, int sign) noexcept
 
 
 //Advances forwad pump one step forwards or backwards
-void Simulation::Result::advance_pump_f(u_int const z, int sign) noexcept
+void Simulation::Result::advance_pump_f(u_int const z, int const sign) noexcept
 {
     double const h {p.step_size};
     auto st_it {data[z].Pp_f.begin()}; //start iterator
@@ -608,7 +608,7 @@ void Simulation::Result::advance_pump_f(u_int const z, int sign) noexcept
 
 
 //Advances backwards pump one step forward or backwards
-void Simulation::Result::advance_pump_b(u_int const z, int sign) noexcept
+void Simulation::Result::advance_pump_b(u_int const z, int const sign) noexcept
 {
     double const h {p.step_size};
     auto st_it {data[z].Pp_b.begin()}; //start iterator
@@ -645,7 +645,7 @@ void Simulation::Result::advance_pump_b(u_int const z, int sign) noexcept
 
 
 //Advances forward ASE one step forward or backwards
-void Simulation::Result::advance_ASE_f(u_int const z, int sign) noexcept
+void Simulation::Result::advance_ASE_f(u_int const z, int const sign) noexcept
 {
     double const h {p.step_size};
     auto st_it {data[z].PASE_f.begin()}; //start iterator
@@ -670,7 +670,7 @@ void Simulation::Result::advance_ASE_f(u_int const z, int sign) noexcept
 
 
 //Advances backward ASE one step forward or backwards
-void Simulation::Result::advance_ASE_b(u_int const z, int sign) noexcept
+void Simulation::Result::advance_ASE_b(u_int const z, int const sign) noexcept
 {
     double const h {p.step_size};
     auto st_it {data[z].PASE_b.begin()}; //start iterator
@@ -720,7 +720,7 @@ void Simulation::Result::advance_p_ASE_f(u_int const z, int sign) noexcept
 
 
 //Advances pump backward ASE one step forward or backwards
-void Simulation::Result::advance_p_ASE_b(u_int const z, int sign) noexcept
+void Simulation::Result::advance_p_ASE_b(u_int const z, int const sign) noexcept
 {
     double const h {p.step_size};
     auto st_it {data[z].Pp_ASE_b.begin()}; //start iterator
@@ -1325,7 +1325,7 @@ void Simulation::Result::regress_step (u_int const z,
 }
 
 
-void Simulation::Result::simulate(float& report, bool warn, bool enable_ASE, bool enable_p_ASE) noexcept
+void Simulation::Result::simulate(float& report, bool const warn, bool const enable_ASE, bool const enable_p_ASE) noexcept
 {
     double const NAvg {(p.NYb+p.NEr) / 2.0};
     double const h {1.0e-7 * NAvg};
@@ -1391,7 +1391,7 @@ void Simulation::Result::simulate(float& report, bool warn, bool enable_ASE, boo
 
 
 
-void Simulation::Result::save_data(std::string const filename, bool dBm_units) noexcept
+void Simulation::Result::save_data(std::string const filename, bool const dBm_units, int const s_wl, int const p_wl_1, int const p_wl_2) noexcept
 {
     boost::filesystem::path curr_path{boost::filesystem::current_path()};
     boost::filesystem::path folder {"output"};
@@ -1409,9 +1409,12 @@ void Simulation::Result::save_data(std::string const filename, bool dBm_units) n
     std::ofstream file_handle {curr_path.string()};
     
     std::string dBm {dBm_units ? "dBm" : "mW"};
-    file_handle<<"Length,n1,n2,n3,n4,n5,n6,Ps ("+dBm+"),"
-    "Gain,Pp_f (976),Pp_f (1480),Pp_b (976),Pp_b (1480),PASE_f,PASE_b,Pp_ASE_f,Pp_ASE_b\n";
-    
+    std::string s_wl_s {std::to_string(s_wl/1000)};
+    std::string p_wl_1_s {std::to_string(p_wl_1/1000)};
+    std::string p_wl_2_s {std::to_string(p_wl_2/1000)};
+    file_handle<<"Length,n1,n2,n3,n4,n5,n6,Ps @ "+s_wl_s+" ("+dBm+"),"
+    "Gain,Pp_f ("+p_wl_1_s+"),Pp_f ("+p_wl_2_s+"),Pp_b ("+p_wl_1_s+"),Pp_b ("+p_wl_2_s+"),PASE_f,PASE_b,Pp_ASE_f,Pp_ASE_b\n";
+    //aquiaqui fix the issue of plotting 1480 nm pump
     for (auto i = 0; i < data.size(); ++i)
     {
         double const i_d {static_cast<double>(i)};
@@ -1430,25 +1433,25 @@ void Simulation::Result::save_data(std::string const filename, bool dBm_units) n
                    <<','
                    <<data[i].n6 * 100.0/p.NYb
                    <<','
-                   <<(dBm_units ? Utility::power_to_dBm(data[i].Ps.at(1533000)) : data[i].Ps.at(1533000) * 1000.0)
+                   <<(dBm_units ? Utility::power_to_dBm(data[i].Ps.at(s_wl)) : data[i].Ps.at(s_wl) * 1000.0)
                    <<','
-                   <<Utility::power_to_gain(data[0].Ps.at(1533000), data[i].Ps.at(1533000))
+                   <<Utility::power_to_gain(data[0].Ps.at(s_wl), data[i].Ps.at(s_wl))
                    <<','
-                   <<(data[i].Pp_f.count(976000)  > 0 ? data[i].Pp_f.at(976000) * 1000.0  : 0.0)
+                   <<(data[i].Pp_f.count(p_wl_1) > 0 ? data[i].Pp_f.at(p_wl_1) * 1000.0 : 0.0)
                    <<','
-                   <<(data[i].Pp_f.count(1480000) > 0 ? data[i].Pp_f.at(1480000) * 1000.0 : 0.0)
+                   <<(data[i].Pp_f.count(p_wl_2) > 0 ? data[i].Pp_f.at(p_wl_2) * 1000.0 : 0.0)
                    <<','
-                   <<(data[i].Pp_b.count(976000)  > 0 ? data[i].Pp_b.at(976000) * 1000.0  : 0.0)
+                   <<(data[i].Pp_b.count(p_wl_1) > 0 ? data[i].Pp_b.at(p_wl_1) * 1000.0 : 0.0)
                    <<','
-                   <<(data[i].Pp_b.count(1480000) > 0 ? data[i].Pp_b.at(1480000) * 1000.0 : 0.0)
+                   <<(data[i].Pp_b.count(p_wl_2) > 0 ? data[i].Pp_b.at(p_wl_2) * 1000.0 : 0.0)
                    <<','
-                   <<(dBm_units ? Utility::power_to_dBm(data[i].PASE_f.at(1533000)) : data[i].PASE_f.at(1533000) * 1000.0)
+                   <<(dBm_units ? Utility::power_to_dBm(data[i].PASE_f.at(s_wl)) : data[i].PASE_f.at(s_wl) * 1000.0)
                    <<','
-                   <<(dBm_units ? Utility::power_to_dBm(data[i].PASE_b.at(1533000)) : data[i].PASE_b.at(1533000) * 1000.0)
+                   <<(dBm_units ? Utility::power_to_dBm(data[i].PASE_b.at(s_wl)) : data[i].PASE_b.at(s_wl) * 1000.0)
                    <<','
-                   <<(dBm_units ? Utility::power_to_dBm(data[i].Pp_ASE_f.at(980000)) : data[i].Pp_ASE_f.at(980000) * 1000.0)
+                   <<(dBm_units ? Utility::power_to_dBm(data[i].Pp_ASE_f.at(p_wl_1)) : data[i].Pp_ASE_f.at(p_wl_1) * 1000.0)
                    <<','
-                   <<(dBm_units ? Utility::power_to_dBm(data[i].Pp_ASE_b.at(980000)) : data[i].Pp_ASE_b.at(980000) * 1000.0)
+                   <<(dBm_units ? Utility::power_to_dBm(data[i].Pp_ASE_b.at(p_wl_1)) : data[i].Pp_ASE_b.at(p_wl_1) * 1000.0)
                    <<'\n';
     }
     
@@ -1457,7 +1460,7 @@ void Simulation::Result::save_data(std::string const filename, bool dBm_units) n
 }
 
 
-void Simulation::Result::plot_data (std::string const data_file_) noexcept
+void Simulation::Result::plot_data (std::string const data_file_, int const s_wl, int const p_wl_1, int const p_wl_2) noexcept
 {
     boost::filesystem::path curr_path{boost::filesystem::current_path()};
     boost::filesystem::path folder {"output"};
@@ -1615,7 +1618,7 @@ std::vector<std::array<double, 4>> Simulation::find_ratio(Simulation::Init_param
 }
 
 
-void Simulation::Result::save_spectral_data(std::string const filename, u_int const step, bool dBm_units) noexcept
+void Simulation::Result::save_spectral_data(std::string const filename, u_int const step, bool const dBm_units) noexcept
 {
     std::string name
     {filename[filename.size()-4] == '.' ? filename.substr(0, filename.size()-4) : filename.substr(0, filename.size())};

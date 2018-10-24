@@ -108,13 +108,13 @@ namespace Simulation
         //Simulation march
         void reset_start     ()                            noexcept; //Resets the starting parameters
         void reset_end       ()                            noexcept; //Resets the ending parameters
-        void advance_signal  (u_int const z, int sign = 1) noexcept; //Advances 1 step the signal
-        void advance_pump_f  (u_int const z, int sign = 1) noexcept; //Advances 1 step back pump
-        void advance_pump_b  (u_int const z, int sign = 1) noexcept; //Advances 1 step forward pump
-        void advance_ASE_f   (u_int const z, int sign = 1) noexcept; //Advances 1 step forward ASE
-        void advance_ASE_b   (u_int const z, int sign = 1) noexcept; //Advances 1 step back ASE
-        void advance_p_ASE_f (u_int const z, int sign = 1) noexcept; //Advances 1 step pump forward ASE
-        void advance_p_ASE_b (u_int const z, int sign = 1) noexcept; //Advances 1 step pump back ASE
+        void advance_signal  (u_int const z, int const sign = 1) noexcept; //Advances 1 step the signal
+        void advance_pump_f  (u_int const z, int const sign = 1) noexcept; //Advances 1 step back pump
+        void advance_pump_b  (u_int const z, int const sign = 1) noexcept; //Advances 1 step forward pump
+        void advance_ASE_f   (u_int const z, int const sign = 1) noexcept; //Advances 1 step forward ASE
+        void advance_ASE_b   (u_int const z, int const sign = 1) noexcept; //Advances 1 step back ASE
+        void advance_p_ASE_f (u_int const z, int const sign = 1) noexcept; //Advances 1 step pump forward ASE
+        void advance_p_ASE_b (u_int const z, int const sign = 1) noexcept; //Advances 1 step pump back ASE
         
         
         //calculates all n in z and marches signal, pump and ASE to z+1
@@ -130,15 +130,15 @@ namespace Simulation
                                        bool enable_p_ASE) noexcept;
         
         //Propagates forward and backwards to obtain the results
-        void simulate(float& report, bool warn = false, bool enable_ASE = true, bool enable_p_ASE = false) noexcept;
+        void simulate(float& report, bool const warn = false, bool const enable_ASE = true, bool const enable_p_ASE = false) noexcept;
         
         //Auxiliary Functions
         double  calculate_W(std::size_t const z, int const var) const noexcept;
         void    initialize_ASE() noexcept;
-        void    report_step(u_int z, bool show_ASE = false) noexcept;
-        void    save_data (std::string const filename_, bool dBm_units = false) noexcept;
-        void    plot_data (std::string const data_file) noexcept;
-        void    save_spectral_data(std::string const filename, u_int const step, bool dBm_units = false) noexcept;
+        void    report_step(u_int z, bool const show_ASE = false) noexcept;
+        void    save_data (std::string const filename_, bool const dBm_units = false, int const s_wl = 1533000, int const p_wl_1 = 976000, int const p_wl_2 = 1480000) noexcept;
+        void    plot_data (std::string const data_file, int const s_wl, int const p_wl_1, int const p_wl_2) noexcept;
+        void    save_spectral_data(std::string const filename, u_int const step, bool const dBm_units = false) noexcept;
     };
     
     //Will attempt to find the optimal ratio and return an array with Ner, NYb,length and max gain

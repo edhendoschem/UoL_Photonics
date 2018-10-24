@@ -1,10 +1,12 @@
 #include "headers.h"
 #include "utility_functions.h"
-//Pending recent
-//Pending long term
+//Pending
+//Fix scattering by erbium and ytterbium
+//Double check up conversion and cross relaxation
+//Fix plotting of 1480 nm pump
 //Add overlap columns to the GUI
-//Add function to calculate overlap scattering
-//Investigate power in dbm for signal
+//Add function to calculate overlap
+
 
 //Helper struct for Parallel_idx
 struct Trio
@@ -90,11 +92,20 @@ struct Merge_helper
         temp_doubles[8] = (1.0/p.A65) * 1.0e3;
         temp_doubles[9] = p.Cup;
         temp_doubles[10] = p.Ccr;
+        temp_doubles[11] = p.lpEr;
+        temp_doubles[12] = p.lsEr;
+        temp_doubles[13] = p.lpYb;
+        temp_doubles[14] = p.lsYb;
         
-        for (auto i = 11; i < temp_doubles.size(); ++i)
+        for (auto i = 15; i < temp_doubles.size(); ++i)
         {
             temp_doubles[i] = 0.0;
         }
+        
+        //Default values for plotting
+        temp_doubles[21] = 1533.0;
+        temp_doubles[22] = 976.0;
+        temp_doubles[23] = 1480.0;
         
         temp_bools[0] = true;
         temp_bools[1] = true;
@@ -124,6 +135,10 @@ struct Merge_helper
         p.Pp0_b = temp_b_pump;
         p.Cup = temp_doubles[9];
         p.Ccr = temp_doubles[10];
+        p.lpEr = temp_doubles[11];
+        p.lsEr = temp_doubles[12]; 
+        p.lpYb = temp_doubles[13];
+        p.lsYb = temp_doubles[14];
         
         return;
     }
@@ -215,10 +230,17 @@ struct Launch_sim
         std::optional<std::size_t> opt_t {progress.assign_idx(name)};
         curr_t = *opt_t;
         Simulation::Result r{p_};
+        
+        wl_map temp_signals;
+        wl_map temp_f_pump;
+        wl_map temp_b_pump;
         progress.idx[curr_t].first = 0.0f;
         r.simulate(progress.idx[curr_t].first, false, m.temp_bools[1], m.temp_bools[2]);
         r.save_data(name, m.temp_bools[3]);
-        r.plot_data(name);
+        int const s_wl {static_cast<int>(m.temp_doubles[21]) * 1000};
+        int const p_wl_1 {static_cast<int>(m.temp_doubles[22]) * 1000};
+        int const p_wl_2 {static_cast<int>(m.temp_doubles[23]) * 1000};
+        r.plot_data(name, s_wl, p_wl_1, p_wl_2);
         progress.release_idx(curr_t);
         ++av_threads;
         return;
@@ -233,30 +255,31 @@ struct Launch_sim
 //Helper enum for the combine_wl_map
 enum class S_type{Signal, F_pump, B_pump};
 //Adds a signal or pump value to the current profile
+
 void combine_wl_map(std::vector<Merge_helper>& m_vec, int& vec_idx, int& curr_idx, S_type t)
 {
     if (t == S_type::B_pump)
     {
-        int temp_wl {static_cast<int>(m_vec[curr_idx].temp_doubles[15] * 1000.0)};
-        if (!(m_vec[curr_idx].temp_doubles[15] < 850.0 || m_vec[curr_idx].temp_doubles[15] > 1150.0))
+        int temp_wl {static_cast<int>(m_vec[curr_idx].temp_doubles[19] * 1000.0)};
+        if (!(m_vec[curr_idx].temp_doubles[19] < 850.0 || m_vec[curr_idx].temp_doubles[19] > 1150.0))
         {
-            double temp_pow {m_vec[curr_idx].temp_doubles[16] / 1000.0};
+            double temp_pow {m_vec[curr_idx].temp_doubles[20] / 1000.0};
             m_vec[vec_idx].temp_b_pump.emplace(std::pair(temp_wl, temp_pow));
         }
     } else if (t == S_type::Signal)
     {
-        int temp_wl {static_cast<int>(m_vec[curr_idx].temp_doubles[11] * 1000.0)};
-        if (!(m_vec[curr_idx].temp_doubles[11] < 1450.0 || m_vec[curr_idx].temp_doubles[11] > 1600.0))
+        int temp_wl {static_cast<int>(m_vec[curr_idx].temp_doubles[15] * 1000.0)};
+        if (!(m_vec[curr_idx].temp_doubles[15] < 1450.0 || m_vec[curr_idx].temp_doubles[15] > 1600.0))
         {
-            double temp_pow {m_vec[curr_idx].temp_doubles[12] / 1000.0};
+            double temp_pow {m_vec[curr_idx].temp_doubles[16] / 1000.0};
             m_vec[vec_idx].temp_signals.emplace(std::pair(temp_wl, temp_pow));
         }
     } else 
     {
-        int temp_wl {static_cast<int>(m_vec[curr_idx].temp_doubles[13] * 1000.0)};
-        if (!(m_vec[curr_idx].temp_doubles[13] < 850.0 || m_vec[curr_idx].temp_doubles[13] > 1150.0))
+        int temp_wl {static_cast<int>(m_vec[curr_idx].temp_doubles[17] * 1000.0)};
+        if (!(m_vec[curr_idx].temp_doubles[17] < 850.0 || m_vec[curr_idx].temp_doubles[17] > 1150.0))
         {
-            double temp_pow {m_vec[curr_idx].temp_doubles[14] / 1000.0};
+            double temp_pow {m_vec[curr_idx].temp_doubles[18] / 1000.0};
             m_vec[vec_idx].temp_f_pump.emplace(std::pair(temp_wl, temp_pow));
         }
     }
@@ -278,6 +301,7 @@ int main(int argc, char **argv)
     bool monitor_launched {false};
     bool ready {false};
     
+    
     //Create size 12 Merge_helper (same size as buf)
     std::vector<Merge_helper> m_vec {create_helpers(p, 12)};
     int curr_idx {0};
@@ -291,7 +315,7 @@ int main(int argc, char **argv)
     ImGui::SFML::Init(window);
  
     sf::Color bgColor; //Default colour scheme
-    char windowTitle[255] = "Test window";
+    char windowTitle[255] = "EDWA simulation window";
     ImVec2 button_size(100, 50); //Size for some of the ImGui::Button used
 
     window.setTitle(windowTitle);
@@ -403,6 +427,13 @@ int main(int argc, char **argv)
                 ImGui::InputInt("Steps", &p.steps);
                 ImGui::InputDouble("Cup (m^3/s)", &m_vec[curr_idx].temp_doubles[9], 0.0f, 0.0f, "%e");
                 ImGui::InputDouble("Ccr (m^3/s)", &m_vec[curr_idx].temp_doubles[10], 0.0f, 0.0f, "%e");
+                ImGui::NewLine();
+                ImGui::Text("Erbium concentration scattering");
+                ImGui::InputDouble("Pump scattering (dB/m)", &m_vec[curr_idx].temp_doubles[11], 0.0f, 0.0f, "%.2f");
+                ImGui::InputDouble("Signal scattering (dB/m)", &m_vec[curr_idx].temp_doubles[12], 0.0f, 0.0f, "%.2f");
+                ImGui::Text("Ytterbium concentration scattering");
+                ImGui::InputDouble("Pump scattering (dB/m)##2", &m_vec[curr_idx].temp_doubles[13], 0.0f, 0.0f, "%.2f");
+                ImGui::InputDouble("Signal scattering (dB/m)##2", &m_vec[curr_idx].temp_doubles[14], 0.0f, 0.0f, "%.2f");
                 ImGui::PopItemWidth();
                 
                 if (ImGui::Button("Apply to all profiles##3"))
@@ -413,6 +444,10 @@ int main(int argc, char **argv)
                         {
                             m_vec[i].temp_doubles[9] = m_vec[curr_idx].temp_doubles[9];
                             m_vec[i].temp_doubles[10] = m_vec[curr_idx].temp_doubles[10];
+                            m_vec[i].temp_doubles[11] = m_vec[curr_idx].temp_doubles[11];
+                            m_vec[i].temp_doubles[12] = m_vec[curr_idx].temp_doubles[12];
+                            m_vec[i].temp_doubles[13] = m_vec[curr_idx].temp_doubles[13];
+                            m_vec[i].temp_doubles[14] = m_vec[curr_idx].temp_doubles[14];
                         }
                     }
                 }
@@ -423,13 +458,17 @@ int main(int argc, char **argv)
             
             if (ImGui::TreeNode("Signals & Pump"))
             {
+                ImGui::Text("Signal allowed ranges: 1450 nm to 1600 nm");
+                ImGui::Text("Pump allowed ranges: 850 nm to 1150 nm");
+                ImGui::Text("For 1480 nm pumping, add it as a signal");
+                ImGui::NewLine();
                 ImGui::Text("Wavelength (nm)"); ImGui::SameLine(150); ImGui::Text("Power (mW)");
                 ImGui::PushItemWidth(100);
-                ImGui::InputDouble("##w1", &m_vec[curr_idx].temp_doubles[11], 0.0f, 0.0f, "%.2f");
+                ImGui::InputDouble("##w1", &m_vec[curr_idx].temp_doubles[15], 0.0f, 0.0f, "%.2f");
                 ImGui::PopItemWidth();
                 ImGui::SameLine(150);
                 ImGui::PushItemWidth(100);
-                ImGui::InputDouble("##w2", &m_vec[curr_idx].temp_doubles[12], 0.0f, 0.0f, "%e");
+                ImGui::InputDouble("##w2", &m_vec[curr_idx].temp_doubles[16], 0.0f, 0.0f, "%e");
                 ImGui::PopItemWidth();
                 ImGui::SameLine();
                 if (ImGui::Button("Add signal"))
@@ -459,11 +498,11 @@ int main(int argc, char **argv)
                 }
                 
                 ImGui::PushItemWidth(100);
-                ImGui::InputDouble("##w3", &m_vec[curr_idx].temp_doubles[13], 0.0f, 0.0f, "%.2f");
+                ImGui::InputDouble("##w3", &m_vec[curr_idx].temp_doubles[17], 0.0f, 0.0f, "%.2f");
                 ImGui::PopItemWidth();
                 ImGui::SameLine(150);
                 ImGui::PushItemWidth(100);
-                ImGui::InputDouble("##w4", &m_vec[curr_idx].temp_doubles[14], 0.0f, 0.0f, "%e");
+                ImGui::InputDouble("##w4", &m_vec[curr_idx].temp_doubles[18], 0.0f, 0.0f, "%e");
                 ImGui::PopItemWidth();
                 ImGui::SameLine();
                 
@@ -496,11 +535,11 @@ int main(int argc, char **argv)
                 }
                 
                 ImGui::PushItemWidth(100);
-                ImGui::InputDouble("##w5", &m_vec[curr_idx].temp_doubles[15], 0.0f, 0.0f, "%.2f");
+                ImGui::InputDouble("##w5", &m_vec[curr_idx].temp_doubles[19], 0.0f, 0.0f, "%.2f");
                 ImGui::PopItemWidth();
                 ImGui::SameLine(150);
                 ImGui::PushItemWidth(100);
-                ImGui::InputDouble("##w6", &m_vec[curr_idx].temp_doubles[16], 0.0f, 0.0f, "%e");
+                ImGui::InputDouble("##w6", &m_vec[curr_idx].temp_doubles[20], 0.0f, 0.0f, "%e");
                 ImGui::PopItemWidth();
                 ImGui::SameLine();
                 
@@ -571,9 +610,16 @@ int main(int argc, char **argv)
         
         if (ImGui::CollapsingHeader("Simulation"))
         {
+            ImGui::Text("Plotting options");
+            ImGui::PushItemWidth(100);//aquiaqui
+            ImGui::InputDouble("Signal wavelength to plot", &m_vec[curr_idx].temp_doubles[21], 0.0f, 0.0f, "%.2f");
+            ImGui::InputDouble("First pump wavelength to plot", &m_vec[curr_idx].temp_doubles[22], 0.0f, 0.0f, "%.2f");
+            ImGui::InputDouble("Second pump wavelength to plot", &m_vec[curr_idx].temp_doubles[23], 0.0f, 0.0f, "%.2f");
+            ImGui::PopItemWidth();
             ImGui::Checkbox("Enable signal ASE", &m_vec[curr_idx].temp_bools[1]);
             ImGui::Checkbox("Enable pump ASE", &m_vec[curr_idx].temp_bools[2]);
             ImGui::Checkbox("Save in dBm units", &m_vec[curr_idx].temp_bools[3]);
+            ImGui::Text("Other options");
             ImGui::Checkbox("Run all profiles", &run_all);
             ImGui::NewLine();
             ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f);
@@ -583,7 +629,7 @@ int main(int argc, char **argv)
             if (ImGui::Button("Run", button_size))
             {
                 if (run_all)
-                {//aquiaqui
+                {
                     auto launch_monitor = [&it_idx, &monitor_launched, &buf, m_vec, n_threads]
                     (std::atomic<std::size_t>& available_threads, Parallel_idx& progress)
                     {
@@ -603,7 +649,7 @@ int main(int argc, char **argv)
                                 {
                                     it_idx = 0;
                                     monitor_launched = false;
-                                    break;
+                                    return;
                                 }
                                 
                                 ++it_idx;
@@ -611,7 +657,10 @@ int main(int argc, char **argv)
                                 std::this_thread::sleep_for(std::chrono::milliseconds(500));
                             }
                         }
+                        
+                        return;
                     }; //end of launch_monitor
+                    
                     if (!monitor_launched)
                     {
                         monitor_launched = true;
@@ -645,7 +694,7 @@ int main(int argc, char **argv)
     }
  
     ImGui::SFML::Shutdown();
-
+    
 
     
     return 0;
