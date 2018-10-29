@@ -236,10 +236,10 @@ struct Launch_sim
         wl_map temp_b_pump;
         progress.idx[curr_t].first = 0.0f;
         r.simulate(progress.idx[curr_t].first, false, m.temp_bools[1], m.temp_bools[2]);
-        r.save_data(name, m.temp_bools[3]);
-        int const s_wl {static_cast<int>(m.temp_doubles[21]) * 1000};
+        int const s_wl   {static_cast<int>(m.temp_doubles[21]) * 1000};
         int const p_wl_1 {static_cast<int>(m.temp_doubles[22]) * 1000};
         int const p_wl_2 {static_cast<int>(m.temp_doubles[23]) * 1000};
+        r.save_data(name, m.temp_bools[3], s_wl, p_wl_1, p_wl_2);
         r.plot_data(name, s_wl, p_wl_1, p_wl_2);
         progress.release_idx(curr_t);
         ++av_threads;
@@ -458,9 +458,9 @@ int main(int argc, char **argv)
             
             if (ImGui::TreeNode("Signals & Pump"))
             {
-                ImGui::Text("Signal allowed ranges: 1450 nm to 1600 nm");
-                ImGui::Text("Pump allowed ranges: 850 nm to 1150 nm");
-                ImGui::Text("For 1480 nm pumping, add it as a signal");
+                ImGui::Text("Notes");
+                ImGui::SameLine();
+                ShowHelpMarker("Signal allowed ranges: 1450 nm to 1600 nm\nPump allowed ranges: 850 nm to 1150 nm\nFor 1480 nm pumping, add it as a signal\nThe 1480 pump direction will be the same as the signal");
                 ImGui::NewLine();
                 ImGui::Text("Wavelength (nm)"); ImGui::SameLine(150); ImGui::Text("Power (mW)");
                 ImGui::PushItemWidth(100);
@@ -610,17 +610,50 @@ int main(int argc, char **argv)
         
         if (ImGui::CollapsingHeader("Simulation"))
         {
+
             ImGui::Text("Plotting options");
-            ImGui::PushItemWidth(100);//aquiaqui
-            ImGui::InputDouble("Signal wavelength to plot", &m_vec[curr_idx].temp_doubles[21], 0.0f, 0.0f, "%.2f");
-            ImGui::InputDouble("First pump wavelength to plot", &m_vec[curr_idx].temp_doubles[22], 0.0f, 0.0f, "%.2f");
-            ImGui::InputDouble("Second pump wavelength to plot", &m_vec[curr_idx].temp_doubles[23], 0.0f, 0.0f, "%.2f");
+            ImGui::PushItemWidth(100);
+            ImGui::Text("Signal wavelength to plot");
+            ImGui::InputDouble("##Signal wavelength to plot", &m_vec[curr_idx].temp_doubles[21], 0.0f, 0.0f, "%.2f");
+            ImGui::SameLine();
+            if (ImGui::Button("Apply to all profiles##5"))
+            {
+                for (auto i = 0; i < m_vec.size(); ++i)
+                {
+                    if (i == curr_idx) continue;
+                    m_vec[i].temp_doubles[21] = m_vec[curr_idx].temp_doubles[21];
+                }
+            }
+        
+            ImGui::Text("First pump wavelength to plot");
+            ImGui::InputDouble("##First pump wavelength to plot", &m_vec[curr_idx].temp_doubles[22], 0.0f, 0.0f, "%.2f");
+            ImGui::SameLine();
+            if (ImGui::Button("Apply to all profiles##6"))
+            {
+                for (auto i = 0; i < m_vec.size(); ++i)
+                {
+                    if (i == curr_idx) continue;
+                    m_vec[i].temp_doubles[22] = m_vec[curr_idx].temp_doubles[22];
+                }
+            }
+        
+            ImGui::Text("Second pump wavelength to plot");
+            ImGui::InputDouble("##Second pump wavelength to plot", &m_vec[curr_idx].temp_doubles[23], 0.0f, 0.0f, "%.2f");
+            ImGui::SameLine();
+            if (ImGui::Button("Apply to all profiles##7"))
+            {
+                for (auto i = 0; i < m_vec.size(); ++i)
+                {
+                    if (i == curr_idx) continue;
+                    m_vec[i].temp_doubles[23] = m_vec[curr_idx].temp_doubles[23];
+                }
+            }
+        
             ImGui::PopItemWidth();
             ImGui::Checkbox("Enable signal ASE", &m_vec[curr_idx].temp_bools[1]);
             ImGui::Checkbox("Enable pump ASE", &m_vec[curr_idx].temp_bools[2]);
             ImGui::Checkbox("Save in dBm units", &m_vec[curr_idx].temp_bools[3]);
-            ImGui::Text("Other options");
-            ImGui::Checkbox("Run all profiles", &run_all);
+            
             ImGui::NewLine();
             ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f);
             
@@ -681,6 +714,7 @@ int main(int argc, char **argv)
                 }
             }
             
+            ImGui::Checkbox("Run all profiles", &run_all);
             multi_progress_bar(progress, curr_idx);
             
         }//End of simulation

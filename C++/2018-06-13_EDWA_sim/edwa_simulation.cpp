@@ -79,7 +79,6 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
         for (st1; st1 != end1; ++st1)
         {
             int const wl1        {(st1->first)};
-            if (wl1 == 1480000) continue; //Ignore 1480 nm pump
             double const pump_pow1  {st1->second};
             double const flux       {Utility::return_photon_flux(
                 wl1,
@@ -98,7 +97,6 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
         for (st2; st2 != end2; ++st2)
         {
             int const wl2        {(st2->first)};
-            if (wl2 == 1480000) continue; //Ignore 1480 nm wavelength
             double const pump_pow2  {st2->second};
             double const flux       {Utility::return_photon_flux(
                 wl2,
@@ -118,7 +116,6 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
         for (st3; st3 != end3; ++st3)
         {
             int const wl3        {(st3->first)};
-            if (wl3 == 1480000) continue; //Ignore 1480 nm wavelength
             double const pump_pow3  {st3->second};
             double const flux       {Utility::return_photon_flux(
                 wl3,
@@ -138,7 +135,6 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
         for (st4; st4 != end4; ++st4)
         {
             int const wl4        {(st4->first)};
-            if (wl4 == 1480000) continue; //Ignore 1480 nm wavelength
             double const pump_pow4  {st4->second};
             double const flux       {Utility::return_photon_flux(
                 wl4,
@@ -165,7 +161,7 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
                 wl1,
                 sig_pow1,
                 p.A,
-                var_
+                var_ 
             )};
         
             result += flux;
@@ -209,47 +205,6 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
             result += flux;
         }
         
-        //Forward 1480 nm Pump contribution
-        auto st4 {data[z].Pp_f.cbegin()}; 
-        auto end4 {data[z].Pp_f.cend()};
-    
-        for (st4; st4 != end4; ++st4)
-        {
-            if (var == 13) break;
-            int const wl4        {(st4->first)};
-            if (wl4 != 1480000) continue; //Ignore wavelengths different from 1480 nm
-            double const pump_pow4  {st4->second};
-            double const flux       {Utility::return_photon_flux(
-            wl4,
-            pump_pow4,
-            p.A,
-            Cross_sec::Er_abs
-            )};
-        
-            result += flux;
-        }
-            
-            
-        //Backwards 1480 pump contribution
-        auto st5 {data[z].Pp_b.cbegin()}; 
-        auto end5 {data[z].Pp_b.cend()};
-    
-        for (st5; st5 != end5; ++st5)
-        {
-            if (var == 13) break;
-            int const wl5        {(st5->first)};
-            if (wl5 != 1480000) continue; //Ignore wavelengths different from 1480 nm
-            double const pump_pow5  {st5->second};
-            double const flux       {Utility::return_photon_flux(
-            wl5,
-            pump_pow5,
-            p.A,
-            Cross_sec::Er_abs
-            )};
-        
-            result += flux;
-        }
-        
         
         if (var == 13)
         {
@@ -260,13 +215,14 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
             for (st6; st6 != end6; ++st6)
             {
                 int const wl6        {(st6->first)};
-                if (wl6 == 1480000) continue; //Ignore 1480 nm
+                if (wl6 < 962000) continue;
+                if (wl6 > 990000) break;
                 double const pump_pow6  {st6->second};
                 double const flux       {Utility::return_photon_flux(
                     wl6,
                     pump_pow6,
                     p.A,
-                    Cross_sec::Yb_abs
+                    var_
                 )};
         
                 result += flux;
@@ -280,13 +236,14 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
             for (st7; st7 != end7; ++st7)
             {
                 int const wl7        {(st7->first)};
-                if (wl7 == 1480000) continue; //Ignore 1480 nm
+                if (wl7 < 962000) continue;
+                if (wl7 > 990000) break;
                 double const pump_pow7  {st7->second};
                 double const flux       {Utility::return_photon_flux(
                     wl7,
                     pump_pow7,
                     p.A,
-                    Cross_sec::Yb_abs
+                    var_
                 )};
         
                 result += flux;
@@ -299,14 +256,14 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
             for (st8; st8 != end8; ++st8)
             {
                 int const wl8        {(st8->first)};
-                if (wl8 < 962) continue;
-                if (wl8 > 990) break;
+                if (wl8 < 962000) continue;
+                if (wl8 > 990000) break;
                 double const pump_pow8  {st8->second};
                 double const flux       {Utility::return_photon_flux(
                     wl8,
                     pump_pow8,
                     p.A,
-                    Cross_sec::Yb_abs
+                    var_
                 )};
         
                 result += flux;
@@ -320,14 +277,14 @@ double Simulation::Result::calculate_W(std::size_t const z, int const var) const
             for (st9; st9 != end9; ++st9)
             {
                 int const wl9        {(st9->first)};
-                if (wl9 < 962) continue;
-                if (wl9 > 990) break;
+                if (wl9 < 962000) continue;
+                if (wl9 > 990000) break;
                 double const pump_pow9  {st9->second};
                 double const flux       {Utility::return_photon_flux(
                     wl9,
                     pump_pow9,
                     p.A,
-                    Cross_sec::Yb_abs
+                    var_
                 )};
         
                 result += flux;
@@ -354,7 +311,8 @@ double Simulation::Result::dPp_f_ind (u_int const z, int const wl_, double const
     
     int const wl {wl_};
     double const power {val};
-    double const sigEr_13 {Utility::return_cross_section(wl, Cross_sec::Er_abs)};
+    double sigEr_13 {0.0};
+    if (wl >= 962000 && wl <= 990000) sigEr_13 = Utility::return_cross_section(wl, Cross_sec::Er_abs);
     double const sigYb_56 {Utility::return_cross_section(wl, Cross_sec::Yb_abs)};
     double const sigYb_65 {Utility::return_cross_section(wl, Cross_sec::Yb_emi)};
     double const overlap {p.overlap.at(wl_)};
@@ -376,7 +334,8 @@ double Simulation::Result::dPp_b_ind (u_int const z, int const wl_, double const
     
     int const wl {wl_};
     double const power {val};
-    double const sigEr_13 {Utility::return_cross_section(wl, Cross_sec::Er_abs)};
+    double sigEr_13 {0.0};
+    if (wl >= 962000 && wl <= 990000) sigEr_13 = Utility::return_cross_section(wl, Cross_sec::Er_abs);
     double const sigYb_56 {Utility::return_cross_section(wl, Cross_sec::Yb_abs)};
     double const sigYb_65 {Utility::return_cross_section(wl, Cross_sec::Yb_emi)};
     double const overlap {p.overlap.at(wl_)};
@@ -1393,6 +1352,10 @@ void Simulation::Result::simulate(float& report, bool const warn, bool const ena
 
 void Simulation::Result::save_data(std::string const filename, bool const dBm_units, int const s_wl, int const p_wl_1, int const p_wl_2) noexcept
 {
+    std::cout<<"Entered save data\n";
+    std::cout<<"s_wl = "<<s_wl<<'\n';
+    std::cout<<"p_wl_1 = "<<p_wl_1<<'\n';
+    std::cout<<"p_wl_2 = "<<p_wl_2<<'\n';
     boost::filesystem::path curr_path{boost::filesystem::current_path()};
     boost::filesystem::path folder {"output"};
     curr_path /= folder;
@@ -1414,10 +1377,15 @@ void Simulation::Result::save_data(std::string const filename, bool const dBm_un
     std::string p_wl_2_s {std::to_string(p_wl_2/1000)};
     file_handle<<"Length,n1,n2,n3,n4,n5,n6,Ps @ "+s_wl_s+" ("+dBm+"),"
     "Gain,Pp_f ("+p_wl_1_s+"),Pp_f ("+p_wl_2_s+"),Pp_b ("+p_wl_1_s+"),Pp_b ("+p_wl_2_s+"),PASE_f,PASE_b,Pp_ASE_f,Pp_ASE_b\n";
-    //aquiaqui fix the issue of plotting 1480 nm pump
+
     for (auto i = 0; i < data.size(); ++i)
     {
         double const i_d {static_cast<double>(i)};
+        
+        auto Pp_f_wl_1 = p_wl_1 >= 1420000 ? data[i].Ps : data[i].Pp_f;
+        auto Pp_f_wl_2 = p_wl_2 >= 1420000 ? data[i].Ps : data[i].Pp_f;
+        auto Pp_b_wl_1 = p_wl_1 >= 1420000 ? data[i].Ps : data[i].Pp_b;
+        auto Pp_b_wl_2 = p_wl_2 >= 1420000 ? data[i].Ps : data[i].Pp_b;
         
         file_handle<<(p.step_size*i_d*100.0)
                    <<','
@@ -1437,13 +1405,13 @@ void Simulation::Result::save_data(std::string const filename, bool const dBm_un
                    <<','
                    <<Utility::power_to_gain(data[0].Ps.at(s_wl), data[i].Ps.at(s_wl))
                    <<','
-                   <<(data[i].Pp_f.count(p_wl_1) > 0 ? data[i].Pp_f.at(p_wl_1) * 1000.0 : 0.0)
+                   <<(Pp_f_wl_1.count(p_wl_1) > 0 ? Pp_f_wl_1.at(p_wl_1) * 1000.0 : 0.0)
                    <<','
-                   <<(data[i].Pp_f.count(p_wl_2) > 0 ? data[i].Pp_f.at(p_wl_2) * 1000.0 : 0.0)
+                   <<(Pp_f_wl_2.count(p_wl_2) > 0 ? Pp_f_wl_2.at(p_wl_2) * 1000.0 : 0.0)
                    <<','
-                   <<(data[i].Pp_b.count(p_wl_1) > 0 ? data[i].Pp_b.at(p_wl_1) * 1000.0 : 0.0)
+                   <<(Pp_b_wl_1.count(p_wl_1) > 0 ? Pp_b_wl_1.at(p_wl_1) * 1000.0 : 0.0)
                    <<','
-                   <<(data[i].Pp_b.count(p_wl_2) > 0 ? data[i].Pp_b.at(p_wl_2) * 1000.0 : 0.0)
+                   <<(Pp_b_wl_2.count(p_wl_2) > 0 ? Pp_b_wl_2.at(p_wl_2) * 1000.0 : 0.0)
                    <<','
                    <<(dBm_units ? Utility::power_to_dBm(data[i].PASE_f.at(s_wl)) : data[i].PASE_f.at(s_wl) * 1000.0)
                    <<','
@@ -1456,12 +1424,16 @@ void Simulation::Result::save_data(std::string const filename, bool const dBm_un
     }
     
     file_handle.close();
+    std::cout<<"Exited save_data\n";
     return;
 }
 
 
 void Simulation::Result::plot_data (std::string const data_file_, int const s_wl, int const p_wl_1, int const p_wl_2) noexcept
 {
+    std::string s_wl_s {std::to_string(s_wl / 1000)};
+    std::string p_wl_1_s {std::to_string(p_wl_1 / 1000)};
+    std::string p_wl_2_s {std::to_string(p_wl_2 / 1000)};
     boost::filesystem::path curr_path{boost::filesystem::current_path()};
     boost::filesystem::path folder {"output"};
     curr_path /= folder;
@@ -1522,13 +1494,13 @@ void Simulation::Result::plot_data (std::string const data_file_, int const s_wl
     "\n"
     "set autoscale y\n"
     "set output \""+name+"_plot_3.png\"\n"
-    "set title \"Signal at 1533 nm\"\n"
+    "set title \"Signal at "+s_wl_s+" nm\"\n"
     "set xlabel \"Length (cm)\"\n"
     "set ylabel \""+(dBm_units ? "Power (dBm)" : "Power (mW)")+"\"\n"
     "plot filename using 1:8 title \'Signal\' with lines\n"
     "\n"
     "set output \""+name+"_plot_4.png\"\n"
-    "set title \"Signal gain at 1533 nm\"\n"
+    "set title \"Signal gain at "+s_wl_s+" nm\"\n"
     "set xlabel \"Length (cm)\"\n"
     "set ylabel \"Gain (dB)\"\n"
     "plot filename using 1:9 title \'Signal\' with lines\n"
@@ -1537,10 +1509,10 @@ void Simulation::Result::plot_data (std::string const data_file_, int const s_wl
     "set title \"Forward and backwards pump\"\n"
     "set xlabel \"Length (cm)\"\n"
     "set ylabel \"Pump power (mW)\"\n"
-    "plot filename using 1:10 title \'Pp_f 976 nm\' with lines,\\\n"
-    "filename using 1:11 title \'Pp_f 1480 nm\' lt rgb \"red\" with lines,\\\n"
-    "filename using 1:12 title \'Pp_b 976 nm\' with lines,\\\n"
-    "filename using 1:13 title \'Pp_b 1480 nm\' lt rgb \"green\" with lines\n"
+    "plot filename using 1:10 title \'Pp_f "+p_wl_1_s+" nm\' with lines,\\\n"
+    "filename using 1:11 title \'Pp_f "+p_wl_2_s+" nm\' lt rgb \"red\" with lines,\\\n"
+    "filename using 1:12 title \'Pp_b "+p_wl_1_s+" nm\' with lines,\\\n"
+    "filename using 1:13 title \'Pp_b "+p_wl_2_s+"\' lt rgb \"green\" with lines\n"
     "\n"
     "set output \""+name+"_plot_6.png\"\n"
     "set title \"Forward and backward ASE at 1533 nm\"\n"
