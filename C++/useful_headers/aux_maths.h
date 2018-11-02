@@ -5,7 +5,7 @@
 #include <vector>
 #include <array>
 #include <cmath>
-#include "/home/eduardo/Desktop/Programming/cpp/2018-02-09_Parallel_Matrix/matrix_fact_opt.h"
+#include "matrix_fact_opt.h"
 
 namespace Maths
 {
@@ -116,7 +116,7 @@ namespace Maths
             for (auto j = 0; j < x.size(); ++j)
             {
                 std::vector<double> x_ {x};
-                x_[j] += h;
+                x_[j] += h*x_[j];
                 output(i,j) = (f[i](x_) - f_output[i]) / h;
             }
         }
@@ -154,7 +154,7 @@ namespace Maths
             for (auto j = 0; j < x.size(); ++j)
             {
                 std::vector<double> x_ {x};
-                x_[j] += h;
+                x_[j] += h*x_[j];
                 output(i,j) = (f[i](x_, args...) - f_output[i]) / h;
             }
         }
@@ -183,7 +183,7 @@ namespace Maths
             for (auto j = 0; j < x.size(); ++j)
             {
                 std::vector<double> x_ {x};
-                x_[j] += h;
+                x_[j] += h*x_[j];
                 output(i,j) = (f[i](x_, args...) - f_output[i]) / h;
             }
         }
