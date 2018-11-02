@@ -23,6 +23,7 @@ namespace Simulation
         Simulation::Init_params p;
         std::vector<Simulation::Step> data;
         Simulation::Step start_step, end_step; //Steps stored for convergence comparison
+        bool first_run {false}; //Has the simulate command been run?
         
         //Helper structs
         //Additional data needed in order to be able to use the static functions
@@ -51,46 +52,6 @@ namespace Simulation
         static double Eq_2(std::vector<double> const& vars, Data_p const& p) noexcept; //dn2/dt
         static double Eq_3(std::vector<double> const& vars, Data_p const& p) noexcept; //dn3/dt
         static double Eq_4(std::vector<double> const& vars, Data_p const& p) noexcept; //dn5/dt
-        static double Eq_5(std::vector<double> const& vars, Data_p const& p) noexcept; //NEr-n1-n2-n3-n4 = 0
-        static double Eq_6(std::vector<double> const& vars, Data_p const& p) noexcept; //NYb - n5 - n6 = 0;
-        
-        //Derivatives
-        static double dEq_1_dn1(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_1_dn2(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_1_dn3(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_1_dn4(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_1_dn5(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_1_dn6(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_2_dn1(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_2_dn2(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_2_dn3(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_2_dn4(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_2_dn5(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_2_dn6(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_3_dn1(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_3_dn2(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_3_dn3(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_3_dn4(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_3_dn5(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_3_dn6(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_4_dn1(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_4_dn2(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_4_dn3(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_4_dn4(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_4_dn5(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_4_dn6(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_5_dn1(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_5_dn2(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_5_dn3(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_5_dn4(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_5_dn5(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_5_dn6(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_6_dn1(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_6_dn2(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_6_dn3(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_6_dn4(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_6_dn5(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
-        static double dEq_6_dn6(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
         
         //n finder (uses Newton's method to find the root of the equation system)
         void find_all_n(u_int const z, double const h, double const tol, unsigned int n_it) noexcept;

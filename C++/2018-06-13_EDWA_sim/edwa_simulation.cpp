@@ -708,8 +708,8 @@ double Simulation::Result::Eq_1(std::vector<double> const& vars, Data_p const& p
     double const n1 {vars[0]};
     double const n2 {vars[1]};
     double const n3 {vars[2]};
-    double const n4 {vars[3]};
-    double const n6 {vars[5]};
+    double const n4 {p.NEr - vars[0] - vars[1] - vars[2]};
+    double const n6 {vars[3]};
     
     double const W12 {p.W12};
     double const W13 {p.W13};
@@ -730,7 +730,7 @@ double Simulation::Result::Eq_2(std::vector<double> const& vars, Data_p const& p
     double const n1 {vars[0]};
     double const n2 {vars[1]};
     double const n3 {vars[2]};
-    double const n4 {vars[3]};
+    double const n4 {p.NEr - vars[0] - vars[1] - vars[2]};
     
     double const W12 {p.W12};
     double const W21 {p.W21};
@@ -746,8 +746,8 @@ double Simulation::Result::Eq_3(std::vector<double> const& vars, Data_p const& p
 {
     double const n1 {vars[0]};
     double const n3 {vars[2]};
-    double const n4 {vars[3]};
-    double const n6 {vars[5]};
+    double const n4 {p.NEr - vars[0] - vars[1] - vars[2]};
+    double const n6 {vars[3]};
     
     double const W13 {p.W13};
     double const t1  {W13 * n1 - p.A32 * n3};
@@ -761,8 +761,8 @@ double Simulation::Result::Eq_3(std::vector<double> const& vars, Data_p const& p
 double Simulation::Result::Eq_4(std::vector<double> const& vars, Data_p const& p) noexcept
 {
     double const n1 {vars[0]};
-    double const n5 {vars[4]};
-    double const n6 {vars[5]};
+    double const n5 {p.NYb - vars[3]};
+    double const n6 {vars[3]};
     
     double const W56 {p.W56};
     double const W65 {p.W65};
@@ -770,220 +770,6 @@ double Simulation::Result::Eq_4(std::vector<double> const& vars, Data_p const& p
     double const t2  {p.Ccr * n1 * n6};
     
     return t1 + t2;
-}
-
-
-double Simulation::Result::Eq_5(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    double const n1 {vars[0]};
-    double const n2 {vars[1]};
-    double const n3 {vars[2]};
-    double const n4 {vars[3]};
-
-    return p.NEr - n1 - n2 - n3 - n4;
-}
-
-
-double Simulation::Result::Eq_6(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    double const n5 {vars[4]};
-    double const n6 {vars[5]};
-    return p.NYb - n5 - n6;
-}
-
-
-double Simulation::Result::dEq_1_dn1(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    double const n4 {vars[3]};
-    double const n6 {vars[5]};
-    return -(p.W12 + p.W13) - p.Ccr * (n4 + n6);
-}
-
-double Simulation::Result::dEq_1_dn2(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    double const n2 {vars[1]};
-    return p.A21 + p.W21 + 2.0 * p.Cup * n2;
-}
-
-double Simulation::Result::dEq_1_dn3(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    double const n3 {vars[2]};
-    return 2.0 * p.Cup * n3;
-}
-
-double Simulation::Result::dEq_1_dn4(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    double const n1 {vars[0]};
-    return -p.Ccr * n1;
-}
-
-double Simulation::Result::dEq_1_dn5(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return 0.0;
-}
-
-double Simulation::Result::dEq_1_dn6(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    double const n1 {vars[0]};
-    return -p.Ccr * n1;
-}
-
-double Simulation::Result::dEq_2_dn1(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    double const n4 {vars[3]};
-    return p.W12 + 2.0 * p.Ccr * n4;
-}
-
-double Simulation::Result::dEq_2_dn2(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    double const n2 {vars[1]};    
-    return -(p.A21 + p.W21) - 4.0 * p.Cup * n2;
-}
-
-double Simulation::Result::dEq_2_dn3(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return p.A32;
-}
-
-double Simulation::Result::dEq_2_dn4(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    double const n1 {vars[0]};
-    return 2.0 * p.Ccr * n1;
-}
-
-double Simulation::Result::dEq_2_dn5(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return 0.0;
-}
-
-double Simulation::Result::dEq_2_dn6(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return 0.0;
-}
-
-double Simulation::Result::dEq_3_dn1(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    double const n6 {vars[5]};
-    return p.W13 + p.Ccr * n6;
-}
-
-double Simulation::Result::dEq_3_dn2(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return 0.0;
-}
-
-double Simulation::Result::dEq_3_dn3(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    double const n3 {vars[2]};
-    return -p.A32 - 4.0 * p.Cup * n3;
-}
-
-double Simulation::Result::dEq_3_dn4(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return p.A43;
-}
-
-double Simulation::Result::dEq_3_dn5(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return 0.0;
-}
-
-double Simulation::Result::dEq_3_dn6(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    double const n1 {vars[0]};
-    return p.Ccr * n1;
-}
-
-double Simulation::Result::dEq_4_dn1(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    double const n6 {vars[5]};
-    return p.Ccr * n6;
-}
-
-double Simulation::Result::dEq_4_dn2(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return 0.0;
-}
-
-double Simulation::Result::dEq_4_dn3(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return 0.0;
-}
-
-double Simulation::Result::dEq_4_dn4(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return 0.0;
-}
-
-double Simulation::Result::dEq_4_dn5(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return -p.W56;
-}
-
-double Simulation::Result::dEq_4_dn6(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    double const n1 {vars[0]};
-    return p.A65 + p.W65 + p.Ccr * n1;
-}
-
-double Simulation::Result::dEq_5_dn1(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return -1.0;
-}
-
-double Simulation::Result::dEq_5_dn2(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return -1.0;
-}
-
-double Simulation::Result::dEq_5_dn3(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return -1.0;
-}
-
-double Simulation::Result::dEq_5_dn4(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return -1.0;
-}
-
-double Simulation::Result::dEq_5_dn5(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return 0.0;
-}
-
-double Simulation::Result::dEq_5_dn6(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return 0.0;
-}
-
-double Simulation::Result::dEq_6_dn1(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return 0.0;
-}
-
-double Simulation::Result::dEq_6_dn2(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return 0.0;
-}
-
-double Simulation::Result::dEq_6_dn3(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return 0.0;
-}
-
-double Simulation::Result::dEq_6_dn4(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return 0.0;
-}
-
-double Simulation::Result::dEq_6_dn5(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return -1.0;
-}
-
-double Simulation::Result::dEq_6_dn6(std::vector<double> const& vars, Data_p const& p) noexcept
-{
-    return -1.0;
 }
 
 
@@ -1008,91 +794,43 @@ void Simulation::Result::find_all_n(u_int const z, double const h, double const 
     std::vector<f_ptr> f {Simulation::Result::Eq_1, 
                           Simulation::Result::Eq_2,
                           Simulation::Result::Eq_3,
-                          Simulation::Result::Eq_4,
-                          Simulation::Result::Eq_5,
-                          Simulation::Result::Eq_6};
-    std::vector<f_ptr> df {Simulation::Result::dEq_1_dn1, 
-                           Simulation::Result::dEq_2_dn1,
-                           Simulation::Result::dEq_3_dn1,
-                           Simulation::Result::dEq_4_dn1,
-                           Simulation::Result::dEq_5_dn1,
-                           Simulation::Result::dEq_6_dn1,
-                           Simulation::Result::dEq_1_dn2,
-                           Simulation::Result::dEq_2_dn2,
-                           Simulation::Result::dEq_3_dn2,
-                           Simulation::Result::dEq_4_dn2,
-                           Simulation::Result::dEq_5_dn2,
-                           Simulation::Result::dEq_6_dn2,
-                           Simulation::Result::dEq_1_dn3,
-                           Simulation::Result::dEq_2_dn3,
-                           Simulation::Result::dEq_3_dn3,
-                           Simulation::Result::dEq_4_dn3,
-                           Simulation::Result::dEq_5_dn3,
-                           Simulation::Result::dEq_6_dn3,
-                           Simulation::Result::dEq_1_dn4,
-                           Simulation::Result::dEq_2_dn4,
-                           Simulation::Result::dEq_3_dn4,
-                           Simulation::Result::dEq_4_dn4,
-                           Simulation::Result::dEq_5_dn4,
-                           Simulation::Result::dEq_6_dn4,
-                           Simulation::Result::dEq_1_dn5,
-                           Simulation::Result::dEq_2_dn5,
-                           Simulation::Result::dEq_3_dn5,
-                           Simulation::Result::dEq_4_dn5,
-                           Simulation::Result::dEq_5_dn5,
-                           Simulation::Result::dEq_6_dn5,
-                           Simulation::Result::dEq_1_dn6,
-                           Simulation::Result::dEq_2_dn6,
-                           Simulation::Result::dEq_3_dn6,
-                           Simulation::Result::dEq_4_dn6,
-                           Simulation::Result::dEq_5_dn6,
-                           Simulation::Result::dEq_6_dn6};
+                          Simulation::Result::Eq_4};
                           
-    std::vector<double> x0(6, 0.0);
-    if (z == 0 && 
-        data[z].n1 == 0.0 &&
-        data[z].n2 == 0.0 &&
-        data[z].n3 == 0.0 &&
-        data[z].n4 == 0.0 &&
-        data[z].n5 == 0.0 &&
-        data[z].n6 == 0.0)
+    std::vector<double> x0(4, 0.0);
+    if (z == 0 && !first_run)
     {
         //Initial guess
-        x0[0] = 0.90*p.NEr;
-        x0[1] = 0.90*p.NEr;
-        x0[2] = 0.90*p.NEr;
-        x0[3] = 0.90*p.NEr;
-        x0[4] = 0.90*p.NYb;
-        x0[5] = 0.90*p.NYb;
+        x0[0] = 0.20*p.NEr;
+        x0[1] = 0.70*p.NEr;
+        x0[2] = 0.10*p.NEr;
+        x0[3] = 0.45*p.NYb;
+
     } else if (z == 0)
     {
         //If the simulation has been run previously then use curr vals as initial guess
-        x0[0] = data[z].n1 > -0.1 ? data[z].n1 : 0.90*p.NEr;
-        x0[1] = data[z].n2 > -0.1 ? data[z].n2 : 0.90*p.NEr;
-        x0[2] = data[z].n3 > -0.1 ? data[z].n3 : 0.90*p.NEr;
-        x0[3] = data[z].n4 > -0.1 ? data[z].n4 : 0.90*p.NEr;
-        x0[4] = data[z].n5 > -0.1 ? data[z].n5 : 0.90*p.NYb;
-        x0[5] = data[z].n6 > -0.1 ? data[z].n6 : 0.90*p.NYb;
+        x0[0] = data[z].n1 > -0.1 ? data[z].n1 : 0.20*p.NEr;
+        x0[1] = data[z].n2 > -0.1 ? data[z].n2 : 0.70*p.NEr;
+        x0[2] = data[z].n3 > -0.1 ? data[z].n3 : 0.10*p.NEr;
+        x0[3] = data[z].n6 > -0.1 ? data[z].n4 : 0.45*p.NYb;
+
         
     } else if (z > 0)
     {
-        //Use last values as starting values (should be different from zero if the simulation
+        //Use previous values as starting values (should be different from zero if the simulation
         //forward iteration was run
-        x0[0] = data[z-1].n1 > -0.1 ? data[z-1].n1 : 0.90*p.NEr;
-        x0[1] = data[z-1].n2 > -0.1 ? data[z-1].n2 : 0.90*p.NEr;
-        x0[2] = data[z-1].n3 > -0.1 ? data[z-1].n3 : 0.90*p.NEr;
-        x0[3] = data[z-1].n4 > -0.1 ? data[z-1].n4 : 0.90*p.NEr;
-        x0[4] = data[z-1].n5 > -0.1 ? data[z-1].n5 : 0.90*p.NYb;
-        x0[5] = data[z-1].n6 > -0.1 ? data[z-1].n6 : 0.90*p.NYb;
+        x0[0] = data[z-1].n1 > -0.1 ? data[z].n1 : 0.20*p.NEr;
+        x0[1] = data[z-1].n2 > -0.1 ? data[z].n2 : 0.70*p.NEr;
+        x0[2] = data[z-1].n3 > -0.1 ? data[z].n3 : 0.10*p.NEr;
+        x0[3] = data[z-1].n6 > -0.1 ? data[z].n4 : 0.45*p.NYb;
      }
     
-    //std::vector<double> output {Maths::jac_newton_method(f, x0, h, tol, n_it, p_)}; //old
-    std::vector<double> output {Maths::jac_newton_method(f, x0, df, tol, n_it, p_)}; //new
+    std::vector<double> output {Maths::jac_newton_method(f, x0, h, tol, n_it, p_)}; //old
+    //std::vector<double> output {Maths::jac_newton_method(f, x0, df, tol, n_it, p_)}; //new
     for (auto i =0; i < output.size(); ++i)
     {
-        if (output[i] > (i <= 4 ? p.NEr:p.NYb)) 
+        if (output[i] > (i <= 2 ? p.NEr:p.NYb)) 
         {
-            output[i] = i <= 4 ? p.NEr:p.NYb;
+            output[i] = i <= 2 ? p.NEr:p.NYb;
             continue;
         }
         
@@ -1105,10 +843,10 @@ void Simulation::Result::find_all_n(u_int const z, double const h, double const 
     data[z].n1 = output[0];
     data[z].n2 = output[1];
     data[z].n3 = output[2];
-    data[z].n4 = output[3];
-    data[z].n5 = output[4];
-    data[z].n6 = output[5];
-    data[z].residual = output[6];
+    data[z].n4 = p.NEr - output[0] - output[1] - output[2];
+    data[z].n5 = p.NYb - output[3];
+    data[z].n6 = output[3];
+    data[z].residual = output[4];
     
     return;
 }
@@ -1287,7 +1025,7 @@ void Simulation::Result::regress_step (u_int const z,
 void Simulation::Result::simulate(float& report, bool const warn, bool const enable_ASE, bool const enable_p_ASE) noexcept
 {
     double const NAvg {(p.NYb+p.NEr) / 2.0};
-    double const h {1.0e-7 * NAvg};
+    double const h {1.0e-6};
     double const tol {5.0e-6 * NAvg};
     u_int n_it {1000};
     int n_loops {3};
@@ -1313,6 +1051,8 @@ void Simulation::Result::simulate(float& report, bool const warn, bool const ena
                 std::cout<<"Warning in simulate: negative value found at step "<<i<<'\n';
                 report_step(i, false);
             }
+            
+
         } //End of fowards iteration
     
         p.curr_step = 0;
@@ -1336,6 +1076,7 @@ void Simulation::Result::simulate(float& report, bool const warn, bool const ena
                 std::cout<<"Warning in simulate: negative value found at step "<<i<<'\n';
                 report_step(i, true);
             }
+            
         
         } //End of backwards iteration
 
@@ -1343,6 +1084,7 @@ void Simulation::Result::simulate(float& report, bool const warn, bool const ena
         reset_start();
         
     } //End of Cycle
+    
     
 }
 

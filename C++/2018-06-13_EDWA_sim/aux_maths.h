@@ -116,7 +116,7 @@ namespace Maths
             for (auto j = 0; j < x.size(); ++j)
             {
                 std::vector<double> x_ {x};
-                x_[j] += h;
+                x_[j] += h*x_[j];
                 output(i,j) = (f[i](x_) - f_output[i]) / h;
             }
         }
@@ -154,7 +154,7 @@ namespace Maths
             for (auto j = 0; j < x.size(); ++j)
             {
                 std::vector<double> x_ {x};
-                x_[j] += h;
+                x_[j] += h*x_[j];
                 output(i,j) = (f[i](x_, args...) - f_output[i]) / h;
             }
         }
@@ -183,7 +183,7 @@ namespace Maths
             for (auto j = 0; j < x.size(); ++j)
             {
                 std::vector<double> x_ {x};
-                x_[j] += h;
+                x_[j] += h*x_[j];
                 output(i,j) = (f[i](x_, args...) - f_output[i]) / h;
             }
         }
