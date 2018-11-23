@@ -13,12 +13,12 @@ be able to choose from a variety of sources.
 <b>Note:</b> the text files beginning with plot_script_  are GNUPLOT scripts used to quickly visualize the data
 produced by the simulation
 
-## useful_headers <a name = "it2"></a>
-Contains a set of useful headers defining a Matrix class with error handling. It contains the following operations:
-	* Matrix Slicing
+## Maths <a name = "it2"></a>
+Contains a set of useful headers defining a Matrix class with error handling and more robust algorithms. It contains the following operations:
+	* Matrix slicing
 	* Matrix transpose
 	* Matrix invert
-	* Matrix determinant
+	* Matrix determinant (via Cholesky or LU)
 	* Matrix Eigenvalues
 	* LU (Lower upper) factorization
 	* Cholesky Factorization

@@ -1,7 +1,5 @@
 # Table of contents
-## 1. [FDTD_parallel](#FDTD_parallel)
+## 1. [useful_headers](#it1)
 
-## FDTD_parallel <a name = "FDTD_parallel"></a>
-This is a finite difference time domain method solver for Maxwell's Equations, to simulate propagation through a
-rectangular straight waveguide. It employs multithreading to enhance speed also provides a serial execution functions
-to compare speedup. It is currently unfinished and has been replaced by new simulation in the main folder
+##  useful_headers <a name = "it1"></a>
+Old Matrix headers along with some useful iterative methods. Contains no error checking and may be numerically unstable
