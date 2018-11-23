@@ -7,8 +7,20 @@
 #include <cmath>
 #include "matrix_fact_opt.h"
 
+
+
+
 namespace Maths
 {
+    template <typename T>
+    struct Output
+    {
+        Output(std::vector<T>&& result_) : result{result_} {}
+        Output(std::vector<T> const& result_) : result{result_} {}
+        double residual{};
+        std::vector<T> result;
+    };
+    
     //Returns absolute value
     double abs_val(double const x) noexcept;
     
@@ -116,8 +128,9 @@ namespace Maths
             for (auto j = 0; j < x.size(); ++j)
             {
                 std::vector<double> x_ {x};
+                double const x_h {x_[j] * h};
                 x_[j] += h*x_[j];
-                output(i,j) = (f[i](x_) - f_output[i]) / h;
+                output(i,j) = (f[i](x_) - f_output[i]) / x_h;
             }
         }
         
@@ -138,7 +151,7 @@ namespace Maths
     template <typename T, typename... ARGS>
     Matrix<double> jacobian(std::vector<T> const& f, 
                             std::vector<double> const& x, 
-                            double const h = 0.0001, 
+                            double const h, 
                             ARGS... args) noexcept
     {
         std::vector<double> f_output(f.size(), 0.0);
@@ -154,8 +167,9 @@ namespace Maths
             for (auto j = 0; j < x.size(); ++j)
             {
                 std::vector<double> x_ {x};
+                double const x_h {x_[j] * h};
                 x_[j] += h*x_[j];
-                output(i,j) = (f[i](x_, args...) - f_output[i]) / h;
+                output(i,j) = (f[i](x_, args...) - f_output[i]) / x_h;
             }
         }
         
@@ -183,8 +197,9 @@ namespace Maths
             for (auto j = 0; j < x.size(); ++j)
             {
                 std::vector<double> x_ {x};
+                double const x_h {x_[j] * h};
                 x_[j] += h*x_[j];
-                output(i,j) = (f[i](x_, args...) - f_output[i]) / h;
+                output(i,j) = (f[i](x_, args...) - f_output[i]) / x_h;
             }
         }
         
@@ -203,10 +218,13 @@ namespace Maths
                                           unsigned int n_it,
                                           ARGS... args) noexcept
     {
+        std::cout<<"11111111111111111\n";
         Matrix<double> x0 {x.size(), 1, std::move(x)};
         Matrix<double> y {f.size(), 1};
         Matrix<T> f_m {f.size(), 1, std::move(f)};
         std::vector<double> output {x0.copy_vector()};
+        //std::vector<double> output_vec {x0.copy_vector()};
+        //Output output {std::move(output_vec)};
         double norm {0.0};
 
         
@@ -218,6 +236,7 @@ namespace Maths
             for (auto j = 0; j < y.size(); ++j)
             {
                 y(j, 0) = f_m[j](x0.copy_vector(), args...);
+                std::cout<<"y("<<j<<", 0) = "<<y(j,0)<<'\n';
                 norm += y(j,0) * y(j,0);
             }
             
@@ -263,6 +282,7 @@ namespace Maths
                                           unsigned int n_it,
                                           ARGS... args) noexcept
     {
+        std::cout<<"22222222222222222222222222\n";
         Matrix<double> x0 {x.size(), 1, std::move(x)};
         Matrix<double> y {f.size(), 1};
         Matrix<T> f_m {f.size(), 1, std::move(f)};
@@ -328,6 +348,7 @@ namespace Maths
                                           unsigned int n_it,
                                           ARGS... args) noexcept
     {
+        std::cout<<"333333333333333333333333\n";
         Matrix<double> x0 {std::move(x.make_copy())};
         Matrix<double> y {f.size(), 1};
         Matrix<T> f_m {std::move(f.make_copy())};
