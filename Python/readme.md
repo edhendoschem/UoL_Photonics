@@ -31,7 +31,8 @@ transmitted by TCP-IP and no need to manually measure data as the program will s
 ## lifetime_processor <a name = "item3"></a>
 This is a simple program to extract the lifetime data from the .txt files created by the Steady State Time Resolved 
 Fluorescence Spectrometer. It uses the Trust Region Reflective algorithm. If the curve fitter fails to properly fit the
-curve, you may be in the presence of a double exponential or some other behaviour
+curve, you may be in the presence of a double exponential or some other behaviour. Lifetime Processor-double_exp will 
+attempt to fit double exponentials.
 
 In order to use it, place the lifetime measurement files in the folder with the .ipynb file and click on "run cell,
 select below" twice or alternatively press shift+enter twice.
