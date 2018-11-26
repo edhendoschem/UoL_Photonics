@@ -103,7 +103,7 @@ namespace Maths
     template <typename T, typename F_ptr, typename... ARGS>
     Matrix<T> newton_method (std::vector<F_ptr> const& f, Matrix<T> const& x, Iter_params<T> const& p, ARGS... args)
     {
-        std::vector<T> const x_vec {x}
+        std::vector<T> const x_vec {x};
         std::vector<T> out_vec {newton_method(f, x_vec, p, args...)};
         Matrix<T> const output {x.size(), 1, std::move(out_vec)};
         return output;
