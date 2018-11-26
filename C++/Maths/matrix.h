@@ -51,10 +51,15 @@ namespace Maths
     } //End of split_interval
 
 
-    template<typename T>
-    bool is_zero(T const c)
+    bool is_zero(double const c)
     {
-        if (std::abs(c) < static_cast<T>(1e-6)) return true;
+        if (std::abs(c) < 1.0e-10) return true;
+        return false;
+    }
+    
+    bool is_zero(float const c)
+    {
+        if (std::abs(c) < 1.0e-6) return true;
         return false;
     }
     
@@ -80,23 +85,6 @@ namespace Maths
     };
     
     
-    template <typename T>
-    struct Result
-    {
-        template <typename inner_T>
-        explicit Result(inner_T&& res_) : result {std::forward<inner_T>(res_)} {}
-        
-        explicit Result(std::string_view error_) : error {error_} {}
-        
-        void set_error(std::string_view error_)
-        {
-            error = error_;
-        }
-        
-        std::optional<T> residual;
-        std::optional<T> result;
-        Error error;
-    };
 
 //Stores data as a flat vector, with overloaded call operator to be able to access the data as a 0 indexed matrix
 //e.g. A(0,1) returns the element on the first row and second column. Recommended types: float, double. It also supports

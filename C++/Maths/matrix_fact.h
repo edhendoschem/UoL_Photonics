@@ -493,9 +493,9 @@ namespace Maths
     Matrix<T> invert(Matrix<T> const& matrix, sz_t const limit = 500000)
     {
         T det {determinant<T>(matrix)};
-        if (det < static_cast<T>(0.0) || is_zero(det))
+        if (is_zero(det))
         {
-            std::string const e {"Error in invert(): Non positive determinant\n"};
+            std::string const e {"Error in invert(): Zero valued determinant\n"};
             throw Error{e};
         }
     
@@ -550,14 +550,14 @@ namespace Maths
             
             Matrix<T> output {std::move(mp.second)};
             return output;
-    }
-    catch(Error& e)
-    {
-        std::string const prev_e {e.what()};
-        std::string const curr_e {"Error in invert() -> " + prev_e};
-        throw Error{curr_e};
-    }
-} //End of matrix inversion
+        }
+        catch(Error& e)
+        {
+            std::string const prev_e {e.what()};
+            std::string const curr_e {"Error in invert() -> " + prev_e};
+            throw Error{curr_e};
+        }
+    } //End of matrix inversion
 
 } //End of namespace Maths
 #endif
