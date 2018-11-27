@@ -38,12 +38,12 @@ namespace Maths
             if (i == THREADS-1)
             {
                 second = ed;
-                output.emplace_back(std::array{first, second});
+                output.emplace_back(std::array<T, 2>{first, second});
                 return output;
             }
         
             second = first + step_size;
-            output.emplace_back(std::array{first, second});
+            output.emplace_back(std::array<T, 2>{first, second});
             first = second;
         }
     

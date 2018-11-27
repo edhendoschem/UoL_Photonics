@@ -41,7 +41,7 @@ namespace Maths
                 
                     for (auto k : f)
                     {
-                        f_curr[count] = f[count](x_curr.get_data(), args...);
+                        f_curr[count] = k(x_curr.get_data(), args...);
                         total += std::abs(f_curr[count]);
                         ++count;
                     
@@ -72,10 +72,9 @@ namespace Maths
                 
                 for (auto k : f)
                 {
-                    f_curr[count] = f[count](x_curr.get_data(), args...);
+                    f_curr[count] = k(x_curr.get_data(), args...);
                     total += std::abs(f_curr[count]);
                     ++count;
-                    
                 }
                 
                 if (total < tol) break;
