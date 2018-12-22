@@ -51,13 +51,13 @@ namespace Maths
     } //End of split_interval
 
 
-    bool is_zero(double const c)
+    inline bool is_zero(double const c)
     {
         if (std::abs(c) < 1.0e-10) return true;
         return false;
     }
     
-    bool is_zero(float const c)
+    inline bool is_zero(float const c)
     {
         if (std::abs(c) < 1.0e-6) return true;
         return false;
