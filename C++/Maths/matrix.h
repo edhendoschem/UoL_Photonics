@@ -50,18 +50,14 @@ namespace Maths
         return output;
     } //End of split_interval
 
-
-    inline bool is_zero(double const c)
+    template<typename T>
+    bool is_zero(T const c)
     {
-        if (std::abs(c) < 1.0e-10) return true;
+        T cmp_val {static_cast<T>(1.0e-10)};
+        if (std::abs(c) < cmp_val) return true;
         return false;
     }
     
-    inline bool is_zero(float const c)
-    {
-        if (std::abs(c) < 1.0e-6) return true;
-        return false;
-    }
     
     
     //Generic wrapper to create math errors
@@ -773,7 +769,7 @@ namespace Maths
     template<typename T>
     Matrix<T> operator / (Matrix<T> const& matrix_a, T const c)
     {
-        if (is_zero(c))
+        if (is_zero<T>(c))
         {
             std::string const e {"Error in Matrix operator /: Division by zero encountered\n"};
             throw Error{e};
@@ -980,7 +976,7 @@ namespace Maths
             case '/':
                 {
                     for (auto j = 0; j < max_c; ++j) {
-                        if (is_zero(row_slice[j]))
+                        if (is_zero<T>(row_slice[j]))
                         {
                             std::string const e {"Error in row_slice_op(): Division by zero\n"};
                             throw Error{e};
@@ -1107,7 +1103,7 @@ namespace Maths
             case '/':
                 {
                     for (auto i = 0; i < max_r; ++i) {
-                        if (is_zero(col_slice[i])) {
+                        if (is_zero<T>(col_slice[i])) {
                             std::string const e{"Error in col_slice_op(): Division by zero\n"};
                             throw Error{e};
                         }

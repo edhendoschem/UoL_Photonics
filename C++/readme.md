@@ -36,5 +36,5 @@ Library dependencies: pthread, OpenGL, sfml-graphics, sfml-window, sfml-system, 
 This program takes the pixels/length and an image of the laser spot with a dark background (ideally in a dark room) as input and bulk processes all laser spot image 
 files provided, adding up the number of pixels with an intensity value >= ~13.5% of max and then multiplying that value by the area of each pixel (assuming square pixels) 
 to obtain the spot size. The units will depend on the units given when entering the pixels/length value (e.g. if pixels/mm given then area will be mm^2)
-Library dependencies: 
+Library dependencies: boost_system, boost_filesystem, opencv_core, opencv_imgproc, opencv_highgui, opencv_imgcodecs
 

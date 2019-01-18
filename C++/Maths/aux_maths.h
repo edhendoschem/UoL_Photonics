@@ -31,7 +31,7 @@ namespace Maths
     template <typename T, typename F_ptr, typename... ARGS>
     std::vector<T> derivative(F_ptr const& f, std::vector<T> const& x, double const h, ARGS... args)
     {
-        if (is_zero(h))
+        if (is_zero<T>(h))
         {
             std::string const e {"Error in derivative(): differential h cannot be zero\n"};
             throw Error{e};
@@ -46,7 +46,7 @@ namespace Maths
         {
             std::vector<T> x_mod {x};
             T x_h;
-            if (is_zero(h_t * x_mod[i]))
+            if (is_zero<T>(h_t * x_mod[i]))
             {
                 x_h = h_t;
             } 

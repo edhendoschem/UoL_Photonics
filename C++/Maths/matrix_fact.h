@@ -493,7 +493,7 @@ namespace Maths
     Matrix<T> invert(Matrix<T> const& matrix, sz_t const limit = 500000)
     {
         T det {determinant<T>(matrix)};
-        if (is_zero(det))
+        if (is_zero<T>(det))
         {
             std::string const e {"Error in invert(): Zero valued determinant\n"};
             throw Error{e};
