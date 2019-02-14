@@ -50,7 +50,7 @@ namespace Maths
         return output;
     } //End of split_interval
 
-    template<typename T>
+    template <typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     bool is_zero(T const c)
     {
         T cmp_val {static_cast<T>(1.0e-10)};
@@ -83,9 +83,8 @@ namespace Maths
     
 
 //Stores data as a flat vector, with overloaded call operator to be able to access the data as a 0 indexed matrix
-//e.g. A(0,1) returns the element on the first row and second column. Recommended types: float, double. It also supports
-//other types but factorizations will no longer work properly
-    template<typename T>
+//e.g. A(0,1) returns the element on the first row and second column. Recommended types: float, double.
+    template <typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     class Matrix
     {
     private:
@@ -388,7 +387,7 @@ namespace Maths
 
     //Helper structs
     //Auxiliary struct for returning pair of matrices
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     struct Matrix_pair 
     {
         Matrix<T> first;
@@ -465,7 +464,7 @@ namespace Maths
 
 
     //Auxiliary struct to represent system of matrices
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     struct Matrix_system 
     {
         Matrix<T> first;
@@ -550,7 +549,7 @@ namespace Maths
 
     //Other operators
     //Overloading << operator to help print the matrix or store it in a file.
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     std::ostream& operator << (std::ostream& os, Matrix<T> const& matrix) noexcept
     {
         auto max_r {matrix.max_rows()};
@@ -570,7 +569,7 @@ namespace Maths
 
 
     //Overloaded << operator to print a matrix pair
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     std::ostream& operator << (std::ostream& os, Matrix_pair<T> const& matrix) noexcept
     {
         std::cout<<"First matrix\n";
@@ -584,7 +583,7 @@ namespace Maths
 
 
     //Overloaded << operator to print a matrix system
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     std::ostream& operator << (std::ostream& os, Matrix_system<T> const& matrix) noexcept
     {
         std::cout<<"First matrix\n";
@@ -602,7 +601,7 @@ namespace Maths
     
     //Operations
     //Adds a constant to every element of the matrix,
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     Matrix<T> operator + (Matrix<T> const& matrix_a, T const c) noexcept
     {
         auto max_r {matrix_a.max_rows()};
@@ -620,7 +619,7 @@ namespace Maths
 
 
     //Adds a constant to every element of the matrix
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     Matrix<T> operator + (T const c, Matrix<T> const& matrix_a) noexcept
     {
         Matrix<T> output {(matrix_a + c)};
@@ -629,7 +628,7 @@ namespace Maths
 
 
     //Adds matrix_b to matrix_a
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     Matrix<T> operator + (Matrix<T> const& matrix_a, Matrix<T> const& matrix_b)
     {
         Matrix<T> output {matrix_a};
@@ -652,7 +651,7 @@ namespace Maths
 
 
     //Substracts a constant to all elements of the matrix, the output is a new matrix
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     Matrix<T> operator - (Matrix<T> const& matrix_a, T const c) noexcept
     {
         Matrix<T> output {matrix_a};
@@ -670,7 +669,7 @@ namespace Maths
 
 
     //Substracts a constant to all elements of the matrix, the output is a new matrix
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     Matrix<T> operator - (T const c, Matrix<T> const& matrix_a) noexcept
     {
         Matrix<T> output {matrix_a};
@@ -689,7 +688,7 @@ namespace Maths
 
 
     //Substracts matrix_b from matrix_a
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     Matrix<T> operator - (Matrix<T> const& matrix_a, Matrix<T> const& matrix_b)
     {
         Matrix<T> output {matrix_a};
@@ -712,7 +711,7 @@ namespace Maths
 
 
     //Multiplies all elements of the matrix by a constant
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     Matrix<T> operator * (Matrix<T> const& matrix_a, T const c) noexcept
     {
         Matrix<T> output {matrix_a};
@@ -729,7 +728,7 @@ namespace Maths
 
 
     //Multiplies all elements of the matrix by a constant
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     Matrix<T> operator * (T const c, Matrix<T> const& matrix_a) noexcept
     {
         Matrix<T> output {matrix_a};
@@ -740,7 +739,7 @@ namespace Maths
     
     
     //Multiplies two matrices of compatible dimensions.
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     Matrix<T> operator * (Matrix<T> const& matrix_a, Matrix<T> const& matrix_b)
     {
         if (matrix_a.max_cols() != matrix_b.max_rows()) {
@@ -766,7 +765,7 @@ namespace Maths
 
 
     //Divides all elements of the matrix by a constant
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     Matrix<T> operator / (Matrix<T> const& matrix_a, T const c)
     {
         if (is_zero<T>(c))
@@ -791,7 +790,7 @@ namespace Maths
     
     //Matrix pair operations, Note they don't return a new instance of matrix pair
     //Multiplies all elements of the matrix pair by a constant
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     void operator * (T const c, Matrix_pair<T>& matrix_a) noexcept
     {
         matrix_a.first = c * matrix_a.first; 
@@ -810,7 +809,7 @@ namespace Maths
 
 
     //Multiplies all elements of the matrix system by a constant
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     void operator * (T const c, Matrix_system<T>& matrix_a) noexcept
     {
 
@@ -823,7 +822,7 @@ namespace Maths
 
 
     //Multiplies all elements of the matrix system by a constant
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     void operator * (Matrix_system<T>& matrix_a, T const c) noexcept
     {
         c * matrix_a;
@@ -858,7 +857,7 @@ namespace Maths
 
 
     //Switches the rows with the columns of the matrix
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     Matrix<T> transpose(Matrix<T> const& matrix_a, sz_t const limit = 500000) noexcept
     {
         auto max_r {matrix_a.max_rows()};
@@ -917,7 +916,7 @@ namespace Maths
 
 
     //Creates a matrix with 0 in all the elements except those in the diagonal wich are equal to 1
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     Matrix<T> make_identity(sz_t const m, sz_t const n) noexcept
     {
         Matrix<T> output {m, n};
@@ -932,7 +931,7 @@ namespace Maths
 
     //Performs the specified operation between a particular matrix row and a row slice. E.G. row_slice_op(A, S, 3, '+'); adds
     //to row 3 of matrix A the slice S
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     Matrix<T> row_slice_op(Matrix<T> const& matrix, Matrix<T> const& row_slice, sz_t const row, char const op)
     {
         if (matrix.max_cols() != row_slice.size()) 
@@ -1016,7 +1015,7 @@ namespace Maths
     //Performs the specified operation between a particular Matrix_pair row and a Matrix_pair row slice. E.G.
     //row_slice_op(A, S, 3, '+'); adds to row 3 of the first and second matrices, the first and second slices from S
     //Rethrows exception from single matrix row_slice_op
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     void row_slice_op(Matrix_pair<T>& m_sys, Matrix_pair<T> const& row_slice, sz_t const row, char const op)
     {
         try
@@ -1037,7 +1036,7 @@ namespace Maths
     //Performs the specified operation between a particular matrix_system row and a row slice. E.G. row_slice_op(A, S, 3, '+'); adds
     //to row 3 of the first, second and third matrices the first, second and third slices from S
     //Rethrows exception from single matrix row_slice_op
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     void row_slice_op(Matrix_system<T>& m_sys, Matrix_system<T> const& row_slice, sz_t const row, char const op)
     {
         try
@@ -1059,7 +1058,7 @@ namespace Maths
     //Performs the specified operation between a particular matrix column and a column slice. E.G. col_slice_op(A, S, 3, '+'); adds
     //to column 3 of matrix A the slice S
     //Allows exception handling
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     Matrix<T> col_slice_op(Matrix<T> const& matrix, Matrix<T> const& col_slice, sz_t const col, char const op)
     {
         if (matrix.max_rows() != col_slice.size()) {
@@ -1141,7 +1140,7 @@ namespace Maths
 
     //Performs the specified operation between a particular Matrix_pair row and a Matrix_pair row slice. E.G.
     //row_slice_op(A, S, 3, '+'); adds to row 3 of the first and second matrices, the first and second slices from S
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     void col_slice_op(Matrix_pair<T>& m_sys, Matrix_pair<T> const& col_slice, sz_t const col, char const op)
     {
         try
@@ -1163,7 +1162,7 @@ namespace Maths
     //Performs the specified operation between a particular matrix_system column and a column slice. E.G. col_slice_op(A, S, 3, '+');
     //adds to column 3 of the first, second and third matrices the first, second and third slices from col_slice
     //Allows exception handling
-    template<typename T>
+    template<typename T, std::enable_if_t<std::is_floating_point_v<T>, int> = 0>
     void col_slice_op(Matrix_system<T>& m_sys, Matrix_system<T> const& col_slice, sz_t const col, char const op)
     {
         try
