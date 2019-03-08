@@ -8,5 +8,4 @@ constexpr double EPS_0 = 8.854187817e-12; //Permittivity of free space in F/m (F
 constexpr double MU_0 = (4.0e-7 * PI); //Permeability of vacuum
 constexpr double C = 299792458; //Speed of light in vacuum m/s
 
-
 #endif

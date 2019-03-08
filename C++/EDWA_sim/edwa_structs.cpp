@@ -19,7 +19,7 @@ Simulation::Init_params::Init_params() noexcept
     step_size = l / static_cast<double>(steps-1);
     
     //Effect of pair induced... Di Pasquale and Federighi. linear interpolation
-    Cup = 2.252632e-49 * NEr - 6.463158e-24;
+    Cup = 2.410714286e-49 * NEr - 7.107142857e-24;
     
     //Effect of pair induced...Assuming Dipole-Dipole interactions and neglecting Er-Er dipoles,
     //We get the following critical interaction distance
@@ -31,12 +31,18 @@ Simulation::Init_params::Init_params() noexcept
     double const var3_ {4.0 * PI / 3.0};
     double const var4_ {pow(RYb_Er, 3.0) * (1.0 / A65)};
     Ccr = var3_ * R0_pow6 / var4_;
-    
+    /*
     //Loss calculation in dB;
     lsEr = (9.210526e-26 * NEr + 10.878947);
     lpEr = (1.173684e-25 * NEr + 13.826316);
     lsYb = (1.263158e-26 * NYb + 22.736842);
     lpYb = (1.605263e-26 * NYb + 28.894737);
+    */
+    lsEr = 0.0;
+    lpEr = 0.0;
+    lsYb = 0.0;
+    lpYb = 0.0;
+    
     
     //Fill the channel spacing map
     int const step_size_ {150000 / (150)}; //Subdivide 1450-1600 nm in 150 subintervals
@@ -47,7 +53,7 @@ Simulation::Init_params::Init_params() noexcept
         double const spacing {Utility::wl_to_freq(prev_wl) - Utility::wl_to_freq(curr_wl)};
         channel_spacing.emplace(curr_wl, spacing);
         //overlap.emplace(curr_wl, 0.4); //Becker et al chapter 6
-        overlap.emplace(curr_wl, 0.8); //Becker et al chapter 6
+        overlap.emplace(curr_wl, 0.8);
     }
     
     //Fill the pump channel spacing map
@@ -64,13 +70,29 @@ Simulation::Init_params::Init_params() noexcept
     return;
 }
 
+void Simulation::Init_params::set_steps(int const s) noexcept
+{
+    steps     = s;         
+    step_size = l / static_cast<double>(steps-1);
+}
+
+void Simulation::Init_params::set_length(double const l_) noexcept
+{
+    l = l_;
+    set_steps(steps);
+}
 
 void Simulation::Init_params::calculate_loss() noexcept
 {
-    lsEr = (9.210526e-26 * NEr + 10.878947);
-    lpEr = (1.173684e-25 * NEr + 13.826316);
-    lsYb = (1.263158e-26 * NYb + 22.736842);
-    lpYb = (1.605263e-26 * NYb + 28.894737);
+    //lsEr = (9.210526e-26 * NEr + 10.878947);
+    //lpEr = (1.173684e-25 * NEr + 13.826316);
+    //lsYb = (1.263158e-26 * NYb + 22.736842);
+    //lpYb = (1.605263e-26 * NYb + 28.894737);
+    lsEr = 0.0;
+    lpEr = 0.0;
+    lsYb = 0.0;
+    lpYb = 0.0;
+    
     return;
 }
 
@@ -78,9 +100,10 @@ void Simulation::Init_params::recalculate_constants() noexcept
 {
     //Recalculate step size in case length changed
     step_size = l / static_cast<double>(steps-1);
+    double op = 2.410714286e-49 * 4.45e26 - 7.107142857e-24;
     
     //Effect of pair induced... Di Pasquale and Federighi. linear interpolation
-    Cup = 2.252632e-49 * NEr - 6.463158e-24;
+    Cup = 2.410714286e-49 * NEr - 7.107142857e-24;
     
     //Effect of pair induced...Assuming Dipole-Dipole interactions and neglecting Er-Er dipoles,
     //We get the following critical interaction distance
@@ -92,7 +115,7 @@ void Simulation::Init_params::recalculate_constants() noexcept
     double const var3_ {4.0 * PI / 3.0};
     double const var4_ {pow(RYb_Er, 3.0) * (1.0 / A65)};
     Ccr = var3_ * R0_pow6 / var4_;
-    
     //Updates loss values
     calculate_loss();
+
 }

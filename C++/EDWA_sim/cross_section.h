@@ -4,6 +4,7 @@
 #include <iostream>
 #include <array>
 #include <cmath>
+#include <boost/filesystem.hpp>
 
 /*
 Data obtained from Germanium silicate glass from "Absorption and emission cross section of er3+

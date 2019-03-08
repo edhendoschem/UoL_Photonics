@@ -1,5 +1,4 @@
 #include "headers.h"
-#include "utility_functions.h"
 //Pending
 //Fix scattering by erbium and ytterbium
 //Double check up conversion and cross relaxation
@@ -122,14 +121,13 @@ struct Merge_helper
     {
         p.width = temp_doubles[0] * 1.0e-6;
         p.height = temp_doubles[1] * 1.0e-6;
-        p.l = temp_doubles[2] * 1.0e-2;
+        p.set_length((temp_doubles[2] * 1.0e-2));
         p.NEr = temp_doubles[3];
         p.NYb = temp_doubles[4];
         p.A21 = 1.0/(temp_doubles[5] * 1.0e-3);
         p.A32 = 1.0/(temp_doubles[6] * 1.0e-3);
         p.A43 = 1.0/(temp_doubles[7] * 1.0e-3);
         p.A65 = 1.0/(temp_doubles[8] * 1.0e-3);
-        p.step_size = p.l / static_cast<double>(p.steps-1);
         p.Ps0 = temp_signals;
         p.Pp0_f = temp_f_pump;
         p.Pp0_b = temp_b_pump;
@@ -235,7 +233,7 @@ struct Launch_sim
         wl_map temp_f_pump;
         wl_map temp_b_pump;
         progress.idx[curr_t].first = 0.0f;
-        r.simulate(progress.idx[curr_t].first, false, m.temp_bools[1], m.temp_bools[2]);
+        r.simulate(progress.idx[curr_t].first, false, m.temp_bools[1]);
         int const s_wl   {static_cast<int>(m.temp_doubles[21]) * 1000};
         int const p_wl_1 {static_cast<int>(m.temp_doubles[22]) * 1000};
         int const p_wl_2 {static_cast<int>(m.temp_doubles[23]) * 1000};
@@ -285,10 +283,209 @@ void combine_wl_map(std::vector<Merge_helper>& m_vec, int& vec_idx, int& curr_id
     }
     
     return;
-}
+ }
 
+ 
 int main(int argc, char **argv)
 {
+    /*
+    //delete afterwards
+    auto print_vec = [] (std::vector<double> const& v) {
+        auto count = 0;
+        for (auto i : v)
+        {
+            std::cout<<"output["<<count<<"] = "<<i<<'\n';
+            ++count;
+        }
+    
+    };
+    
+    auto return_data_pack = [] (Simulation::Result const& r, std::size_t const z) {
+        Simulation::Result::Data_pack pack0;
+        pack0.W12 = r.calculate_W(z, 12);
+        pack0.W13 = r.calculate_W(z, 13);
+        pack0.W21 = r.calculate_W(z, 21);
+        pack0.W65 = r.calculate_W(z, 65);
+        pack0.W56 = r.calculate_W(z, 56);
+        pack0.Cup = r.p.Cup;
+        pack0.Ccr = r.p.Ccr;
+        pack0.NEr = r.p.NEr;
+        pack0.NYb = r.p.NYb;
+        pack0.A21 = r.p.A21;
+        pack0.A32 = r.p.A32;
+        pack0.A43 = r.p.A43;
+        pack0.A65 = r.p.A65;
+        
+        return pack0;
+    };
+    
+    auto integrate_step_data = [] (Simulation::Result& r, 
+                                   std::size_t const z, 
+                                   std::vector<double> const& output) 
+    {
+        r.data[z].n1 = output[0];
+        r.data[z].n2 = output[1];
+        r.data[z].n3 = output[2];
+        r.data[z].n6 = output[3];
+        r.data[z].n4 = r.p.NEr - output[0] - output[1] - output[2];
+        r.data[z].n5 = r.p.NYb - output[3];
+    };
+    
+    auto advance_everything = [] (Simulation::Result& r,
+                                  std::size_t const z,
+                                  int const sign)
+    {
+        r.advance_signal(z, sign);
+        r.advance_pump_f(z, sign);
+        r.advance_pump_b(z, sign);
+        //r.advance_ASE_f(z, sign);
+        //r.advance_ASE_b(z, sign);
+    };
+    
+    auto return_x0 = [] (Simulation::Result const& r, std::size_t const z) {
+        std::vector<double> output {r.data[z].n1,
+                                    r.data[z].n2,
+                                    r.data[z].n3,
+                                    r.data[z].n6
+        };
+        
+        return output;
+    };
+    
+    auto iterate = [&return_data_pack, 
+                    &return_x0, 
+                    &print_vec,
+                    &integrate_step_data,
+                    &advance_everything] 
+                    (Simulation::Result& r, 
+                    std::size_t const& max_it, 
+                    Maths::Iter_params<double> const& it_p, std::string const& filename,
+                    int sign = 1) 
+    {
+        
+        std::ofstream file_handle {filename};
+        std::vector<double (*)(std::vector<double> const&, Simulation::Result::Data_pack const&)> f 
+                          {Simulation::Result::Eq_1, 
+                          Simulation::Result::Eq_2,
+                          Simulation::Result::Eq_3,
+                          Simulation::Result::Eq_4};
+        
+        Simulation::Result::Data_p pack0 {return_data_pack(r, 0)};
+        std::vector<double> x0 {0.015*r.p.NEr, 0.98*r.p.NEr, 0.001*r.p.NEr, 0.01*r.p.NYb};    
+        std::vector<double> output {Maths::newton_method(f, x0, it_p, pack0)};
+    
+        integrate_step_data(r, 0, output); //integrates the results from output to the step
+        advance_everything(r, 0, 1); //Advances the pump, signal, ASE, etc
+    
+        file_handle<<"NEr = "<<r.p.NEr<<'\n'<<"NYb = "<<r.p.NYb<<'\n'<<"Length = "<<r.p.l
+                    <<'\n'<<"Steps = "<<r.p.steps<<'\n';
+        file_handle<<'\n'<<"step,curr_length,n1,n2,n3,n4,n5,n6,Ps(1533),Pp_f(976),Pp_b(976),PASE_f(1533),PASE_b(1533)\n";
+            
+        auto back_pump = r.p.Pp0_b;
+        auto forward_pump = r.p.Pp0_f;
+        auto signal = r.p.Ps0;
+        
+        for (auto j = 0; j < 3; ++j)
+        {
+        //Forward advance
+        for (auto i = 1; i < max_it; ++i) {
+            
+            auto pack1 {return_data_pack(r, i)};
+            auto x1 {return_x0(r, i-1)}; //Uses values of the given step
+    
+            std::vector<double> output1 {Maths::newton_method(f, x1, it_p, pack1)};
+
+            integrate_step_data(r, i, output1); //integrates the results from output to the step
+            if (i == max_it-1) break;
+            advance_everything(r, i, sign); //Advances the pump, signal, ASE, etc
+        }
+      
+        r.data[max_it-1].Pp_b = back_pump;
+        //Backwards advance
+        for (auto i = max_it - 1; i != 0; --i) {
+            auto pack1 {return_data_pack(r, i)};
+            auto x1 {return_x0(r, i-1)}; //Uses values of the given step
+    
+            std::vector<double> output1 {Maths::newton_method(f, x1, it_p, pack1)};
+
+            integrate_step_data(r, i, output1); //integrates the results from output to the step
+            if (i == 0) break;
+            advance_everything(r, i, -1 * sign); //Advances the pump, signal, ASE, etc
+        }
+        
+        r.data[0].Pp_f = forward_pump;
+        r.data[0].Ps = signal;
+        
+        //Forward advance
+        for (auto i = 1; i < max_it; ++i) {
+            
+            auto pack1 {return_data_pack(r, i)};
+            auto x1 {return_x0(r, i-1)}; //Uses values of the given step
+    
+            std::vector<double> output1 {Maths::newton_method(f, x1, it_p, pack1)};
+
+            integrate_step_data(r, i, output1); //integrates the results from output to the step
+            if (i == max_it-1) break;
+            advance_everything(r, i, sign); //Advances the pump, signal, ASE, etc
+        }
+        
+        r.data[max_it-1].Pp_b = back_pump;
+        
+        
+        } //End of cycle loop
+
+
+        for (auto i = 0; i < max_it; ++i)
+        {
+                        auto step   = r.data[i].curr_step;
+            auto curr_l = static_cast<double>(r.data[i].curr_step) * r.p.step_size;
+            auto n1     = r.data[i].n1 * 100.0 / r.p.NEr;
+            auto n2     = r.data[i].n2 * 100.0 / r.p.NEr;
+            auto n3     = r.data[i].n3 * 100.0 / r.p.NEr;
+            auto n4     = r.data[i].n4 * 100.0 / r.p.NEr;
+            auto n5     = r.data[i].n5 * 100.0 / r.p.NYb;
+            auto n6     = r.data[i].n6 * 100.0 / r.p.NYb;
+            auto Ps     = r.data[i].Ps[1533000];
+            auto Pp_f   = r.data[i].Pp_f[976000];
+            auto Pp_b   = r.data[i].Pp_b[976000];
+            auto PASE_f = r.data[i].PASE_f[1533000];
+            auto PASE_b = r.data[i].PASE_b[1533000];
+            file_handle<<step<<','<<curr_l<<','<<n1<<','<<n2<<','<<n3<<','<<n4<<','<<n5<<','<<n6
+                        <<','<<Ps<<','<<Pp_f<<','<<Pp_b<<','<<PASE_f<<','<<PASE_b<<'\n';
+        }
+        
+        file_handle.close();
+    }; //End of iterate
+    */
+    
+    //aquiaqui
+    Simulation::Init_params p{};
+    p.set_steps(1000);
+    p.set_length(0.05);
+    p.NEr = 4.45e26;
+    p.NYb = 4.45e26;
+    p.recalculate_constants();
+    p.Ps0[1533000] = 1e-6;
+    p.Pp0_f[976000] = 0.1;
+    p.Pp0_b[976000] = 0.1;
+    Simulation::Result r{p};
+    float dummy_float{0.0};
+    
+    double const h = 1.0e-7;
+    double const tol = (p.NEr + p.NYb)/2.0 * 1.0e-7;
+    //double const tol = 1.0e20;
+    std::size_t const n_it = 1000;
+    Maths::Iter_params it_p {h, tol, n_it};
+    
+    //iterate(r, p.steps, it_p, "testout.csv", 1);
+   
+    
+    r.simulate(dummy_float, false, true);
+    r.save_data("test_data", true, 1533000, 976000, 1480000);
+    r.plot_data("test_data", 1533000, 976000, 1480000);
+
+
+    /*
     std::size_t n_threads {std::thread::hardware_concurrency()}; //Number of threads
     std::atomic<std::size_t> available_threads {n_threads}; //Threads not in use
     //Support 12 different profiles
@@ -296,11 +493,11 @@ int main(int argc, char **argv)
                               "profile_5", "profile_6", "profile_7", "profile_8", "profile_9",
                               "profile_10", "profile_11"};
     Simulation::Init_params p{};
-    bool run_all {true};
+    bool run_all {false};
     bool copy_all {true};
     bool monitor_launched {false};
     bool ready {false};
-    
+    int p_steps {301};
     
     //Create size 12 Merge_helper (same size as buf)
     std::vector<Merge_helper> m_vec {create_helpers(p, 12)};
@@ -424,7 +621,7 @@ int main(int argc, char **argv)
             {
                 ImGui::SameLine(); ShowHelpMarker("test help");
                 ImGui::PushItemWidth(100);
-                ImGui::InputInt("Steps", &p.steps);
+                ImGui::InputInt("Steps", &p_steps);
                 ImGui::InputDouble("Cup (m^3/s)", &m_vec[curr_idx].temp_doubles[9], 0.0f, 0.0f, "%e");
                 ImGui::InputDouble("Ccr (m^3/s)", &m_vec[curr_idx].temp_doubles[10], 0.0f, 0.0f, "%e");
                 ImGui::NewLine();
@@ -651,7 +848,6 @@ int main(int argc, char **argv)
         
             ImGui::PopItemWidth();
             ImGui::Checkbox("Enable signal ASE", &m_vec[curr_idx].temp_bools[1]);
-            ImGui::Checkbox("Enable pump ASE", &m_vec[curr_idx].temp_bools[2]);
             ImGui::Checkbox("Save in dBm units", &m_vec[curr_idx].temp_bools[3]);
             
             ImGui::NewLine();
@@ -704,6 +900,7 @@ int main(int argc, char **argv)
                     if (available_threads > 0)
                     {
                         Simulation::Init_params p_{};
+                        p_.set_steps(p_steps);
                         m_vec[curr_idx].merge_with_sim(p_);
                         if (m_vec[curr_idx].temp_bools[0]) p_.recalculate_constants();
                         std::string name(buf[curr_idx]);
@@ -728,7 +925,7 @@ int main(int argc, char **argv)
     }
  
     ImGui::SFML::Shutdown();
-    
+    */
 
     
     return 0;

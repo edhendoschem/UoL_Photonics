@@ -3,9 +3,10 @@
 
 #include <iostream>
 #include <map>
+#include <vector>
 #include "constants.h"
 #include "cross_section.h"
-#include "/home/eduardo/Desktop/Programming/cpp/2018-06-13_aux_maths/aux_maths.h"
+
 
 //Contains all auxiliary functions used for the EDWA simulation
 using wl_map = std::map<int, double>;

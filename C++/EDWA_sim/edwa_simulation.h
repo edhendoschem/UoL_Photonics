@@ -7,12 +7,9 @@
 #include <string>
 #include <regex>
 #include <boost/filesystem.hpp>
-#include "constants.h"
-#include "cross_section.h"
-#include "utility_functions.h"
+
 #include "edwa_structs.h"
-#include "aux_maths.h"
-#include "matrix_fact_opt.h"
+#include "iterative.h"
 
 namespace Simulation
 {
@@ -20,10 +17,11 @@ namespace Simulation
     {
     public:
         //vars
+        std::ofstream data_p_file {"data_p.csv"};
         Simulation::Init_params p;
         std::vector<Simulation::Step> data;
         Simulation::Step start_step, end_step; //Steps stored for convergence comparison
-        bool first_run {false}; //Has the simulate command been run?
+        bool first_run {true}; //Has the simulate command been run?
         
         //Helper structs
         //Additional data needed in order to be able to use the static functions
@@ -44,8 +42,8 @@ namespace Simulation
         using u_int  = unsigned int;
         
         //Constructors
-        Result(Simulation::Init_params const& initial_state) noexcept;
-        Result() noexcept;
+        explicit Result(Simulation::Init_params const& initial_state) noexcept;
+
         
         //Functions
         static double Eq_1(std::vector<double> const& vars, Data_p const& p) noexcept; //dn1/dt
@@ -63,8 +61,6 @@ namespace Simulation
         double dPs_ind     (u_int const z, int const wl_, double const val) noexcept;
         double dPASE_f_ind (u_int const z, int const wl_, double const val) noexcept;
         double dPASE_b_ind (u_int const z, int const wl_, double const val) noexcept;
-        double dPp_ASE_f_ind (u_int const z, int const wl_, double const val) noexcept;
-        double dPp_ASE_b_ind (u_int const z, int const wl_, double const val) noexcept;
         
         //Simulation march
         void reset_start     ()                            noexcept; //Resets the starting parameters
@@ -82,24 +78,24 @@ namespace Simulation
         void advance_step (u_int const z, 
                                        double const h, 
                                        double const tol, 
-                                       u_int n_it, bool enable_ASE, 
-                                       bool enable_p_ASE) noexcept; 
+                                       u_int n_it, bool enable_ASE) noexcept; 
         void regress_step (u_int const z, 
                                        double const h, 
                                        double const tol, 
-                                       u_int n_it, bool enable_ASE, 
-                                       bool enable_p_ASE) noexcept;
+                                       u_int n_it, 
+                                       bool enable_ASE) noexcept;
         
         //Propagates forward and backwards to obtain the results
-        void simulate(float& report, bool const warn = false, bool const enable_ASE = true, bool const enable_p_ASE = false) noexcept;
+        void simulate(float& report, bool const warn = false, bool const enable_ASE = true) noexcept;
         
         //Auxiliary Functions
         double  calculate_W(std::size_t const z, int const var) const noexcept;
         void    initialize_ASE() noexcept;
-        void    report_step(u_int z, bool const show_ASE = false) noexcept;
+        void    log(u_int const z) noexcept;
         void    save_data (std::string const filename_, bool const dBm_units = false, int const s_wl = 1533000, int const p_wl_1 = 976000, int const p_wl_2 = 1480000) noexcept;
         void    plot_data (std::string const data_file, int const s_wl, int const p_wl_1, int const p_wl_2) noexcept;
         void    save_spectral_data(std::string const filename, u_int const step, bool const dBm_units = false) noexcept;
+    
     };
     
     //Will attempt to find the optimal ratio and return an array with Ner, NYb,length and max gain

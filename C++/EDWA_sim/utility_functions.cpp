@@ -68,6 +68,7 @@ double Utility::return_conc_loss(double const loss) noexcept
 {
     double const out_frac {pow(10.0, (-loss/10.0))};
     double const loss_frac {(1.0-out_frac)};
+
     return loss_frac;
 }
 

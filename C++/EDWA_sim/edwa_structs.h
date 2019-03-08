@@ -38,7 +38,8 @@ namespace Simulation
         
         Init_params() noexcept; //Constructor, initializes the struct with default test data
         Init_params(Init_params const& p) = default;
-        
+        void set_steps(int const s) noexcept;
+        void set_length(double const l_) noexcept;
         //Returns loss as db/m based on the concentration using linear interpolation of data
         //provided in Improved gain characteristics... Di Pasquale and M. Federighi
         void calculate_loss() noexcept; 
@@ -61,14 +62,14 @@ namespace Simulation
         double lpEr     {0.0};  //Pump loss due to Erbium concentration (dB/m)
         double lpYb     {0.0};  //Pump loss due to Ytterbium concentration (dB/m)
         double residual {0.0};  //Residual of the solution
-        unsigned int curr_step {0}; //Current step
+        double curr_length {0.0}; //Current length (step_size * step)
+        double W12, W13, W21, W65, W56; //Stimulated emission
+        double A21, A32, A43, A65; //Spontaneous emission
         wl_map Pp_f;        //Forward pump power by wavelength (map<double, double>, wl in nm NOT m)
         wl_map Pp_b;        //Backwards pump power by wavelength
         wl_map Ps;          //Signals power
         wl_map PASE_f;      //Forward ASE power
         wl_map PASE_b;      //Backwards ASE power
-        wl_map Pp_ASE_f;      //Forward Pump ASE power
-        wl_map Pp_ASE_b;      //Backwards Pump ASE power
     };
 
 } //End of namespace simulation
@@ -88,8 +89,6 @@ namespace Utility
         start_it.emplace_back(s.Pp_b.begin());
         start_it.emplace_back(s.PASE_f.begin());
         start_it.emplace_back(s.PASE_b.begin());
-        start_it.emplace_back(s.Pp_ASE_f.begin());
-        start_it.emplace_back(s.Pp_ASE_b.begin());
         
         //end iterators
         std::vector<T> end_it;
@@ -98,8 +97,6 @@ namespace Utility
         end_it.emplace_back(s.Pp_b.end());
         end_it.emplace_back(s.PASE_f.end());
         end_it.emplace_back(s.PASE_b.end());
-        end_it.emplace_back(s.Pp_ASE_f.end());
-        end_it.emplace_back(s.Pp_ASE_b.end());
         
         std::array<std::vector<T>, 2> output {start_it, end_it};
         return output;

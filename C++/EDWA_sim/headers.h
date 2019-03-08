@@ -5,12 +5,13 @@
 #include <iostream>
 //Project files
 #include "edwa_simulation.h"
+
 //GUI files
-#include "./src/gui/imgui.h"
-#include "./src/gui/imgui-SFML.h"
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/System/Clock.hpp>
 #include <SFML/Window/Event.hpp>
+#include "./gui/imgui.h"
+#include "./gui/imgui-SFML.h"
 
 
 
