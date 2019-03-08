@@ -60,11 +60,29 @@ namespace Maths
     
     
     
+//Error types
+    enum class Error_type {
+        unknown_error,
+        invalid_operation,
+        matrix_not_symmetric,
+        invalid_option,
+        matrix_not_square,
+        zero_value_determinant,
+        zero_step_size,
+        incompatible_vector_size,
+        index_out_of_bounds,
+        invalid_column_index,
+        invalid_row_index,
+        incompatible_dimensions,
+        division_by_zero,
+    };
+    
     //Generic wrapper to create math errors
     struct Error final : public std::exception
     {
-        explicit Error() : error_msg{std::string{"Error state not set"}} {}
-        explicit Error(std::string_view error_msg_) : error_msg{error_msg_} {}
+        explicit Error() {}
+        explicit Error(std::string_view error_msg_, Error_type const& error) 
+                        :error_msg {error_msg_}, et {error} {}
         
         char const* what() const noexcept
         {
@@ -77,8 +95,11 @@ namespace Maths
             return *this;
         }
         
-        std::string error_msg;
+
+        std::string error_msg {std::string{"Error state not set"}};
+        Error_type et {Error_type::unknown_error};
     };
+    
     
     
 
@@ -119,8 +140,10 @@ namespace Maths
         template <typename inner_T>
         Matrix(sz_t m_, sz_t n_, inner_T&& data_) noexcept:
         m {m_}, n {n_}, data {m_ * n_ == data_.size() ? std::forward<inner_T>(data_) : 
-            throw Error{"Error in Matrix constructor: Vector size does not correspond to matrix size\n"}} {}
-
+            throw Error{
+                "Error in Matrix constructor: Vector size does not correspond to matrix size\n",
+                Error_type::incompatible_vector_size
+                }} {}
 
         Matrix(Matrix<T> const& mat) = default;
 
@@ -142,10 +165,10 @@ namespace Maths
             } else {
                 if (j < m) {
                     std::string const e {"Error in operator(): row index "+std::to_string(i)+" exceeds m-1\n"};
-                    throw Error{e};
+                    throw Error{e, Error_type::invalid_row_index};
                 } else {
                     std::string const e {"Error in operator(): column index "+std::to_string(j)+" exceeds n-1\n"};
-                    throw Error{e};
+                    throw Error{e, Error_type::invalid_column_index};
                 }
             }
         }
@@ -159,10 +182,10 @@ namespace Maths
             } else {
                 if (j < m) {
                     std::string const e {"Error in operator(): row index "+std::to_string(i)+" exceeds m-1\n"};
-                    throw Error{e};
+                    throw Error{e, Error_type::invalid_row_index};
                 } else {
                     std::string const e {"Error in operator(): column index "+std::to_string(j)+" exceeds n-1\n"};
-                    throw Error{e};
+                    throw Error{e, Error_type::invalid_column_index};
                 }
             }
         }
@@ -175,7 +198,7 @@ namespace Maths
                 return data[i];
             } else {
                 std::string const e{"Error in operator[]: Index "+std::to_string(i)+" exceeds maximum size\n"};
-                throw Error{e};
+                throw Error{e, Error_type::index_out_of_bounds};
             }
         }
 
@@ -187,7 +210,7 @@ namespace Maths
                 return data[i];
             } else {
                 std::string const e{"Error in operator[]: Index "+std::to_string(i)+" exceeds maximum size\n"};
-                throw Error{e};
+                throw Error{e, Error_type::index_out_of_bounds};
             }
         }
         
@@ -209,7 +232,7 @@ namespace Maths
                         return output;
                     } else {
                         std::string const e {"Error in Matrix.slice(): Invalid column\n"};
-                        throw Error{e};
+                        throw Error{e, Error_type::invalid_column_index};
                     }
                 }
 
@@ -224,14 +247,14 @@ namespace Maths
                         return output;
                     } else {
                         std::string const e {"Error in Matrix.slice(): Invalid row\n"};
-                        throw Error{e};
+                        throw Error{e, Error_type::invalid_row_index};
                     }
                 }
 
             default:
                 {
                     std::string e {"Error in Matrix.slice(): Unknown operation\n"};
-                    throw Error{e};
+                    throw Error{e, Error_type::invalid_operation};
                 }
             }
         }
@@ -286,7 +309,7 @@ namespace Maths
             if (m == m_) return;
             if (m_ == 0) {
                 std::string const e {"Error in Matrix.set_rows(): Number of rows cannot be 0\n"};
-                throw Error{e};
+                throw Error{e, Error_type::invalid_row_index};
             }
 
             sz_t difference = m > m_ ? m-m_:m_-m;
@@ -329,8 +352,8 @@ namespace Maths
         {
             if (n == n_) return;
             if (n_ == 0) {
-                std::string const e {"Error in Matrix.set_rows(): Number of columns cannot be 0\n"};
-                throw Error{e};
+                std::string const e {"Error in Matrix.set_cols(): Number of columns cannot be 0\n"};
+                throw Error{e, Error_type::invalid_column_index};
             }
 
             std::vector<T> new_vector;
@@ -456,7 +479,7 @@ namespace Maths
             default:
                 {
                     std::string e{"Error in Matrix_pair.slice(): Unknown option\n"};
-                    throw Error{e};
+                    throw Error{e, Error_type::invalid_option};
                 }
             }
         }
@@ -539,7 +562,7 @@ namespace Maths
             default:
                 {
                     std::string const e {"Error in Matrix_system.slice(): Unknown option\n"};
-                    throw Error{e};
+                    throw Error{e, Error_type::invalid_option};
                 }
 
             }
@@ -637,7 +660,7 @@ namespace Maths
 
         if (matrix_a.max_rows() != matrix_b.max_rows() || matrix_a.max_cols() != matrix_b.max_cols()) {
             std::string const e {"Error in Matrix operator +: Incompatible matrix dimensions\n"};
-            throw Error{e};
+            throw Error{e, Error_type::incompatible_dimensions};
         }
 
         for (auto i = 0; i < max_r; ++i) {
@@ -697,7 +720,7 @@ namespace Maths
         
         if (matrix_a.max_rows() != matrix_b.max_rows() || matrix_a.max_cols() != matrix_b.max_cols()) {
             std::string const e {"Error in Matrix operator -: Incompatible matrix dimensions\n"};
-            throw Error{e};
+            throw Error{e, Error_type::incompatible_dimensions};
         }
 
         for (auto i = 0; i < max_r; ++i) {
@@ -744,7 +767,7 @@ namespace Maths
     {
         if (matrix_a.max_cols() != matrix_b.max_rows()) {
             std::string const e {"Error in Matrix operator *: Incompatible matrix dimensions\n"};
-            throw Error{e};
+            throw Error{e, Error_type::incompatible_dimensions};
         }
 
         sz_t m_ = matrix_a.max_rows();
@@ -771,7 +794,7 @@ namespace Maths
         if (is_zero<T>(c))
         {
             std::string const e {"Error in Matrix operator /: Division by zero encountered\n"};
-            throw Error{e};
+            throw Error{e, Error_type::division_by_zero};
         }
         
         Matrix<T> output {matrix_a};
@@ -937,7 +960,7 @@ namespace Maths
         if (matrix.max_cols() != row_slice.size()) 
         {
             std::string const e {"Error in row_slice_op(): Matrix row size is different than slice size\n"};
-            throw Error{e};
+            throw Error{e, Error_type::incompatible_dimensions};
         }
         
         Matrix<T> output {matrix};
@@ -978,7 +1001,7 @@ namespace Maths
                         if (is_zero<T>(row_slice[j]))
                         {
                             std::string const e {"Error in row_slice_op(): Division by zero\n"};
-                            throw Error{e};
+                            throw Error{e, Error_type::division_by_zero};
                         }
                     
                         output(row, j) = output(row, j) / row_slice[j];
@@ -999,7 +1022,7 @@ namespace Maths
             default:
                 {
                     std::string const e {"Error in row_slice_op(): Unknown operation\n"};
-                    throw Error{e};
+                    throw Error{e, Error_type::invalid_operation};
                 }
             }
         }
@@ -1007,7 +1030,7 @@ namespace Maths
         {
             std::string const prev_e {e.what()};
             std::string const curr_e {"Error in row_slice_op() -> "+prev_e};
-            throw Error{curr_e};
+            throw Error{curr_e, e.et};
         }
     } //end row_slice_op
 
@@ -1027,7 +1050,7 @@ namespace Maths
         {
             std::string const caught_e {e.what()};
             std::string const this_e {"Error in row_slice_op (Matrix_pair)-> "+caught_e};
-            throw Error{this_e};
+            throw Error{this_e, Error_type::unknown_error};
         }
         return;
     }
@@ -1049,7 +1072,7 @@ namespace Maths
         {
             std::string const caught_e {e.what()};
             std::string const this_e {"Error in row_slice_op (Matrix_system)-> "+caught_e};
-            throw Error{this_e};
+            throw Error{this_e, Error_type::unknown_error};
         }
         return;
     } //end of row_slice_op 
@@ -1063,7 +1086,7 @@ namespace Maths
     {
         if (matrix.max_rows() != col_slice.size()) {
             std::string const e {"Error in col_slice_op(): Matrix row size is different than slice size\n"};
-            throw Error{e};
+            throw Error{e, Error_type::incompatible_dimensions};
         }
         
         Matrix<T> output {matrix};
@@ -1104,7 +1127,7 @@ namespace Maths
                     for (auto i = 0; i < max_r; ++i) {
                         if (is_zero<T>(col_slice[i])) {
                             std::string const e{"Error in col_slice_op(): Division by zero\n"};
-                            throw Error{e};
+                            throw Error{e, Error_type::division_by_zero};
                         }
 
                         output(i, col) = output(i, col) / col_slice[i];
@@ -1125,7 +1148,7 @@ namespace Maths
             default:
                 {
                     std::string const e {"Error in col_slice_op(): Unknown operation\n"};
-                    throw Error{e};
+                    throw Error{e, Error_type::invalid_operation};
                 }
             }
         }
@@ -1133,7 +1156,7 @@ namespace Maths
         {
             std::string const prev_e {e.what()};
             std::string const curr_e {"Error in col_slice_op() -> "+prev_e};
-            throw Error{curr_e};
+            throw Error{curr_e, e.et};
         }
     } //end of col_slice_op
 
@@ -1152,7 +1175,7 @@ namespace Maths
         {
             std::string const prev_e {e.what()};
             std::string const curr_e {"Error in col_slice_op (Matrix_pair) ->: "+prev_e};
-            throw  Error{curr_e};
+            throw  Error{curr_e, Error_type::unknown_error};
         }
         
         return;
@@ -1175,7 +1198,7 @@ namespace Maths
         {
             std::string const prev_e {e.what()};
             std::string const curr_e {"Error in col_slice_op (Matrix_system) -> "+prev_e};
-            throw Error {curr_e};
+            throw Error {curr_e, Error_type::unknown_error};
         }
         
         return;

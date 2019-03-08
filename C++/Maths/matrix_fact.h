@@ -182,7 +182,7 @@ namespace Maths
     {
         if (is_symmetric(A_) == false) {
             std::string const e{"Error in cholesky_factorize(): Matrix not symmetric.\n"};
-            throw Error{e};
+            throw Error{e, Error_type::matrix_not_symmetric};
         }
         
         try
@@ -238,7 +238,7 @@ namespace Maths
         {
             std::string const prev_e {e.what()};
             std::string const this_e {"Error in cholesky_factorize() -> "+prev_e};
-            throw Error{this_e};
+            throw Error{this_e, e.et};
         }
     } //End of Cholesky
 
@@ -292,7 +292,7 @@ namespace Maths
         {
             std::string const prev_e {e.what()};
             std::string const this_e {"Error in lu_factorize() -> "+prev_e};
-            throw Error{this_e};
+            throw Error{this_e, e.et};
         }
     } //End of lu factorize
 
@@ -338,7 +338,7 @@ namespace Maths
                 default:
                 {
                     std::string const e {"Error in determinant(): Unknown option\n"};
-                    throw Error{e};
+                    throw Error{e, Error_type::invalid_option};
                 }
             }
             
@@ -347,7 +347,7 @@ namespace Maths
         {
             std::string const prev_e {e.what()};
             std::string const this_e {"Error in determinant() -> "+prev_e};
-            throw Error{this_e};
+            throw Error{this_e, e.et};
         }
     } //end of determinant
 
@@ -376,7 +376,7 @@ namespace Maths
         {
             std::string const prev_e {e.what()};
             std::string const curr_e {"Error in find_col_modulus() -> "+prev_e};
-            throw Error{curr_e};
+            throw Error{curr_e, e.et};
         }
     }
 
@@ -443,7 +443,7 @@ namespace Maths
         {
             std::string const prev_e {e.what()};
             std::string const curr_e {"Error in qr_factorize() -> "+prev_e};
-            throw Error{curr_e};
+            throw Error{curr_e, e.et};
         }
     } //End of qr_factorize
 
@@ -457,7 +457,7 @@ namespace Maths
             if (matrix.max_cols() != matrix.max_rows())
             {
                 std::string const e {"Error in find_eigenvalues(): Non square matrix\n"};
-                throw Error{e};
+                throw Error{e, Error_type::matrix_not_square};
             }
             
             std::vector<T> output;
@@ -483,7 +483,7 @@ namespace Maths
         {
             std::string const prev_e {e.what()};
             std::string const curr_e {"Error in find_eigenvalues() -> " + prev_e};
-            throw Error{curr_e};
+            throw Error{curr_e, e.et};
         }
     } //End of find_eigenvalues
 
@@ -495,8 +495,8 @@ namespace Maths
         T det {determinant<T>(matrix)};
         if (is_zero<T>(det))
         {
-            std::string const e {"Error in invert(): Zero valued determinant\n"};
-            throw Error{e};
+            std::string const e {"Error in invert(): Zero value determinant\n"};
+            throw Error{e, Error_type::zero_value_determinant};
         }
     
         try
@@ -555,7 +555,7 @@ namespace Maths
         {
             std::string const prev_e {e.what()};
             std::string const curr_e {"Error in invert() -> " + prev_e};
-            throw Error{curr_e};
+            throw Error{curr_e, e.et};
         }
     } //End of matrix inversion
 

@@ -91,7 +91,7 @@ namespace Maths
         {
             std::string const prev_e {e.what()};
             std::string const curr_e {"Error in newton_method() -> " + prev_e};
-            throw Error{curr_e};
+            throw Error{curr_e, e.et};
         }
         
     } //End of newton_method

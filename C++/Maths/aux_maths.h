@@ -34,7 +34,7 @@ namespace Maths
         if (is_zero<T>(h))
         {
             std::string const e {"Error in derivative(): differential h cannot be zero\n"};
-            throw Error{e};
+            throw Error{e, Error_type::zero_step_size};
         }
         
         sz_t const x_size {x.size()};
@@ -98,7 +98,7 @@ namespace Maths
         {
             std::string const prev_e {e.what()};
             std::string const curr_e {"Error in jacobian -> " + prev_e};
-            throw Error{e};
+            throw Error{curr_e, e.et};
         }
     }
     
@@ -117,7 +117,7 @@ namespace Maths
         {
             std::string const prev_e {e.what()};
             std::string const curr_e {"Error in jacobian -> " + prev_e};
-            throw Error{e};
+            throw Error{curr_e, e.et};
         }
     }    
     
