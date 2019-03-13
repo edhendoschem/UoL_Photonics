@@ -5,6 +5,7 @@
 #include <optional>
 #include <fstream>
 #include <string>
+#include <string_view>
 #include <regex>
 #include <boost/filesystem.hpp>
 
@@ -17,7 +18,6 @@ namespace Simulation
     {
     public:
         //vars
-        std::ofstream data_p_file {"data_p.csv"};
         Simulation::Init_params p;
         std::vector<Simulation::Step> data;
         Simulation::Step start_step, end_step; //Steps stored for convergence comparison
@@ -63,8 +63,8 @@ namespace Simulation
         double dPASE_b_ind (u_int const z, int const wl_, double const val) noexcept;
         
         //Simulation march
-        void reset_start     ()                            noexcept; //Resets the starting parameters
-        void reset_end       ()                            noexcept; //Resets the ending parameters
+        void reset_start     ()                                  noexcept; //Resets the starting parameters
+        void reset_end       ()                                  noexcept; //Resets the ending parameters
         void advance_signal  (u_int const z, int const sign = 1) noexcept; //Advances 1 step the signal
         void advance_pump_f  (u_int const z, int const sign = 1) noexcept; //Advances 1 step back pump
         void advance_pump_b  (u_int const z, int const sign = 1) noexcept; //Advances 1 step forward pump
@@ -76,14 +76,14 @@ namespace Simulation
         
         //calculates all n in z and marches signal, pump and ASE to z+1
         void advance_step (u_int const z, 
-                                       double const h, 
-                                       double const tol, 
-                                       u_int n_it, bool enable_ASE) noexcept; 
+                           double const h, 
+                           double const tol, 
+                           u_int n_it, bool enable_ASE) noexcept; 
         void regress_step (u_int const z, 
-                                       double const h, 
-                                       double const tol, 
-                                       u_int n_it, 
-                                       bool enable_ASE) noexcept;
+                           double const h, 
+                           double const tol, 
+                           u_int n_it, 
+                           bool enable_ASE) noexcept;
         
         //Propagates forward and backwards to obtain the results
         void simulate(float& report, bool const warn = false, bool const enable_ASE = true) noexcept;
@@ -91,15 +91,11 @@ namespace Simulation
         //Auxiliary Functions
         double  calculate_W(std::size_t const z, int const var) const noexcept;
         void    initialize_ASE() noexcept;
-        void    log(u_int const z) noexcept;
-        void    save_data (std::string const filename_, bool const dBm_units = false, int const s_wl = 1533000, int const p_wl_1 = 976000, int const p_wl_2 = 1480000) noexcept;
-        void    plot_data (std::string const data_file, int const s_wl, int const p_wl_1, int const p_wl_2) noexcept;
-        void    save_spectral_data(std::string const filename, u_int const step, bool const dBm_units = false) noexcept;
+        void    save_data (std::string_view filename_, bool const dBm_units = false, int const s_wl = 1533000, int const p_wl_1 = 976000, int const p_wl_2 = 1480000) noexcept;
+        void    plot_data (std::string_view data_file, int const s_wl, int const p_wl_1, int const p_wl_2) noexcept;
+        void    save_spectral_data(std::string_view filename, u_int const step, bool const dBm_units = false) noexcept;
     
     };
-    
-    //Will attempt to find the optimal ratio and return an array with Ner, NYb,length and max gain
-    std::vector<std::array<double, 4>> find_ratio(Simulation::Init_params const p, float& progress) noexcept;
-}
+} //End of namespace simulation
 
 #endif  /* EDWA_SIMULATION_H_INCLUDED */

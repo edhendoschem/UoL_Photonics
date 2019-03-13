@@ -457,7 +457,7 @@ int main(int argc, char **argv)
         file_handle.close();
     }; //End of iterate
     */
-    
+    /*
     //aquiaqui
     Simulation::Init_params p{};
     p.set_steps(1000);
@@ -466,8 +466,8 @@ int main(int argc, char **argv)
     p.NYb = 4.45e26;
     p.recalculate_constants();
     p.Ps0[1533000] = 1e-6;
-    p.Pp0_f[976000] = 0.1;
-    p.Pp0_b[976000] = 0.1;
+    p.Pp0_f[976000] = 0.8;
+    p.Pp0_b[976000] = 0.8;
     Simulation::Result r{p};
     float dummy_float{0.0};
     
@@ -481,11 +481,12 @@ int main(int argc, char **argv)
    
     
     r.simulate(dummy_float, false, true);
-    r.save_data("test_data", true, 1533000, 976000, 1480000);
+    r.save_data("test_data", false, 1533000, 976000, 1480000);
     r.plot_data("test_data", 1533000, 976000, 1480000);
+    r.save_spectral_data("spectral_data", r.data.size()-1, false);
+    */
 
-
-    /*
+    //dearimgui GUI
     std::size_t n_threads {std::thread::hardware_concurrency()}; //Number of threads
     std::atomic<std::size_t> available_threads {n_threads}; //Threads not in use
     //Support 12 different profiles
@@ -911,6 +912,7 @@ int main(int argc, char **argv)
                 }
             }
             
+
             ImGui::Checkbox("Run all profiles", &run_all);
             multi_progress_bar(progress, curr_idx);
             
@@ -922,10 +924,10 @@ int main(int argc, char **argv)
         window.clear(bgColor); // fill background with default color
         ImGui::SFML::Render(window);
         window.display();
-    }
+    } //end of while (window.isOpen())
  
     ImGui::SFML::Shutdown();
-    */
+    
 
     
     return 0;

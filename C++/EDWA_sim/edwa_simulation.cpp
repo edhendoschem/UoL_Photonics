@@ -22,8 +22,7 @@ Simulation::Result::Result(Simulation::Init_params const& initial_state) noexcep
     p = initial_state;
     data.reserve(p.steps);
     
-    data_p_file<<"Step,Length,n1,n2,n3,n4,n5,n6,Ps,Pp_f,Pp_b,PASE_f,PASE_b,NEr,NYb,Cup,Ccr,A21,A32,A43,A65,W12,W13,W21,W65,W56\n";
-
+    
     //Creating the first values
     data.emplace_back(Simulation::Step{});
         data[0].curr_length = 0.0;      //Length
@@ -639,6 +638,8 @@ void Simulation::Result::find_all_n(u_int const z, double const h, double const 
             throw(e);
         }
         
+        //Will attempt to recalculate assuming that the populations n5 and n6 do not change (the 
+        //Jacobian's last row is 0) by redifining the Jacobian to exclude the last row
         std::vector<f_ptr> f2 {Simulation::Result::Eq_1, 
                           Simulation::Result::Eq_2,
                           Simulation::Result::Eq_3};
@@ -790,7 +791,7 @@ void Simulation::Result::regress_step (u_int const z,
 
 void Simulation::Result::simulate(float& report, bool const warn, bool const enable_ASE) noexcept
 {
-    //aquiaqui
+    
     double const NAvg {(p.NYb + p.NEr) / 2.0};
     double const h {1.0e-7};
     double const tol {1.0e-7 * NAvg};
@@ -834,7 +835,7 @@ void Simulation::Result::simulate(float& report, bool const warn, bool const ena
 
 
 
-void Simulation::Result::save_data(std::string const filename, bool const dBm_units, int const s_wl, int const p_wl_1, int const p_wl_2) noexcept
+void Simulation::Result::save_data(std::string_view filename, bool const dBm_units, int const s_wl, int const p_wl_1, int const p_wl_2) noexcept
 {
     std::cout<<"Entered save data\n";
     std::cout<<"s_wl = "<<s_wl<<'\n';
@@ -846,7 +847,8 @@ void Simulation::Result::save_data(std::string const filename, bool const dBm_un
     if (!boost::filesystem::exists(curr_path)) boost::filesystem::create_directories(curr_path);
     std::regex rx ("([a-zA-Z0-9_]+)(.*)(\w*)");
     std::smatch s;
-    std::regex_match(filename, s, rx);
+    std::string const filename_str {filename.data()};
+    std::regex_match(filename_str, s, rx);
     std::string file_name {s[1]};
     curr_path /= boost::filesystem::path(file_name);
     if (!boost::filesystem::exists(curr_path)) boost::filesystem::create_directories(curr_path);
@@ -860,7 +862,8 @@ void Simulation::Result::save_data(std::string const filename, bool const dBm_un
     std::string p_wl_1_s {std::to_string(p_wl_1/1000)};
     std::string p_wl_2_s {std::to_string(p_wl_2/1000)};
     file_handle<<"Length,n1,n2,n3,n4,n5,n6,Ps @ "+s_wl_s+" ("+dBm+"),"
-    "Gain,Pp_f ("+p_wl_1_s+"),Pp_f ("+p_wl_2_s+"),Pp_b ("+p_wl_1_s+"),Pp_b ("+p_wl_2_s+"),PASE_f,PASE_b,Pp_ASE_f,Pp_ASE_b\n";
+    "Gain,Pp_f ("+p_wl_1_s+"),Pp_f ("+p_wl_2_s+"),Pp_b ("+p_wl_1_s+"),Pp_b ("+p_wl_2_s+"),PASE_f,PASE_b,"
+    "W12,W13,W21,W65,W56,A21,A32,A43,A65,NEr,NYb,Cup,Ccr\n";
 
     for (auto i = 0; i < data.size(); ++i)
     {
@@ -900,16 +903,42 @@ void Simulation::Result::save_data(std::string const filename, bool const dBm_un
                    <<(dBm_units ? Utility::power_to_dBm(data[i].PASE_f.at(s_wl)) : data[i].PASE_f.at(s_wl) * 1000.0)
                    <<','
                    <<(dBm_units ? Utility::power_to_dBm(data[i].PASE_b.at(s_wl)) : data[i].PASE_b.at(s_wl) * 1000.0)
+                   <<','
+                   <<data[i].W12
+                   <<','
+                   <<data[i].W13
+                   <<','
+                   <<data[i].W21
+                   <<','
+                   <<data[i].W65
+                   <<','
+                   <<data[i].W56
+                   <<','
+                   <<data[i].A21
+                   <<','
+                   <<data[i].A32
+                   <<','
+                   <<data[i].A43
+                   <<','
+                   <<data[i].A65
+                   <<','
+                   <<p.NEr
+                   <<','
+                   <<p.NYb
+                   <<','
+                   <<p.Cup
+                   <<','
+                   <<p.Ccr
                    <<'\n';
     }
-    
+
     file_handle.close();
     std::cout<<"Exited save_data\n";
     return;
 }
 
 
-void Simulation::Result::plot_data (std::string const data_file_, int const s_wl, int const p_wl_1, int const p_wl_2) noexcept
+void Simulation::Result::plot_data (std::string_view data_file_, int const s_wl, int const p_wl_1, int const p_wl_2) noexcept
 {
     std::string s_wl_s {std::to_string(s_wl / 1000)};
     std::string p_wl_1_s {std::to_string(p_wl_1 / 1000)};
@@ -922,7 +951,8 @@ void Simulation::Result::plot_data (std::string const data_file_, int const s_wl
     std::regex dBm(R"((dBm))");
     std::smatch matches {};
     std::smatch dBm_match{};
-    std::regex_match(data_file_, matches, rx);
+    std::string const data_file_str {data_file_.data()};
+    std::regex_match(data_file_str, matches, rx);
     std::string data_file {matches[1]};
     curr_path /= boost::filesystem::path(data_file);
     boost::filesystem::path curr_path_copy {curr_path};
@@ -1002,12 +1032,12 @@ void Simulation::Result::plot_data (std::string const data_file_, int const s_wl
 }
 
 
-void Simulation::Result::save_spectral_data(std::string const filename, u_int const step, bool const dBm_units) noexcept
+void Simulation::Result::save_spectral_data(std::string_view filename, u_int const step, bool const dBm_units) noexcept
 {
     std::string name
     {filename[filename.size()-4] == '.' ? filename.substr(0, filename.size()-4) : filename.substr(0, filename.size())};
     std::string extension
-    {filename[filename.size()-4] == '.' ? filename.substr(filename.size()-4, 4) : std::string{}};
+    {filename[filename.size()-4] == '.' ? filename.substr(filename.size()-4, 4) : std::string{".csv"}};
     
     
     std::string new_name {name + "_step_" + std::to_string(step) + extension};
@@ -1061,32 +1091,3 @@ void Simulation::Result::save_spectral_data(std::string const filename, u_int co
 }
 
 
-void Simulation::Result::log(u_int const z) noexcept {
-    data_p_file<<z<<","
-               <<data[z].curr_length<<","
-               <<data[z].n1 * 100.0 / p.NEr<<","
-               <<data[z].n2 * 100.0 / p.NEr<<","
-               <<data[z].n3 * 100.0 / p.NEr<<","
-               <<data[z].n4 * 100.0 / p.NEr<<","
-               <<data[z].n5 * 100.0 / p.NYb<<","
-               <<data[z].n6 * 100.0 / p.NYb<<","
-               <<data[z].Ps.at(1533000)<<","
-               <<data[z].Pp_f.at(976000)<<","
-               <<data[z].Pp_b.at(976000)<<","
-               <<data[z].PASE_f.at(1530000)<<","
-               <<data[z].PASE_b.at(1530000)<<","
-               <<p.NEr<<","
-               <<p.NYb<<","
-               <<p.Cup<<","
-               <<p.Ccr<<","
-               <<data[z].A21<<","
-               <<data[z].A32<<","
-               <<data[z].A43<<","
-               <<data[z].A65<<","
-               <<data[z].W12<<","
-               <<data[z].W13<<","
-               <<data[z].W21<<","
-               <<data[z].W65<<","
-               <<data[z].W56<<"\n";
-               return;
-}
