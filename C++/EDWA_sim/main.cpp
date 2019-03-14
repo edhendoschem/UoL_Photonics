@@ -549,6 +549,8 @@ int main(int argc, char **argv)
                 ImGui::InputDouble("Length (cm)", &m_vec[curr_idx].temp_doubles[2], 0.0f, 0.0f, "%.2f");
                 ImGui::PopItemWidth();
                 
+                
+                
                 if (ImGui::Button("Apply to all profiles##0"))
                 {
                     for (auto i = 0; i < m_vec.size(); ++i)
@@ -917,6 +919,9 @@ int main(int argc, char **argv)
             multi_progress_bar(progress, curr_idx);
             
         }//End of simulation
+        ImGui::NewLine();
+        ImGui::SameLine(ImGui::GetWindowWidth() * 0.4f);
+        if (ImGui::Button("Close program", button_size)) window.close();
         
         ImGui::End(); // end window
         
